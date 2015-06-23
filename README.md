@@ -1,6 +1,6 @@
 ## What is LoadGo?
 
-**LoadGo** is a JQuery plugin that allow you to simulate loading images by using your own images.
+**LoadGo** is a JQuery plugin that allows you to simulate loading process by using your own images.
 
 - Perfect for logo image animation when user is waiting for something to be loaded (a website, retrieving information, updating status, etc.)
 
@@ -8,7 +8,7 @@
 
 ## How to use LoadGo
 
-1\. Download LoadGo from [this link](loadgo.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
+1\. Download LoadGo from [this link](http://franverona.com/loadgo.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
 
 2\. Uncompress it (if zipped) and copy LoadGo folder into your JS scripts.
 
@@ -30,8 +30,6 @@ You can check for examples following this link: [http://franverona.com/loadgo/] 
 
 **LoadGo** is a plugin which provides you a better way to keep your users update about loading process that take some time to be completed. For example:
 
-
-
 *   Users upload a file to your server.
 *   System is converting a file to PDF.
 *   Current page is loading.
@@ -49,9 +47,7 @@ This piece of code is a minimum example:
     </div>
 
     // Javascript
-    $('#logo').loadgo();</pre>
-
-</div>
+    $('#logo').loadgo();
 
 ### Initialization
 
