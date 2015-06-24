@@ -79,6 +79,14 @@ Now, you are capable of set progress and simulate any kind of progression. **Loa
 
     $('#logo').loadgo('getprogress');
 
+**Loop**: sets overlay to loop indefinitely until stopped. This is useful for situations where you have no way of measuring the progress. This method accepts a duration(ms) parameter to customize animation speed.
+
+    $('#logo').loadgo('loop', 10);
+
+**Stop**: stops the loop and shows the full image. Since loops are indefinite we need to use this method to manually stop it.
+
+    $('#logo').loadgo('stop');
+
 ### Real example
 
 In your webpage, you are using a jQuery plugin like [Uploadify](http://www.uploadify.com/) to give your users a way to upload files to you page (for example: update his/her web avatar). Most of these plugins provide events like `onUploadStart`, `onUploadProgress` or `onUploadComplete`. These events have variables which give you a lot of information about your current load progress (file size, current uploaded bytes, etc).
@@ -87,7 +95,7 @@ You can use this information with **LoadGo** to update logo overlay like this:
 
     // Set LoadGo on your Logo
     $('#logo').loadgo();
-    
+
     // Set Uploadify on your upload input
     $('#uploadinput').uploadify({
        // init options...

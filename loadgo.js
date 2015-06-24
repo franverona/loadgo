@@ -22,11 +22,11 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
 
           var _w = jQuery(this).width(), _h = jQuery(this).height(), pl = jQuery(this).parent().css('padding-left');
 
-          $overlay = jQuery('<div style="background-color:' + defaults.bgcolor + 
-            ';opacity:' + defaults.opacity + 
+          $overlay = jQuery('<div style="background-color:' + defaults.bgcolor +
+            ';opacity:' + defaults.opacity +
             ';width:' + _w + 'px' +
             ';height:' + _h + 'px' +
-            ';margin-right:' + pl + 
+            ';margin-right:' + pl +
             ';top:0;position:absolute;"></div>');
 
           if (defaults.animated) {
@@ -77,6 +77,49 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
         },
         resetprogress : function () {
           jQuery(this).loadgo('setprogress', 0);
+        },
+
+        // Overlay loops back and forth
+        loop : function (duration) {
+          var data = jQuery(this).data('loadgo');
+          var toggle = true;
+          var image = this;
+
+          if (data.interval) {
+            console.warn('LoadGo requires you to stop the current loop before modifying it.');
+            return false;
+          }
+
+          // Store interval so we can stop it later
+          data.interval = setInterval(function(){
+            if(toggle) {
+              data.progress += 1;
+              if (data.progress >= 100) {
+                toggle = false;
+              }
+            }
+            else {
+              data.progress -= 1;
+              if(data.progress <= 0) {
+                toggle = true;
+              }
+            }
+            // Remove transition animation
+            // Can be replaced with animated: false in the initializer
+            data.overlay.css({
+              '-webkit-transition': 'none',
+              'transition':         'none'
+            });
+
+            image.loadgo('setprogress', data.progress);
+          }, duration);
+        },
+
+        // Stops the loop interval and shows image
+        stop: function () {
+          var data = jQuery(this).data('loadgo');
+          data.interval = clearInterval(data.interval);
+          this.loadgo('setprogress', 100);
         }
       };
 
@@ -88,7 +131,7 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
         return methods.init.apply( this, arguments );
       } else {
         $.error( 'Method ' +  methodOrOptions + ' does not exist on jQuery.loadgo' );
-      }    
+      }
     };
 
   })(jQuery);
