@@ -59,7 +59,7 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
          * Set progress by percentage
          * @param  {int} progress Progress in percentage
          */
-         setprogress : function (progress) {
+        setprogress : function (progress) {
           if (progress > 100)
             console.warn('LoadGo expects maximum progress of 100 (100%). ' + progress + '% sent.');
           else {
@@ -71,10 +71,12 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}))
           }
         },
+
         getprogress : function () {
           var data = jQuery(this).data('loadgo');
           return (data.progress)? data.progress : 0;
         },
+        
         resetprogress : function () {
           jQuery(this).loadgo('setprogress', 0);
         },
