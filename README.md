@@ -16,7 +16,7 @@
 
     <script type="text/javascript" src="loadgo/loadgo.js"></script>
 
-You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(programming) version:
+You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(programming)) version:
 
     <script type="text/javascript" src="loadgo/loadgo.min.js"></script>
 
