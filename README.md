@@ -8,17 +8,26 @@
 
 ## How to use LoadGo
 
-1\. Download LoadGo from [this link](http://franverona.com/loadgo.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
+1\. Download LoadGo from [this link](http://franverona.com/loadgo/loadgo.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
 
-2\. Uncompress it (if zipped) and copy LoadGo folder into your JS scripts.
+2\. Uncompress it (if zipped) and copy **LoadGo** folder into your JS scripts.
 
 3\. Insert the following code in your webpage:
 
     <script type="text/javascript" src="loadgo/loadgo.js"></script>
 
-You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(programming)) version:
+You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(programming) version:
 
     <script type="text/javascript" src="loadgo/loadgo.min.js"></script>
+
+
+**Important**: **LoadGo** needs images fully loaded in order to read its dimensions correctly. If you are not sure when this is going to happen, you can use this piece of code with each image:
+
+    $("#my-image").load(function() {
+      $('#my-image').loadgo();
+    }).each(function() {
+      if(this.complete) $(this).load();
+    });
 
 ## Examples
 
@@ -37,7 +46,7 @@ You can check for examples following this link: [http://franverona.com/loadgo/] 
 
 This plugin won't control asynchronous behaviour for your loading process, so you have to do that by yourself in your app.
 
-In order to do this, **LoadGo** creates an overlay on top of your image, and playing with its width simulates a loading behaviour. This overlay is set using "`position: absolute`", so your DOM element needs to be inside a `DIV` element or things won't look good.
+In order to do this, **LoadGo** creates an overlay on top of your image, and playing with its width simulates a loading behaviour. This overlay is set by using `position: absolute` CSS property, so your DOM element needs to be inside a `DIV` element or things won't look good.
 
 This piece of code is a minimum example:
 
@@ -51,11 +60,13 @@ This piece of code is a minimum example:
 
 ### Initialization
 
-**LoadGo** needs to be initialized in a DOM element before use it. To do this, you should do:
+**LoadGo** needs to be initialized in a DOM element before use it.
 
     $('#logo').loadgo();
 
 Now, you are capable of set progress and simulate any kind of progression. **LoadGo** have three methods and a couple of options which will help you.
+
+**LoadGo** also applies an empty CSS class to overlay called `loadgo-overlay` in case that you want to implement your own resize function or some other advanced features.
 
 ### Options
 
@@ -64,6 +75,7 @@ Now, you are capable of set progress and simulate any kind of progression. **Loa
 *   **animated**: true if `setprogress` CSS width transitions are enable, false otherwise. Default is **true** (NOTE: Internet Explorer does not support CSS transitions).
 *   **image**: image url to bet use if want a background image instead of a simple color. This option disables **bgcolor** option.
 *   **class**: CSS class which will be applied to overlay. By using this option you should assure that all looks good because some CSS options for class could invalidate other **LoadGo** plugin CSS options. Default is **none**.
+*   **resize**: resize function. **LoadGo** provides a function which automatically resizes **LoadGo** overlay by default, but you can use your own.
 
 ### Methods
 
@@ -114,4 +126,4 @@ You can use this information with **LoadGo** to update logo overlay like this:
       }
     });
 
-**LoadGo** is under MIT License. Feel free to download, modify and adapt it to your own purposes.
+**LoadGo** is under MIT License. Feel free to download, modify and adapt it to your own purposes. If you find any bug, send a pull request and I will include your piece of code into repository
