@@ -20,10 +20,18 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             animated:   (options.animated !== undefined)? options.animated : true,      //  Overlay smooth animation when setting progress
             image:      (options.image !== undefined)? options.image : null,            //  Overlay image
             class:      (options.class !== undefined)? options.class : null,            //  Overlay CSS class
-            resize:     (options.resize !== undefined)? options.resize : null           //  Resize functions (optional)
+            resize:     (options.resize !== undefined)? options.resize : null,          //  Resize functions (optional)
+            direction:  (options.direction !== undefined)? options.direction : 'lr'     //  Direction animation (optional)
           };
 
-          var _w = jQuery(_).width(), _h = jQuery(_).height(), pl = jQuery(_).parent().css('padding-left');
+          // Check for valid direction
+          var validDirections = ['lr', 'rl', 'bt', 'tb'];
+          if (validDirections.indexOf(defaults.direction.toLowerCase()) === -1) {
+            console.warn('LoadGo requires a valid direction. "' + defaults.direction + '" provided. Using default value: "lr".');
+            defaults.direction = 'lr';
+          }
+
+          var _w = jQuery(_)[0].getBoundingClientRect().width, _h = jQuery(_)[0].getBoundingClientRect().height, pl = jQuery(_).parent().css('padding-left');
 
           $overlay = jQuery('<div class="loadgo-overlay" style="background-color:' + defaults.bgcolor +
             ';opacity:' + defaults.opacity +
@@ -34,8 +42,8 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
 
           if (defaults.animated) {
             $overlay.css({
-              '-webkit-transition': 'width 0.6s ease',
-              'transition':         'width 0.6s ease'
+              '-webkit-transition': 'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+              'transition':         'width 0.6s ease, height 0.6s ease, top 0.6 ease'
             });
           }
 
@@ -44,16 +52,40 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
           }
 
           if (defaults.image) {
+
+            var bgposition;
+            switch (defaults.direction) {
+              case 'lr':
+                bgposition = '100% 0%';
+                break;
+              case 'rl':
+                // Right to left animation
+                bgposition = '0% 50%';
+                break;
+              case 'bt':
+                // Bottom to top animation
+                bgposition = '100% 0%';
+                break;
+              case 'tb':
+                // Top to bottom animation
+                bgposition = '0% 100%';
+                break;
+              default:
+                // Left to right animation
+                bgposition = '100% 50%';
+                break;
+            }
+
             $overlay.css({
               'background-image':         'url("' + defaults.image + '")',
               'background-repeat':        'no-repeat',
               'background-size':          'cover',
               'background-color':         'none',
-              'background-position':      '100% center'
+              'background-position':      bgposition
             });
           }
 
-          jQuery(_).data('loadgo', { overlay: $overlay, width: $overlay.width(), height: $overlay.height(), progress: 0 });
+          jQuery(_).data('loadgo', { overlay: $overlay, width: $overlay.width(), height: $overlay.height(), progress: 0, direction: defaults.direction });
 
           $overlay.insertAfter(_);
 
@@ -64,14 +96,14 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
           else {
             $(window).on('resize', function() {
               var $element = jQuery(_), data = $element.data('loadgo');
-              var $overlay = data.overlay, progress = data.progress;
+              var $overlay = data.overlay, progress = data.progress, direction = data.direction;
               var _w = $element.width(), _h = $element.height(), pl = $element.parent().css('padding-left');
               $overlay.css({
                 'width':          _w + 'px',
                 'height':         _h + 'px',
                 'margin-right':   pl + 'px'
               });
-              $element.data('loadgo', { overlay: $overlay, width: _w, height: _h, progress: progress });
+              $element.data('loadgo', { overlay: $overlay, width: _w, height: _h, progress: progress, direction: direction });
               _.loadgo('setprogress', progress);
             });
           }
@@ -86,11 +118,44 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             console.warn('LoadGo expects progress number between 0 (0%) and 100 (100%).');
           else {
             var data = jQuery(this).data('loadgo'),
-            $overlay = data.overlay, $width = data.width, $height = data.height;
-            var _w = $width * (1 - progress / 100);
-            $overlay.css('width', _w + 'px');
-            $overlay.css('right', '0px');
-            jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
+            $overlay = data.overlay, $width = data.width, $height = data.height, $direction = data.direction;
+
+            var _w, _h;
+            switch ($direction) {
+              case 'lr':
+                // Left to right animation
+                _w = $width * (1 - progress / 100);
+                $overlay.css('width', _w + 'px');
+                $overlay.css('right', '0px');
+                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
+                break;
+              case 'rl':
+                // Right to left animation
+                _w = $width * (1 - progress / 100);
+                $overlay.css('width', _w + 'px');
+                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
+                break;
+              case 'bt':
+                // Bottom to top animation
+                _h = $height * (1 - progress / 100);
+                $overlay.css('height', _h + 'px');
+                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
+                break;
+              case 'tb':
+                // Top to bottom animation
+                _h = $height * (1 - progress / 100);
+                $overlay.css('height', _h + 'px');
+                $overlay.css('top', ($height - _h) + 'px');
+                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
+                break;
+              default:
+                // Left to right animation
+                _w = $width * (1 - progress / 100);
+                $overlay.css('width', _w + 'px');
+                $overlay.css('right', '0px');
+                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
+                break;
+            }
           }
         },
 
