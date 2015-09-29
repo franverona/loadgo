@@ -8,7 +8,7 @@
 
 ## How to use LoadGo
 
-1\. Download LoadGo from [this link](http://franverona.com/loadgo/loadgo.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
+1\. Download LoadGo from [this link](https://github.com/franverona/loadgo/archive/master.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
 
 2\. Uncompress it (if zipped) and copy **LoadGo** folder into your JS scripts.
 
@@ -60,7 +60,7 @@ This piece of code is a minimum example:
 
 ### Initialization
 
-**LoadGo** needs to be initialized in a DOM element before use it.
+**LoadGo** needs to be initialized in a DOM element before use.
 
     $('#logo').loadgo();
 
@@ -127,4 +127,4 @@ You can use this information with **LoadGo** to update logo overlay like this:
       }
     });
 
-**LoadGo** is under MIT License. Feel free to download, modify and adapt it to your own purposes. If you find any bug, send a pull request and I will include your piece of code into repository
+**LoadGo** is under MIT License. Feel free to download, modify and adapt it to your own purposes. If you find any bug, send a pull request or write an issue.
