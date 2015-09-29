@@ -6,9 +6,9 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
       var methods = {
         init : function (useroptions) {
 
-          var _ = this;
+          var _ = this, $this = jQuery(this);
 
-          if ($(_).length > 1) {
+          if ($this.length > 1) {
             throw new Error('LoadGo selector must be an id. Please, set a valid DOM id; also check if you have more than one DOM element with the same id.');
           }
 
@@ -21,7 +21,8 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             image:      (options.image !== undefined)? options.image : null,            //  Overlay image
             class:      (options.class !== undefined)? options.class : null,            //  Overlay CSS class
             resize:     (options.resize !== undefined)? options.resize : null,          //  Resize functions (optional)
-            direction:  (options.direction !== undefined)? options.direction : 'lr'     //  Direction animation (optional)
+            direction:  (options.direction !== undefined)? options.direction : 'lr',    //  Direction animation (optional)
+            filter:     (options.filter !== undefined)? options.filter : null           //  Image filter (optional)
           };
 
           // Check for valid direction
@@ -31,7 +32,7 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             defaults.direction = 'lr';
           }
 
-          var _w = jQuery(_)[0].getBoundingClientRect().width, _h = jQuery(_)[0].getBoundingClientRect().height, pl = jQuery(_).parent().css('padding-left');
+          var _w = $this[0].getBoundingClientRect().width, _h = $this[0].getBoundingClientRect().height, pl = $this.parent().css('padding-left');
 
           $overlay = jQuery('<div class="loadgo-overlay" style="background-color:' + defaults.bgcolor +
             ';opacity:' + defaults.opacity +
@@ -42,13 +43,55 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
 
           if (defaults.animated) {
             $overlay.css({
+              'transition':         'width 0.6s ease, height 0.6s ease, top 0.6 ease',
               '-webkit-transition': 'width 0.6s ease, height 0.6s ease, top 0.6s ease',
-              'transition':         'width 0.6s ease, height 0.6s ease, top 0.6 ease'
+              '-moz-transition':    'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+              '-ms-transition':     'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+              '-o-transition':      'width 0.6s ease, height 0.6s ease, top 0.6s ease',
             });
           }
 
           if (defaults.class) {
             $overlay.addClass(defaults.class);
+          }
+
+          if (defaults.filter) {
+            var filters = ['blur', 'grayscale', 'sepia', 'hue-rotate', 'invert', 'opacity'];
+            if (filters.indexOf(defaults.filter) !== -1) {
+              switch (defaults.filter) {
+                case 'blur':
+                  $this.css({
+                    '-webkit-filter':     defaults.filter + '(10px)'
+                  });
+                  break;
+                case 'hue-rotate':
+                  $this.css({
+                    '-webkit-filter':     defaults.filter + '(360deg)'
+                  });
+                  break;
+                case 'opacity':
+                  $this.css({
+                    '-webkit-filter':     defaults.filter + '(0)'
+                  });
+                  break;
+                default:
+                  $this.css({
+                    '-webkit-filter':     defaults.filter + '(1)'
+                  });
+              }
+              if (defaults.animated) {
+                $this.css({
+                  'transition':           '0.6s filter ease',
+                  '-webkit-transition':   '0.6s -webkit-filter ease',
+                  '-moz-transition':      '0.6s -moz-filter ease',
+                  '-ms-transition':       '0.6s -ms-filter ease',
+                  '-o-transition':        '0.6s -o-filter ease',
+                });
+              }
+            }
+            else {
+              throw new Error('Invalid value for "filter" option. Possible values: blur, grayscale, sepia, hue-rotate, invert, opacity.');
+            }
           }
 
           if (defaults.image) {
@@ -85,9 +128,14 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             });
           }
 
-          jQuery(_).data('loadgo', { overlay: $overlay, width: $overlay.width(), height: $overlay.height(), progress: 0, direction: defaults.direction });
+          $this.data('loadgo', { overlay: $overlay, width: $overlay.width(), height: $overlay.height(), progress: 0, direction: defaults.direction });
 
-          $overlay.insertAfter(_);
+          if (defaults.filter === null) {
+            $overlay.insertAfter(_);
+          }
+          else {
+            $this.data('loadgo', { filter: defaults.filter });
+          }
 
           // Resize event
           if (defaults.resize) {
@@ -95,15 +143,20 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
           }
           else {
             $(window).on('resize', function() {
-              var $element = jQuery(_), data = $element.data('loadgo');
-              var $overlay = data.overlay, progress = data.progress, direction = data.direction;
+              var $element = $this, data = $element.data('loadgo');
+              var $overlay = data.overlay, progress = data.progress, direction = data.direction, filter = data.filter;
               var _w = $element.width(), _h = $element.height(), pl = $element.parent().css('padding-left');
-              $overlay.css({
-                'width':          _w + 'px',
-                'height':         _h + 'px',
-                'margin-right':   pl + 'px'
-              });
+              if ($overlay) {
+                $overlay.css({
+                  'width':          _w + 'px',
+                  'height':         _h + 'px',
+                  'margin-right':   pl + 'px'
+                });
+              }
               $element.data('loadgo', { overlay: $overlay, width: _w, height: _h, progress: progress, direction: direction });
+              if (filter) {
+                $element.data('loadgo', { filter: filter });
+              }
               _.loadgo('setprogress', progress);
             });
           }
@@ -120,42 +173,69 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             var data = jQuery(this).data('loadgo'),
             $overlay = data.overlay, $width = data.width, $height = data.height, $direction = data.direction;
 
-            var _w, _h;
-            switch ($direction) {
-              case 'lr':
-                // Left to right animation
-                _w = $width * (1 - progress / 100);
-                $overlay.css('width', _w + 'px');
-                $overlay.css('right', '0px');
-                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
-                break;
-              case 'rl':
-                // Right to left animation
-                _w = $width * (1 - progress / 100);
-                $overlay.css('width', _w + 'px');
-                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
-                break;
-              case 'bt':
-                // Bottom to top animation
-                _h = $height * (1 - progress / 100);
-                $overlay.css('height', _h + 'px');
-                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
-                break;
-              case 'tb':
-                // Top to bottom animation
-                _h = $height * (1 - progress / 100);
-                $overlay.css('height', _h + 'px');
-                $overlay.css('top', ($height - _h) + 'px');
-                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
-                break;
-              default:
-                // Left to right animation
-                _w = $width * (1 - progress / 100);
-                $overlay.css('width', _w + 'px');
-                $overlay.css('right', '0px');
-                jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
-                break;
+            if ($overlay) {
+              var _w, _h;
+              switch ($direction) {
+                case 'lr':
+                  // Left to right animation
+                  _w = $width * (1 - progress / 100);
+                  $overlay.css('width', _w + 'px');
+                  $overlay.css('right', '0px');
+                  break;
+                case 'rl':
+                  // Right to left animation
+                  _w = $width * (1 - progress / 100);
+                  $overlay.css('width', _w + 'px');
+                  break;
+                case 'bt':
+                  // Bottom to top animation
+                  _h = $height * (1 - progress / 100);
+                  $overlay.css('height', _h + 'px');
+                  break;
+                case 'tb':
+                  // Top to bottom animation
+                  _h = $height * (1 - progress / 100);
+                  $overlay.css('height', _h + 'px');
+                  $overlay.css('top', ($height - _h) + 'px');
+                  break;
+                default:
+                  // Left to right animation
+                  _w = $width * (1 - progress / 100);
+                  $overlay.css('width', _w + 'px');
+                  $overlay.css('right', '0px');
+                  break;
+              }
             }
+            else {
+              var $filter = data.filter, p;
+              switch ($filter) {
+                case 'blur':
+                  p = (100 - progress) / 10;
+                  jQuery(this).css({
+                    '-webkit-filter':     $filter + '(' + p + 'px)'
+                  });
+                  break;
+                case 'hue-rotate':
+                  p = progress * 360 / 100;
+                  jQuery(this).css({
+                    '-webkit-filter':     $filter + '(' + p + 'deg)'
+                  });
+                  break;
+                case 'opacity':
+                  p = progress / 100;
+                  jQuery(this).css({
+                    '-webkit-filter':     $filter + '(' + p + ')'
+                  });
+                  break;
+                default:
+                  p = 1 - progress / 100;
+                  jQuery(this).css({
+                    '-webkit-filter':     $filter + '(' + p + ')'
+                  });
+              }
+            }
+
+            jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
           }
         },
 
@@ -196,8 +276,11 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
             // Remove transition animation
             // Can be replaced with animated: false in the initializer
             data.overlay.css({
-              '-webkit-transition': 'none',
-              'transition':         'none'
+              'transition':           'none',
+              '-webkit-transition':   'none',
+              '-moz-transition':      'none',
+              '-ms-transition':       'none',
+              '-o-transition':        'none',
             });
 
             image.loadgo('setprogress', data.progress);

@@ -77,6 +77,7 @@ Now, you are capable of set progress and simulate any kind of progression. **Loa
 *   **class**: CSS class which will be applied to overlay. By using this option you should assure that all looks good because some CSS options for class could invalidate other **LoadGo** plugin CSS options. Default is **none**.
 *   **resize**: resize function. **LoadGo** provides a function which automatically resizes **LoadGo** overlay by default, but you can use your own.
 *   **direction**: animation direction. Possible values: **'lr'** (left to right), **'rl'** (right to left), **'bt'** (bottom to top), **'tb'** (top to bottom). Default is **'lr'**.
+*   **filter**: CSS image filter according to [CSS filter property] (https://developer.mozilla.org/en-US/docs/Web/CSS/filter). Possible values: **'blur'**, **'grayscale'**, **'sepia'**, **'hue-rotate'**, **'invert'**, **'opacity'**.
 
 ### Methods
 
