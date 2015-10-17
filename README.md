@@ -8,6 +8,18 @@
 
 ## How to use LoadGo
 
+#### Production environment (CDN)
+
+**(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
+
+    // Original version (for use on development environments)
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.0/loadgo.js"></script>
+
+    // Minified version (for use on production environments)
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.0/loadgo.min.js"></script>
+
+#### Development environment
+
 1\. Download LoadGo from [this link](https://github.com/franverona/loadgo/archive/master.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
 
 2\. Uncompress it (if zipped) and copy **LoadGo** folder into your JS scripts.
