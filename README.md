@@ -8,6 +8,8 @@
 
 ## How to use LoadGo
 
+**LoadGo** needs [jQuery](http://jquery.com/download/) to work, so you have to include [jQuery](http://jquery.com/download/) in your page **BEFORE** using this plugin. I tested it with jQuery v1.11.2, and it works well.
+
 #### Production environment (CDN)
 
 **(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
