@@ -139,10 +139,10 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
 
           // Resize event
           if (defaults.resize) {
-            $(window).on('resize', defaults.resize);
+            jQuery(window).on('resize', defaults.resize);
           }
           else {
-            $(window).on('resize', function() {
+            jQuery(window).on('resize', function() {
               var $element = $this, data = $element.data('loadgo');
               var $overlay = data.overlay, progress = data.progress, direction = data.direction, filter = data.filter;
               var _w = $element.width(), _h = $element.height(), pl = $element.parent().css('padding-left');
@@ -235,7 +235,7 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
               }
             }
 
-            jQuery(this).data('loadgo', $.extend({}, data, {progress: progress}));
+            jQuery(this).data('loadgo', jQuery.extend({}, data, {progress: progress}));
           }
         },
 
@@ -295,14 +295,14 @@ if (typeof jQuery === 'undefined') { throw new Error('LoadGo requires jQuery'); 
         }
       };
 
-      $.fn.loadgo = function (methodOrOptions) {
+      jQuery.fn.loadgo = function (methodOrOptions) {
         if ( methods[methodOrOptions] ) {
           return methods[ methodOrOptions ].apply( this, Array.prototype.slice.call( arguments, 1 ));
         } else if ( typeof methodOrOptions === 'object' || ! methodOrOptions ) {
         // Default to "init"
         return methods.init.apply( this, arguments );
       } else {
-        $.error( 'Method ' +  methodOrOptions + ' does not exist on jQuery.loadgo' );
+        jQuery.error( 'Method ' +  methodOrOptions + ' does not exist on jQuery.loadgo' );
       }
     };
 
