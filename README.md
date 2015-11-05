@@ -12,13 +12,13 @@
 
 #### Production environment (CDN)
 
-**(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
+**(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/libraries/LoadGo), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
 
     // Original version (for use on development environments)
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.0/loadgo.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.1/loadgo.js"></script>
 
     // Minified version (for use on production environments)
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.0/loadgo.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.1/loadgo.min.js"></script>
 
 #### Development environment
 
