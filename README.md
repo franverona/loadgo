@@ -1,24 +1,40 @@
 ## What is LoadGo?
 
-**LoadGo** is a JQuery plugin that allows you to create a progress bar by using your own images.
+**LoadGo** is a Javascript plugin that allows you to create a progress bar by using your own images.
 
 - Perfect for logo image animation when user is waiting for something to be loaded (a website, retrieving information, updating status, etc.)
 
 - It creates an overlay above your desire DOM element and simulates a loading process using width calculations.
 
+- Tested in IE 9, IE 10, IE Edge, Google Chrome and Mozilla Firefox.
+
+## Changelog
+
+**2.0** - Latest release (02-04-2016)
+*  **Pure Javascript version release**: now you can use LoadGo plugin without jQuery.
+*  Fix overlay reposition bug when resizing window.
+
+**1.0.1** (02-11-2015)
+*  Fix for 'undefined' errors with newer jQuery versions.
+
+**1.0** (15-10-2015)
+*  First release.
+
 ## How to use LoadGo
 
-**LoadGo** needs [jQuery](http://jquery.com/download/) to work, so you have to include [jQuery](http://jquery.com/download/) in your page **BEFORE** using this plugin. I tested it with jQuery v1.11.2, and it works well.
+If you are using [jQuery](http://jquery.com/download/), remember that you have to include it BEFORE using this plugin. I tested it with jQuery v1.11.2, and it works well.
+
+If you are not using jQuery, just include **LoadGo** script and start using it. Easy as hell.
 
 #### Production environment (CDN)
 
 **(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/libraries/LoadGo), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
 
-    // Original version (for use on development environments)
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.1/loadgo.js"></script>
+    <!-- If you use jQuery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.0/loadgo.min.js"></script>
 
-    // Minified version (for use on production environments)
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/1.0.1/loadgo.min.js"></script>
+    <!-- If you don't use jQuery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.0/loadgo.min.js"></script>
 
 #### Development environment
 
@@ -28,20 +44,35 @@
 
 3\. Insert the following code in your webpage:
 
+    <!-- If you use jQuery -->
     <script type="text/javascript" src="loadgo/loadgo.js"></script>
+
+    <!-- If you don't use jQuery -->
+    <script type="text/javascript" src="loadgo/loadgo-nojquery.js"></script>
 
 You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(programming)) version:
 
+    <!-- If you use jQuery -->
     <script type="text/javascript" src="loadgo/loadgo.min.js"></script>
+
+    <!-- If you don't use jQuery -->
+    <script type="text/javascript" src="loadgo/loadgo-nojquery.min.js"></script>
 
 
 **Important**: **LoadGo** needs images fully loaded in order to read its dimensions correctly. If you are not sure when this is going to happen, you can use this piece of code with each image:
 
+    // jQuery
     $("#my-image").load(function() {
       $('#my-image').loadgo();
     }).each(function() {
       if(this.complete) $(this).load();
     });
+
+    // Javascript
+    var image = document.getElementById("my-image");
+    image.onload = function () {
+      Loadgo.init(this);
+    };
 
 ## Examples
 
@@ -69,14 +100,21 @@ This piece of code is a minimum example:
       <img id="logo" src="logo.png" alt="Logo" />
     </div>
 
-    // Javascript
+    // jQuery
     $('#logo').loadgo();
+
+    // Javascript
+    Loadgo.init(document.getElementById('logo'));
 
 ### Initialization
 
 **LoadGo** needs to be initialized in a DOM element before use.
 
+    // jQuery
     $('#logo').loadgo();
+
+    // javascript
+    Loadgo.init(document.getElementById('logo'));
 
 Now, you are capable of set progress and simulate any kind of progression. **LoadGo** have three methods and a couple of options which will help you.
 
@@ -97,23 +135,43 @@ Now, you are capable of set progress and simulate any kind of progression. **Loa
 
 **Set Progress**: set progress number to loading overlay. This number must be between 0 and 100 (percentage).
 
+    // jQuery
     $('#logo').loadgo('setprogress', 50);
+
+    // Javascript
+    Loadgo.setprogress(document.getElementById('logo'), 50);
 
 **Reset progress**: set progress to zero automatically. This is really useful when you are using the same element for multiple loads, and you need to reset all before starting a new one.
 
+    // jQuery
     $('#logo').loadgo('resetprogress');
+
+    // Javascript
+    Loadgo.resetprogress(document.getElementById('logo'));
 
 **Get progress**: return current progress. This number will be between 0 and 100 (percentage).
 
+    // jQuery
     $('#logo').loadgo('getprogress');
+
+    // Javascript
+    Loadgo.getprogress(document.getElementById('logo'));
 
 **Loop**: sets overlay to loop indefinitely until stopped. This is useful for situations where you have no way of measuring the progress. This method accepts a duration(ms) parameter to customize animation speed.
 
+    // jQuery
     $('#logo').loadgo('loop', 10);
+
+    // Javascript
+    Loadgo.loop(document.getElementById('logo'), 10);
 
 **Stop**: stops the loop and shows the full image. Since loops are indefinite we need to use this method to manually stop it.
 
+    // jQuery
     $('#logo').loadgo('stop');
+
+    // Javascript
+    Loadgo.stop(document.getElementById('logo'));
 
 ### Real example
 
