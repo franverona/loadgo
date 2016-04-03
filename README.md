@@ -34,7 +34,7 @@ If you are not using jQuery, just include **LoadGo** script and start using it. 
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.0/loadgo.min.js"></script>
 
     <!-- If you don't use jQuery -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.0/loadgo.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.0/loadgo-nojquery.min.js"></script>
 
 #### Development environment
 
