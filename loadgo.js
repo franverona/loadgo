@@ -68,7 +68,7 @@ if (jQuery) (
           ';opacity:' + defaults.opacity +
           ';width:' + _w + 'px' +
           ';height:' + _h + 'px' +
-          ';left:' + computedLeft + 'px' +
+          //';left:' + computedLeft + 'px' +
           ';top:0;position:absolute;"></div>');
 
         if (defaults.animated) {
@@ -224,7 +224,7 @@ if (jQuery) (
                 // Left to right animation
                 _w = $width * (1 - progress / 100);
                 $overlay.css('width', _w + 'px');
-                $overlay.css('right', '0px');
+                $overlay.css('right', $overlay.parent().css('padding-right'));
                 break;
               case 'rl':
                 // Right to left animation
