@@ -10,7 +10,12 @@
 
 ## Changelog
 
-**2.0** - Latest release (02-04-2016)
+**2.1** - Latest release (12-04-2016)
+
+*  Fix bug with LoadGo jQuery version where 'left to right' direction was not working.
+*  Added some examples.
+
+**2.0** (02-04-2016)
 *  **Pure Javascript version release**: now you can use LoadGo plugin without jQuery.
 *  Fix overlay reposition bug when resizing window.
 
@@ -76,7 +81,7 @@ You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(progr
 
 ## Examples
 
-You can check for examples following this link: [http://franverona.com/loadgo/] (http://franverona.com/loadgo/)
+You can check for examples following this link: [http://franverona.com/loadgo/] (http://franverona.com/loadgo/) or in the **examples** folder.
 
 ## Documentation
 
