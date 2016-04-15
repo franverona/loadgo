@@ -36,10 +36,10 @@ If you are not using jQuery, just include **LoadGo** script and start using it. 
 **(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/libraries/LoadGo), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
 
     <!-- If you use jQuery -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.0/loadgo.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.1/loadgo.min.js"></script>
 
     <!-- If you don't use jQuery -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.0/loadgo-nojquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.1/loadgo-nojquery.min.js"></script>
 
 #### Development environment
 
