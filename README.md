@@ -7,6 +7,10 @@
 - It creates an overlay above your desire DOM element and simulates a loading process using width calculations.
 
 - Tested in IE 9, IE 10, IE Edge, Google Chrome and Mozilla Firefox.
+ 
+(02-May-2016) I'm currently working in a Wordpress version using PACE. I will release it in a couple of weeks with admin options and a lot of customize features.
+
+I setup my Chrome Dev tools to simulate a 2Mb/s connection and added some useless scripts to increase webpage size, so Loadgo effect can be seen. If you want to know more, check this video: https://youtu.be/VjSE7KzZU60
 
 ## Changelog
 
