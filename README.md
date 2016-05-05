@@ -12,6 +12,10 @@
 
 I setup my Chrome Dev tools to simulate a 2Mb/s connection and added some useless scripts to increase webpage size, so Loadgo effect can be seen. If you want to know more, check this video: https://youtu.be/VjSE7KzZU60
 
+## LoadGo for Wordpress
+
+**(05-May-2016)** I've just uploaded **LoadGo for WP**, a Wordpress plugin which uses PACE and LoadGo. With **LoadGo for WP** you can use your own logo as a page loader in your Wordpress website. Check it out! [https://github.com/franverona/LoadGo-for-WP](https://github.com/franverona/LoadGo-for-WP)
+
 ## Changelog
 
 **2.1** - Latest release (12-04-2016)
