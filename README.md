@@ -14,7 +14,11 @@ I setup my Chrome Dev tools to simulate a 2Mb/s connection and added some useles
 
 ## LoadGo for Wordpress
 
-**(05-May-2016)** I've just uploaded **LoadGo for WP**, a Wordpress plugin which uses PACE and LoadGo. With **LoadGo for WP** you can use your own logo as a page loader in your Wordpress website. Check it out! [https://github.com/franverona/LoadGo-for-WP](https://github.com/franverona/LoadGo-for-WP)
+**(05-May-2016)** I've just uploaded **LoadGo for WP**, a Wordpress plugin which uses PACE and LoadGo. With **LoadGo for WP** you can use your own logo as a page loader in your Wordpress website. 
+
+Official Wordpress link: [https://wordpress.org/plugins/loadgo-for-wp/](https://wordpress.org/plugins/loadgo-for-wp/)
+
+Github: [https://github.com/franverona/LoadGo-for-WP](https://github.com/franverona/LoadGo-for-WP)
 
 ## Changelog
 
