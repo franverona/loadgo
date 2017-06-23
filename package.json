@@ -1,6 +1,6 @@
 {
   "name": "LoadGo",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "LoadGo is a Javascript plugin for using your logo as a progress bar",
   "author": "Fran Verona <franverona@gmail.com>",
   "homepage": "http://franverona.com/loadgo",
@@ -16,17 +16,17 @@
   "demo": "http://franverona.com/loadgo",
   "docs": "http://franverona.com/loadgo",
   "bugs": "https://github.com/franverona/loadgo/issues",
-  "license":  "MIT",
-  "contributors":   [
+  "license": "MIT",
+  "contributors": [
     {
-      "name":   "Carlos Feliciano Barba",
-      "email":  "c.feliciano2009@gmail.com",
-      "url":    "https://github.com/carloscheddar"
+      "name": "Carlos Feliciano Barba",
+      "email": "c.feliciano2009@gmail.com",
+      "url": "https://github.com/carloscheddar"
     }
   ],
-  "repository":  {
-    "type":   "git",
-    "url":    "https://github.com/franverona/loadgo.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/franverona/loadgo.git"
   },
   "dependencies": {
     "jquery": ">=1.11.3"

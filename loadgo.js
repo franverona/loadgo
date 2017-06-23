@@ -1,353 +1,410 @@
 /**
- * @preserve LoadGo v2.0 (http://franverona.com/loadgo)
- * 2016 - Fran Verona
+ * @preserve LoadGo v2.2 (http://franverona.com/loadgo)
+ * 2017 - Fran Verona
  * Licensed under MIT (https://github.com/franverona/loadgo/blob/master/LICENSE)
  */
 
 if (typeof jQuery === 'undefined') 
-  throw new Error('LoadGo requires jQuery');
+  throw new Error('LoadGo requires jQuery. Make sure you are loading jQuery before LoadGo, or try pure Javascript version if needed.');
 
-if (jQuery) (
-  function (jQuery) {
+(function ( $ ) {
+ 
+  var methods = {
+    init: function (useroptions) {
 
-    // Get CSS style
-    // http://stackoverflow.com/a/22744598/552669
-    var getStyle = function (el, prop) {
-      if (typeof(getComputedStyle) !== 'undefined') {
-        return getComputedStyle(el).getPropertyValue(prop);
-      } else {
-        return el.currentStyle[prop];
+      var $this = $(this);
+
+      if ($this.length === 0)
+        return;
+
+      if (!$this.is('img'))
+        throw new Error('LoadGo only works on img elements.');
+
+      if ($this.length > 1) 
+        throw new Error('LoadGo only works on one element at a time. Try with a valid #id.');
+
+      // Plugin options. We need to reset options to avoid future errors
+      $this.data('loadgo-options', {});
+
+      var pluginOptions = $this.loadgo('options', useroptions);
+
+      var _w = $this[0].getBoundingClientRect().width, 
+          _h = $this[0].getBoundingClientRect().height;
+
+      var overlayTemplate = '<div class="loadgo-overlay" style="background-color:%bgcolor%;opacity:%opacity%;width:%width%px;height:%height%px;position:absolute;"></div>';
+
+      var overlayWithOptions = 
+        overlayTemplate
+          .replace('%bgcolor%', pluginOptions.bgcolor)
+          .replace('%opacity%', pluginOptions.opacity)
+          .replace('%width%', _w)
+          .replace('%height%', _h);
+
+      $overlay = $(overlayWithOptions);
+
+      if (pluginOptions.animated) 
+        $overlay.css({
+          'transition':         'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+          '-webkit-transition': 'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+          '-moz-transition':    'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+          '-ms-transition':     'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+          '-o-transition':      'width 0.6s ease, height 0.6s ease, top 0.6s ease',
+        });
+
+      if (pluginOptions['class']) 
+        $overlay.addClass(pluginOptions['class']);
+
+      if (pluginOptions.filter) {
+        if (pluginOptions.filter === 'blur')
+          $this.css({
+            '-webkit-filter':     pluginOptions.filter + '(10px)'
+          });
+        else if (pluginOptions.filter === 'hue-rotate')
+          $this.css({
+            '-webkit-filter':     pluginOptions.filter + '(360deg)'
+          });
+        else if (pluginOptions.filter === 'opacity')
+          $this.css({
+            '-webkit-filter':     pluginOptions.filter + '(0)'
+          });
+        else
+          $this.css({
+            '-webkit-filter':     pluginOptions.filter + '(1)'
+          });
+
+        if (pluginOptions.animated) 
+          $this.css({
+            'transition':           '0.6s filter ease',
+            '-webkit-transition':   '0.6s -webkit-filter ease',
+            '-moz-transition':      '0.6s -moz-filter ease',
+            '-ms-transition':       '0.6s -ms-filter ease',
+            '-o-transition':        '0.6s -o-filter ease',
+          });
       }
-    };
 
-    var methods = {
-      init : function (useroptions) {
+      if (pluginOptions.image) {
+        var bgposition = '100% 0%';  // Left to right animation by default
+        if (pluginOptions.direction === 'rl')
+          bgposition = '0% 50%';    // Right to left animation
+        else if (pluginOptions.direction === 'bt')
+          bgposition = '100% 0%';   // Bottom to top animation
+        else if (pluginOptions.direction === 'tb')
+          bgposition = '0% 100%';   // Top to bottom animation
 
-        var _ = this, $this = jQuery(this);
+        $overlay.css({
+          'background-image':         'url("' + pluginOptions.image + '")',
+          'background-repeat':        'no-repeat',
+          'background-size':          'cover',
+          'background-color':         'none',
+          'background-position':      bgposition
+        });
+      }
 
-        if ($this.length > 1) {
-          throw new Error('LoadGo selector must be an id. Please, set a valid DOM id; also check if you have more than one DOM element with the same id.');
+      var pluginData = {
+        progress: 0
+      };
+
+      // Insert overlay only if "filter" option is not provided. If user sets a filter, it can be applied directly to the image logo
+      if (pluginOptions.filter === null) {
+        
+        // The DOM tree will look like this:
+        // <div class="loadgo-container"><element />><overlay /></div>
+        
+        $this.wrapAll('<div class="loadgo-container" style="position: relative"></div>');
+        $this.parent().prepend($overlay);
+
+        // We need to add margins and paddings to set the overlay exactly above our image
+        var pl = parseFloat($this.css('padding-left')), 
+            pr = parseFloat($this.css('padding-right')), 
+            pt = parseFloat($this.css('padding-top')), 
+            pb = parseFloat($this.css('padding-bottom')),
+            ml = parseFloat($this.css('margin-left')), 
+            mr = parseFloat($this.css('margin-right')), 
+            mt = parseFloat($this.css('margin-top')), 
+            mb = parseFloat($this.css('margin-bottom'));
+
+        if (pluginOptions.direction === 'lr') {
+          // Left to right animation
+          $overlay.css('right', (pr + mr) + 'px');
+        } else if (pluginOptions.direction === 'rl') {
+          // Right to left animation
+          $overlay.css('left', (pl + ml) + 'px');
+        } else if (pluginOptions.direction === 'bt') {
+          // Bottom to top animation
+          $overlay.css('top', (pt + mt) + 'px');
+        } else if (pluginOptions.direction === 'tb') {
+          // Top to bottom animation
+          $overlay.css('bottom', (pb + mb) + 'px');
         }
 
-        // Default options
-        var options = (typeof(useroptions) !== 'undefined')? useroptions : {};
-        var defaults = {
-          'bgcolor':    (options.bgcolor)? options.bgcolor : '#FFFFFF',                 //  Overlay color
-          'opacity':    (options.opacity)? options.opacity : '0.5',                     //  Overlay opacity
-          'animated':   (options.animated !== undefined)? options.animated : true,      //  Overlay smooth animation when setting progress
-          'image':      (options.image !== undefined)? options.image : null,            //  Overlay image
-          'class':      (options['class'] !== undefined)? options['class'] : null,      //  Overlay CSS class
-          'resize':     (options.resize !== undefined)? options.resize : null,          //  Resize functions (optional)
-          'direction':  (options.direction !== undefined)? options.direction : 'lr',    //  Direction animation (optional)
-          'filter':     (options.filter !== undefined)? options.filter : null           //  Image filter (optional)
-        };
+        // Saves overlay element + overlay current dimensions
+        pluginData.overlay = $overlay;
+        pluginData.width = $overlay.width();
+        pluginData.height = $overlay.height();
+      }
 
-        // Check for valid direction
-        var validDirections = ['lr', 'rl', 'bt', 'tb'];
-        if ($.inArray(defaults.direction.toLowerCase(), validDirections) === -1) {
-          console.warn('LoadGo requires a valid direction. "' + defaults.direction + '" provided. Using default value: "lr".');
-          defaults.direction = 'lr';
-        }
+      $this.data('loadgo', pluginData);
 
-        var _w = $this[0].getBoundingClientRect().width, _h = $this[0].getBoundingClientRect().height, pl = $this.parent().css('padding-left');
+      // Resize event
+      if (pluginOptions.resize) 
+        $(window).on('resize', pluginOptions.resize);
+      else {
+        var _this = this;
+        $(window).on('resize', function() {
+          var $element = $this, data = $element.data('loadgo'), options = $element.data('loadgo-options');
+          
+          if (typeof data === 'undefined')
+            return;
 
-        var ppl = parseFloat(getStyle($this[0].parentNode, 'padding-left')),
-        eml = parseFloat(getStyle($this[0], 'margin-left')) ,
-        epl = parseFloat(getStyle($this[0], 'padding-left'));
-
-        if (isNaN(ppl))
-          ppl = 0;
-        if (isNaN(eml))
-          eml = 0;
-        if (isNaN(epl))
-          epl = 0;
-
-        var computedLeft = ppl + eml + epl;
-
-        $overlay = jQuery('<div class="loadgo-overlay" style="background-color:' + defaults.bgcolor +
-          ';opacity:' + defaults.opacity +
-          ';width:' + _w + 'px' +
-          ';height:' + _h + 'px' +
-          //';left:' + computedLeft + 'px' +
-          ';top:0;position:absolute;"></div>');
-
-        if (defaults.animated) {
-          $overlay.css({
-            'transition':         'width 0.6s ease, height 0.6s ease, top 0.6 ease',
-            '-webkit-transition': 'width 0.6s ease, height 0.6s ease, top 0.6s ease',
-            '-moz-transition':    'width 0.6s ease, height 0.6s ease, top 0.6s ease',
-            '-ms-transition':     'width 0.6s ease, height 0.6s ease, top 0.6s ease',
-            '-o-transition':      'width 0.6s ease, height 0.6s ease, top 0.6s ease',
-          });
-        }
-
-        if (defaults['class']) {
-          $overlay.addClass(defaults['class']);
-        }
-
-        if (defaults.filter) {
-          var filters = ['blur', 'grayscale', 'sepia', 'hue-rotate', 'invert', 'opacity'];
-          if ($.inArray(defaults.filter, filters) !== -1) {
-            switch (defaults.filter) {
-              case 'blur':
-                $this.css({
-                  '-webkit-filter':     defaults.filter + '(10px)'
-                });
-                break;
-              case 'hue-rotate':
-                $this.css({
-                  '-webkit-filter':     defaults.filter + '(360deg)'
-                });
-                break;
-              case 'opacity':
-                $this.css({
-                  '-webkit-filter':     defaults.filter + '(0)'
-                });
-                break;
-              default:
-                $this.css({
-                  '-webkit-filter':     defaults.filter + '(1)'
-                });
-            }
-            if (defaults.animated) {
-              $this.css({
-                'transition':           '0.6s filter ease',
-                '-webkit-transition':   '0.6s -webkit-filter ease',
-                '-moz-transition':      '0.6s -moz-filter ease',
-                '-ms-transition':       '0.6s -ms-filter ease',
-                '-o-transition':        '0.6s -o-filter ease',
-              });
-            }
-          }
-          else {
-            throw new Error('Invalid value for "filter" option. Possible values: blur, grayscale, sepia, hue-rotate, invert, opacity.');
-          }
-        }
-
-        if (defaults.image) {
-
-          var bgposition;
-          switch (defaults.direction) {
-            case 'lr':
-              bgposition = '100% 0%';
-              break;
-            case 'rl':
-              // Right to left animation
-              bgposition = '0% 50%';
-              break;
-            case 'bt':
-              // Bottom to top animation
-              bgposition = '100% 0%';
-              break;
-            case 'tb':
-              // Top to bottom animation
-              bgposition = '0% 100%';
-              break;
-            default:
-              // Left to right animation
-              bgposition = '100% 50%';
-              break;
-          }
-
-          $overlay.css({
-            'background-image':         'url("' + defaults.image + '")',
-            'background-repeat':        'no-repeat',
-            'background-size':          'cover',
-            'background-color':         'none',
-            'background-position':      bgposition
-          });
-        }
-
-        $this.data('loadgo', { overlay: $overlay, width: $overlay.width(), height: $overlay.height(), progress: 0, direction: defaults.direction });
-
-        if (defaults.filter === null) {
-          $overlay.insertAfter(_);
-        }
-        else {
-          $this.data('loadgo', { filter: defaults.filter });
-        }
-
-        // Resize event
-        if (defaults.resize) {
-          jQuery(window).on('resize', defaults.resize);
-        }
-        else {
-          jQuery(window).on('resize', function() {
-            var $element = $this, data = $element.data('loadgo');
-            var $overlay = data.overlay, progress = data.progress, direction = data.direction, filter = data.filter;
-            var _w = $element.width(), _h = $element.height(), pl = $element.parent().css('padding-left');
-            if ($overlay) {
-
-              var ppl = parseFloat(getStyle($element[0].parentNode, 'padding-left')),
-                  eml = parseFloat(getStyle($element[0], 'margin-left')) ,
-                  epl = parseFloat(getStyle($element[0], 'padding-left'));
-
-              if (isNaN(ppl))
-                ppl = 0;
-              if (isNaN(eml))
-                eml = 0;
-              if (isNaN(epl))
-                epl = 0;
-
-              var computedLeft = ppl + eml + epl;
-
-              $overlay.css({
-                'width':    _w + 'px',
-                'height':   _h + 'px',
-                'left':     computedLeft + 'px'
-              });
-            }
-            $element.data('loadgo', { overlay: $overlay, width: _w, height: _h, progress: progress, direction: direction });
-            if (filter) {
-              $element.data('loadgo', { filter: filter });
-            }
-            _.loadgo('setprogress', progress);
-          });
-        }
-
-      },
-      /**
-       * Set progress by percentage
-       * @param  {int} progress Progress in percentage
-       */
-      setprogress : function (progress) {
-        if (progress < 0 || progress > 100)
-          console.warn('LoadGo expects progress number between 0 (0%) and 100 (100%).');
-        else {
-          var data = jQuery(this).data('loadgo'),
-          $overlay = data.overlay, $width = data.width, $height = data.height, $direction = data.direction;
+          var $overlay = data.overlay, progress = data.progress,
+              $width = $element.width(), $height = $element.height(),
+              storedData = { 
+                progress:   data.progress,
+                width:      $width,
+                height:     $height
+              };
 
           if ($overlay) {
-            var _w, _h;
-            switch ($direction) {
-              case 'lr':
-                // Left to right animation
-                _w = $width * (1 - progress / 100);
-                $overlay.css('width', _w + 'px');
-                $overlay.css('right', $overlay.parent().css('padding-right'));
-                break;
-              case 'rl':
-                // Right to left animation
-                _w = $width * (1 - progress / 100);
-                $overlay.css('width', _w + 'px');
-                break;
-              case 'bt':
-                // Bottom to top animation
-                _h = $height * (1 - progress / 100);
-                $overlay.css('height', _h + 'px');
-                break;
-              case 'tb':
-                // Top to bottom animation
-                _h = $height * (1 - progress / 100);
-                $overlay.css('height', _h + 'px');
-                $overlay.css('top', ($height - _h) + 'px');
-                break;
-              default:
-                // Left to right animation
-                _w = $width * (1 - progress / 100);
-                $overlay.css('width', _w + 'px');
-                $overlay.css('right', '0px');
-                break;
+            $overlay.css({
+              'width':    $width + 'px',
+              'height':   $height + 'px'
+            });
+
+            // We need to add margins and paddings to set the overlay exactly above our image
+            var pl = parseFloat($element.css('padding-left')), 
+                pr = parseFloat($element.css('padding-right')), 
+                pt = parseFloat($element.css('padding-top')), 
+                pb = parseFloat($element.css('padding-bottom')),
+                ml = parseFloat($element.css('margin-left')), 
+                mr = parseFloat($element.css('margin-right')), 
+                mt = parseFloat($element.css('margin-top')), 
+                mb = parseFloat($element.css('margin-bottom'));
+
+            if (pluginOptions.direction === 'lr') {
+              // Left to right animation
+              $overlay.css('right', (pr + mr) + 'px');
+            } else if (pluginOptions.direction === 'rl') {
+              // Right to left animation
+              $overlay.css('left', (pl + ml) + 'px');
+            } else if (pluginOptions.direction === 'bt') {
+              // Bottom to top animation
+              $overlay.css('top', (pt + mt) + 'px');
+            } else if (pluginOptions.direction === 'tb') {
+              // Top to bottom animation
+              $overlay.css('bottom', (pb + mb) + 'px');
             }
+
+            storedData.overlay = $overlay;
           }
-          else {
-            var $filter = data.filter, p;
-            switch ($filter) {
-              case 'blur':
-                p = (100 - progress) / 10;
-                jQuery(this).css({
-                  '-webkit-filter':     $filter + '(' + p + 'px)'
-                });
-                break;
-              case 'hue-rotate':
-                p = progress * 360 / 100;
-                jQuery(this).css({
-                  '-webkit-filter':     $filter + '(' + p + 'deg)'
-                });
-                break;
-              case 'opacity':
-                p = progress / 100;
-                jQuery(this).css({
-                  '-webkit-filter':     $filter + '(' + p + ')'
-                });
-                break;
-              default:
-                p = 1 - progress / 100;
-                jQuery(this).css({
-                  '-webkit-filter':     $filter + '(' + p + ')'
-                });
-            }
-          }
-
-          jQuery(this).data('loadgo', jQuery.extend({}, data, {progress: progress}));
-        }
-      },
-
-      getprogress : function () {
-        var data = jQuery(this).data('loadgo');
-        return (data.progress)? data.progress : 0;
-      },
-
-      resetprogress : function () {
-        jQuery(this).loadgo('setprogress', 0);
-      },
-
-      // Overlay loops back and forth
-      loop : function (duration) {
-        var data = jQuery(this).data('loadgo');
-        var toggle = true;
-        var image = this;
-
-        if (data.interval) {
-          console.warn('LoadGo requires you to stop the current loop before modifying it.');
-          return false;
-        }
-
-        // Store interval so we can stop it later
-        data.interval = setInterval(function(){
-          if(toggle) {
-            data.progress += 1;
-            if (data.progress >= 100) {
-              toggle = false;
-            }
-          }
-          else {
-            data.progress -= 1;
-            if(data.progress <= 0) {
-              toggle = true;
-            }
-          }
-          // Remove transition animation
-          // Can be replaced with animated: false in the initializer
-          data.overlay.css({
-            'transition':           'none',
-            '-webkit-transition':   'none',
-            '-moz-transition':      'none',
-            '-ms-transition':       'none',
-            '-o-transition':        'none',
-          });
-
-          image.loadgo('setprogress', data.progress);
-        }, duration);
-      },
-
-      // Stops the loop interval and shows image
-      stop: function () {
-        var data = jQuery(this).data('loadgo');
-        data.interval = clearInterval(data.interval);
-        this.loadgo('setprogress', 100);
+      
+          $element.data('loadgo', $.extend({}, data, storedData));
+          
+          _this.loadgo('setprogress', progress);
+        });
       }
-    };
 
-    jQuery.fn.loadgo = function (methodOrOptions) {
-      if ( methods[methodOrOptions] ) {
-        return methods[ methodOrOptions ].apply( this, Array.prototype.slice.call( arguments, 1 ));
-      } else if ( typeof methodOrOptions === 'object' || ! methodOrOptions ) {
-      // Default to "init"
-      return methods.init.apply( this, arguments );
-    } else {
-      jQuery.error( 'Method ' +  methodOrOptions + ' does not exist on jQuery.loadgo' );
+    },
+
+    options: function (useroptions) {
+
+      var $this = $(this), 
+        currentOptions = $this.data('loadgo-options'),
+        options = typeof useroptions !== 'undefined' ? useroptions : {},
+        defaults = {
+          bgcolor:    '#FFFFFF',  //  Overlay color
+          opacity:    0.5,        //  Overlay opacity
+          animated:   true,       //  Overlay smooth animation when setting progress
+          image:      null,       //  Overlay image
+          class:      null,       //  Overlay CSS class
+          resize:     null,       //  Resize functions (optional)
+          direction:  'lr',       //  Direction animation (optional)
+          filter:     null        //  Image filter (optional)
+        };
+
+      // Parse to number the 'opacity' option
+      if (typeof options.opacity !== 'undefined')
+        options.opacity = parseFloat(options.opacity);
+
+      if (JSON.stringify(currentOptions) === '{}') 
+        currentOptions = $.extend({}, defaults, options);
+      else
+        currentOptions = $.extend({}, currentOptions, options);
+
+      // Check for valid direction
+      var validDirections = ['lr', 'rl', 'bt', 'tb'];
+      if ($.inArray(currentOptions.direction.toLowerCase(), validDirections) === -1) 
+        // Invalid value for "direction" option. Possible values: blur, grayscale, sepia, hue-rotate, invert, opacity. Using default value: "lr".
+        currentOptions.direction = 'lr';
+
+      // Check for valid filter
+      if (currentOptions.filter) {
+        var validFilters = ['blur', 'grayscale', 'sepia', 'hue-rotate', 'invert', 'opacity'];
+        if ($.inArray(currentOptions.filter.toLowerCase(), validFilters) === -1) 
+          // Invalid value for "filter" option. Possible values: blur, grayscale, sepia, hue-rotate, invert, opacity. This option will be ignored.
+          currentOptions.filter = null;
+      }
+
+      // Store user options with default options
+      $this.data('loadgo-options', currentOptions);
+
+      return currentOptions;
+
+    },
+
+    /**
+     * Set progress by percentage
+     * @param  {int} progress Progress in percentage
+     */
+    setprogress: function (progress) {
+
+      // LoadGo expects progress number between 0 (0%) and 100 (100%).
+      if (progress < 0 || progress > 100) 
+        return;
+      
+      var storedData = { progress: progress }, data = $(this).data('loadgo'), pluginOptions = $(this).loadgo('options'),
+          $overlay = data.overlay, $width = data.width, $height = data.height, direction = pluginOptions.direction;
+
+      if ($overlay) {
+        var overlayWidth, overlayHeight;
+        if (direction === 'lr') {
+          // Left to right animation
+          overlayWidth = $width * (1 - progress / 100);
+          $overlay[0].style.width = overlayWidth + 'px';
+        } else if (direction === 'rl') {
+          // Right to left animation
+          overlayWidth = $width * (1 - progress / 100);
+          $overlay[0].style.width = overlayWidth + 'px';
+        } else if (direction === 'bt') {
+          // Bottom to top animation
+          overlayHeight = $height * (1 - progress / 100);
+          $overlay[0].style.height = overlayHeight + 'px';
+        } else if (direction === 'tb') {
+          // Top to bottom animation
+          overlayHeight = $height * (1 - progress / 100);
+          $overlay[0].style.height = overlayHeight + 'px';
+        }
+
+        storedData.overlay = $overlay;
+      }
+      else {
+        var $filter = pluginOptions.filter, p;
+        switch ($filter) {
+          case 'blur':
+            p = (100 - progress) / 10;
+            jQuery(this).css({
+              '-webkit-filter':     $filter + '(' + p + 'px)'
+            });
+            break;
+          case 'hue-rotate':
+            p = progress * 360 / 100;
+            jQuery(this).css({
+              '-webkit-filter':     $filter + '(' + p + 'deg)'
+            });
+            break;
+          case 'opacity':
+            p = progress / 100;
+            jQuery(this).css({
+              '-webkit-filter':     $filter + '(' + p + ')'
+            });
+            break;
+          default:
+            p = 1 - progress / 100;
+            $(this).css({
+              '-webkit-filter':     $filter + '(' + p + ')'
+            });
+        }
+      }
+
+      $(this).data('loadgo', $.extend({}, data, storedData));
+      
+    },
+
+    getprogress: function () {
+      var data = $(this).data('loadgo');
+      if (typeof data === 'undefined')
+        return 0;
+
+      return typeof data.progress !== 'undefined' ? data.progress : 0;
+    },
+
+    resetprogress: function () {
+      $(this).loadgo('setprogress', 0);
+    },
+
+    // Overlay loops back and forth
+    loop: function (duration) {
+      var data = $(this).data('loadgo'), toggle = true, image = this;
+
+      // LoadGo requires you to stop the current loop before modifying it.
+      if (data.interval) 
+        return false;
+
+      // Store interval so we can stop it later
+      data.interval = setInterval(function () {
+        
+        if (toggle) {
+          data.progress += 1;
+          if (data.progress >= 100) 
+            toggle = false;
+        }
+        else {
+          data.progress -= 1;
+          if (data.progress <= 0) 
+            toggle = true;
+        }
+        
+        // Remove transition animation
+        // Can be replaced with animated: false in the initializer
+        data.overlay.css({
+          'transition':           'none',
+          '-webkit-transition':   'none',
+          '-moz-transition':      'none',
+          '-ms-transition':       'none',
+          '-o-transition':        'none',
+        });
+
+        image.loadgo('setprogress', data.progress);
+      }, duration);
+    },
+
+    // Stops the loop interval and shows image
+    stop: function () {
+      var data = $(this).data('loadgo');
+      data.interval = clearInterval(data.interval);
+      this.loadgo('setprogress', 100);
+    },
+
+    // Remove all plugin properties
+    destroy: function () {
+      var $this = $(this), options = $this.data('loadgo');
+
+      if (typeof options === 'undefined')
+        return;   // element was never initialized
+
+      if (options.overlay) {
+        options.overlay.remove();                       // Removes overlay
+
+        $this.insertBefore($this.parent());             // Moves image element before "loadgo-container"
+        $this.siblings('.loadgo-container').remove();   // Removes "loadgo-container" element
+      }
+
+      // Remove properties
+      $.removeData($this, 'loadgo');
+      $.removeData($this, 'loadgo-options');
     }
   };
 
-})(jQuery);
+  $.fn.loadgo = function (methodOrOptions) {
+
+    if (typeof methods[methodOrOptions] === 'undefined') {
+      if (typeof methodOrOptions === 'object' || typeof methodOrOptions === 'undefined') 
+        return methods.init.apply( this, arguments );   // Init method by default
+        
+      throw new Error('Method ' + methodOrOptions + ' does not exist on $.loadgo');
+    }
+
+    return methods[ methodOrOptions ].apply( this, Array.prototype.slice.call( arguments, 1 ));
+
+  }
+ 
+}( jQuery ));

@@ -1,16 +1,3 @@
-function scrollTo (owner, element){
-  $('.nav li').removeClass('active');
-  //owner.className = 'active';
-  $(window).scroll(null);
-  $('html, body').animate({
-    scrollTop: $('#' + element).offset().top - 100
-  }, 500);
-
-  if ($('#header-collapsed').hasClass('in')) {
-    $('.btn-loadgo').trigger('click');
-  }
-}
-
 var cocacolaInterval, disneyInterval, supermanInterval, batmanInterval, 
     jurassicIntervalLR, jurassicIntervalRL, jurassicIntervalBT, jurassicIntervalTB,
     spidermanSepiaInterval, spidermanBlurInterval, spidermanInvertInterval, spidermanOpacityInterval, spidermanHueInterval, spidermanGrayscaleInterval;
@@ -27,7 +14,7 @@ function playDemo (_id, index, interval) {
   $('#demo-progress-' + index).html('0%');
   window.setTimeout(function () {
     interval = window.setInterval(function (){
-      if ($('#' + _id).loadgo('getprogress') == 100) {
+      if ($('#' + _id).loadgo('getprogress') === 100) {
         window.clearInterval(interval);
         $('#demo-msg-' + index).animate({
           'opacity': '1'
@@ -37,7 +24,7 @@ function playDemo (_id, index, interval) {
         });
       }
       else {
-        var prog = p*10;
+        var prog = p * 10;
         $('#' + _id).loadgo('setprogress', prog);
         $('#demo-progress-' + index).html(prog + '%');
         p++;
@@ -47,13 +34,6 @@ function playDemo (_id, index, interval) {
 }
 
 $(window).load(function () {
-
-  $("#cocacola").load(function() {
-    // Main demo
-    $('#cocacola').loadgo();
-  }).each(function() {
-    if(this.complete) $(this).load();
-  });
 
   $("#disney").load(function() {
     // Example #1
@@ -77,7 +57,7 @@ $(window).load(function () {
     // Example #3
     $('#batman').loadgo({
       'opacity':  1,
-      'image':    'logos/batman-overlay.png'
+      'image':    '../logos/batman-overlay.png'
     });
   }).each(function() {
     if(this.complete) $(this).load();

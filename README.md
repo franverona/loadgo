@@ -1,28 +1,93 @@
 ## What is LoadGo?
 
-**LoadGo** is a Javascript plugin that allows you to create a progress bar by using your own images.
+![Batman Example](batman.gif)
 
-- Perfect for logo image animation when user is waiting for something to be loaded (a website, retrieving information, updating status, etc.)
+![Disney Example](disney.gif)
 
-- It creates an overlay above your desire DOM element and simulates a loading process using width calculations.
+**LoadGo** is a Javascript plugin that allows you to create a progress bar using your own images.
 
-- Tested in IE 9, IE 10, IE Edge, Google Chrome and Mozilla Firefox.
- 
-**(02-May-2016)** I'm currently working in a Wordpress version using PACE. I will release it in a couple of weeks with admin options and a lot of customize features.
+- Perfect for logo animation when user is waiting for something to be loaded (a website, retrieving information, updating status, etc.)
 
-I setup my Chrome Dev tools to simulate a 2Mb/s connection and added some useless scripts to increase webpage size, so Loadgo effect can be seen. If you want to know more, check this video: https://youtu.be/VjSE7KzZU60
+- It creates an overlay above your `img` element and simulates a loading process using dimension changes.
+
+- Tested up in IE 9, IE 10, IE Edge, Google Chrome and Mozilla Firefox.
 
 ## LoadGo for Wordpress
 
-**(05-May-2016)** I've just uploaded **LoadGo for WP**, a Wordpress plugin which uses PACE and LoadGo. With **LoadGo for WP** you can use your own logo as a page loader in your Wordpress website. 
+**LoadGo** is also available for Wordpress as a plugin called **LoadGo for WP**. This plugin uses PACE to track your page loading progress, and uses LoadGo to display a logo with this progress.
 
-Official Wordpress link: [https://wordpress.org/plugins/loadgo-for-wp/](https://wordpress.org/plugins/loadgo-for-wp/)
+- Official Wordpress link: [https://wordpress.org/plugins/loadgo-for-wp/](https://wordpress.org/plugins/loadgo-for-wp/)
 
-Github: [https://github.com/franverona/LoadGo-for-WP](https://github.com/franverona/LoadGo-for-WP)
+- Github: [https://github.com/franverona/LoadGo-for-WP](https://github.com/franverona/LoadGo-for-WP)
+
+## Breaking changes
+
+Since **2.2** version, **LoadGo** now wraps the image on a `div` element, then add the overlay as the first sibling of the image following this template:
+
+```
+<div class="loadgo-container">
+  <image src="logo.png" class="..." style="..." />
+  <div class="loadgo-overlay" style="..." />
+</div>
+```
+
+This change makes easy for the plugin to calculate overlay's dimension and position. Make sure that your CSS rules like `div > img` are applied correctly.
+
+For example, if you have html and CSS like these:
+
+```
+<style>
+  .image-container > img {
+      margin: 0 auto;
+  }
+</style>
+
+<div class="image-container">
+  <img src="logo.png" />
+</div>
+```
+
+You should change it to this:
+
+```
+<style>
+  div > div > img {
+      margin: 0 auto;
+  }
+</style>
+
+<div class="image-container">
+  <img src="logo.png" />
+</div>
+```
+
+Or even better, assign a CSS class and forget about `>`:
+
+```
+<style>
+  .my-image {
+      margin: 0 auto;
+  }
+</style>
+
+<div class="image-container">
+  <img src="logo.png" class="my-image" />
+</div>
+```
 
 ## Changelog
 
-**2.1** - Latest release (12-04-2016)
+**2.2** - Latest release (23-06-2017)
+
+* Added a new method: `destroy`.
+* Added tests (more will be added in the future).
+* Fix several bugs.
+* LoadGo default template changed.
+* Improved documentation.
+* Javascript version improved.
+* jQuery version improved.
+
+**2.1** - (12-04-2016)
 
 *  Fix bug with LoadGo jQuery version where 'left to right' direction was not working.
 *  Added some examples.
@@ -37,184 +102,278 @@ Github: [https://github.com/franverona/LoadGo-for-WP](https://github.com/franver
 **1.0** (15-10-2015)
 *  First release.
 
+## Tests
+
+Tests can be find under `test/jquery` folder for jQuery version tests, and `test/javascript` for pure Javascript version tests. Just open their `index.html` file in your browser and all tests should be executed sucessfully.
+
+Tests are done using [Mocha](https://mochajs.org/).
+
 ## How to use LoadGo
 
-If you are using [jQuery](http://jquery.com/download/), remember that you have to include it BEFORE using this plugin. I tested it with jQuery v1.11.2, and it works well.
+- If you are using [jQuery](http://jquery.com/download/), you have to include it **BEFORE** LoadGo. It works with `jQuery >= 1.11.2`.
 
-If you are not using jQuery, just include **LoadGo** script and start using it. Easy as hell.
+- If you are not using jQuery, just include **LoadGo** pure Javascript version and start using it.
 
-#### Production environment (CDN)
+### Production environment (CDN)
 
 **(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/libraries/LoadGo), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
+```
+<!-- If you use jQuery -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.1/loadgo.min.js"></script>
 
-    <!-- If you use jQuery -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.1/loadgo.min.js"></script>
+<!-- If you don't use jQuery -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.1/loadgo-nojquery.min.js"></script>
+```
+### Development environment
 
-    <!-- If you don't use jQuery -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.1/loadgo-nojquery.min.js"></script>
+1. Download LoadGo from [this link](https://github.com/franverona/loadgo/archive/master.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
 
-#### Development environment
+2. Uncompress it (if zipped) and copy **LoadGo** folder into your JS scripts.
 
-1\. Download LoadGo from [this link](https://github.com/franverona/loadgo/archive/master.zip) or [clone it from GitHub](https://github.com/franverona/loadgo)
+3. Insert the following code in your webpage:
+```
+<!-- If you use jQuery -->
+<script type="text/javascript" src="loadgo/loadgo.js"></script>
 
-2\. Uncompress it (if zipped) and copy **LoadGo** folder into your JS scripts.
-
-3\. Insert the following code in your webpage:
-
-    <!-- If you use jQuery -->
-    <script type="text/javascript" src="loadgo/loadgo.js"></script>
-
-    <!-- If you don't use jQuery -->
-    <script type="text/javascript" src="loadgo/loadgo-nojquery.js"></script>
-
+<!-- If you don't use jQuery -->
+<script type="text/javascript" src="loadgo/loadgo-nojquery.js"></script>
+```
 You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(programming)) version:
+```
+<!-- If you use jQuery -->
+<script type="text/javascript" src="loadgo/loadgo.min.js"></script>
 
-    <!-- If you use jQuery -->
-    <script type="text/javascript" src="loadgo/loadgo.min.js"></script>
+<!-- If you don't use jQuery -->
+<script type="text/javascript" src="loadgo/loadgo-nojquery.min.js"></script>
+```
 
-    <!-- If you don't use jQuery -->
-    <script type="text/javascript" src="loadgo/loadgo-nojquery.min.js"></script>
+**LoadGo** needs fully loaded images in order to read its dimensions properly. If you are not sure when this is going to happen, you can use this piece of code with each image:
+```
+// jQuery
+$("#my-image").load(function() {
+    $('#my-image').loadgo();
+}).each(function() {
+    if(this.complete) $(this).load();
+});
 
-
-**Important**: **LoadGo** needs images fully loaded in order to read its dimensions correctly. If you are not sure when this is going to happen, you can use this piece of code with each image:
-
-    // jQuery
-    $("#my-image").load(function() {
-      $('#my-image').loadgo();
-    }).each(function() {
-      if(this.complete) $(this).load();
-    });
-
-    // Javascript
-    var image = document.getElementById("my-image");
-    image.onload = function () {
-      Loadgo.init(this);
-    };
-
+// Javascript
+var image = document.getElementById("my-image");
+image.onload = function () {
+    Loadgo.init(this);
+};
+```
 ## Examples
 
-You can check for examples following this link: [http://franverona.com/loadgo/] (http://franverona.com/loadgo/) or in the **examples** folder.
+You can check for examples on: 
+
+- [LoadGo Official Site](http://franverona.com/loadgo/)
+- **/examples** folder.
 
 ## Documentation
 
 ### Introduction
 
-**LoadGo** is a plugin which provides you a better way to keep your users update about loading process that take some time to be completed. For example:
+**LoadGo** is a plugin which provides you a better way to keep your users updated about a loading process. Some uses cases may be:
 
-*   Users upload a file to your server.
-*   System is converting a file to PDF.
-*   Current page is loading.
-*   Etc.
+*  User uploads a file to your server.
+*  System is converting a file to PDF.
+*  Current page is loading.
 
-This plugin won't control asynchronous behaviour for your loading process, so you have to do that by yourself in your app.
+To do this, **LoadGo** wraps your image into a `div`, and add an overlay inside this wrapper. Then, it will change overlay's dimensions when setting a progress to simulate a loading behaviour.
 
-In order to do this, **LoadGo** creates an overlay on top of your image, and playing with its width simulates a loading behaviour. This overlay is set by using `position: absolute` CSS property, so your DOM element needs to be inside a `DIV` element or things won't look good.
+This plugin **does not** control asynchronous behaviour for your loading process, so you have to do that by yourself in your app.
 
-This piece of code is a minimum example:
+**LoadGo** will work only on `img` elements given by `id`. For example, this will work:
 
-    // HTML
-    <div>
-      <img id="logo" src="logo.png" alt="Logo" />
-    </div>
+```
+// HTML
+<div>
+    <img id="logo" src="logo.png" alt="Logo" />
+</div>
 
-    // jQuery
-    $('#logo').loadgo();
+// jQuery
+$('#logo').loadgo();
 
-    // Javascript
-    Loadgo.init(document.getElementById('logo'));
+// Javascript
+Loadgo.init(document.getElementById('logo'));
+```
+But this **will not work**:
+
+```
+// HTML
+<div>
+    <img src="logo.png" alt="Logo" class="logo" />
+</div>
+<div>
+    <img src="logo.png" alt="Logo" class="logo" />
+</div>
+
+// jQuery
+$('.logo').loadgo();
+
+// Javascript
+Loadgo.init(document.getElementByClass('logo'));
+```
 
 ### Initialization
 
-**LoadGo** needs to be initialized in a DOM element before use.
+**LoadGo** needs to be initialized in a `img` element before use.
+```
+// jQuery
+$('#logo').loadgo();
 
-    // jQuery
-    $('#logo').loadgo();
+// javascript
+Loadgo.init(document.getElementById('logo'));
+```
+Now, you are capable of set and simulate a progress. **LoadGo** have methods and a couple of options which will help you.
 
-    // javascript
-    Loadgo.init(document.getElementById('logo'));
+**LoadGo** also applies an empty CSS class to the overlay called `loadgo-overlay` in case that you want to implement your own resize function or some other advanced features.
 
-Now, you are capable of set progress and simulate any kind of progression. **LoadGo** have three methods and a couple of options which will help you.
+## Options
 
-**LoadGo** also applies an empty CSS class to overlay called `loadgo-overlay` in case that you want to implement your own resize function or some other advanced features.
+| Name | Type | Default  | Description |
+| --- | --- | --- | --- |
+| `bgcolor` | `String` | `#FFFFFF` | Background color for the overlay in hexadecimal or RGB. |
+| `opacity` | `Number` | `0.5` | Overlay transparency. |
+| `animated` | `Boolean` | `true` | `true` if CSS animations are enable when using `setprogress`, false otherwise. Have in mind that Internet Explorer does not support CSS transitions. |
+| `image` | `String` | `null` | Image url to be used if you want a background image instead of a simple color. This option disables `bgcolor` option. |
+| `class` | `String` | `null` | CSS class which will be applied to the overlay. Make sure that all looks good because some CSS options could invalidate other **LoadGo** plugin CSS options. |
+| `resize` | `Function` | Custom | **LoadGo** provides a function which automatically resizes its overlay by default, but you can use your own. |
+| `direction` | `String` | `lr` | Animation direction. Possible values: `lr` (left to right), `rl` (right to left), `bt` (bottom to top), `tb` (top to bottom). |
+| `filter` | `String` | null | CSS image filter according to [CSS filter property](https://developer.mozilla.org/en-US/docs/Web/CSS/filter). Possible values: `blur`, `grayscale`, `sepia`, `hue-rotate`, `invert`, ```opacity```. |
 
-### Options
+## Methods
 
-*   **bgcolor**: background overlay color in hexadecimal or RGB. Default is **#FFFFFF**.
-*   **opacity**: overlay transparency. Default is **0.5**
-*   **animated**: true if `setprogress` CSS width transitions are enable, false otherwise. Default is **true** (NOTE: Internet Explorer does not support CSS transitions).
-*   **image**: image url to bet use if want a background image instead of a simple color. This option disables **bgcolor** option.
-*   **class**: CSS class which will be applied to overlay. By using this option you should assure that all looks good because some CSS options for class could invalidate other **LoadGo** plugin CSS options. Default is **none**.
-*   **resize**: resize function. **LoadGo** provides a function which automatically resizes **LoadGo** overlay by default, but you can use your own.
-*   **direction**: animation direction. Possible values: **'lr'** (left to right), **'rl'** (right to left), **'bt'** (bottom to top), **'tb'** (top to bottom). Default is **'lr'**.
-*   **filter**: CSS image filter according to [CSS filter property] (https://developer.mozilla.org/en-US/docs/Web/CSS/filter). Possible values: **'blur'**, **'grayscale'**, **'sepia'**, **'hue-rotate'**, **'invert'**, **'opacity'**.
+### Get / Set options
+### `$element.loadgo('options', <options>)` | `Loadgo.options(<element>, <options>)`
 
-### Methods
+Get/Set plugin options. When setting options, the parameter must be a JSON object. This is specially useful if element is already initiate, and you want to change properties dynamically based on your app's logic.
 
-**Set Progress**: set progress number to loading overlay. This number must be between 0 and 100 (percentage).
+```
+// jQuery - Get current options
+$('#logo').loadgo('options');
 
-    // jQuery
-    $('#logo').loadgo('setprogress', 50);
+// Javascript - Get current options
+Loadgo.options(document.getElementById('logo'));
 
-    // Javascript
-    Loadgo.setprogress(document.getElementById('logo'), 50);
+// jQuery - Set options
+$('#logo').loadgo('options', { direction: 'bt' });
 
-**Reset progress**: set progress to zero automatically. This is really useful when you are using the same element for multiple loads, and you need to reset all before starting a new one.
+// Javascript - Set options
+Loadgo.options(document.getElementById('logo'), { direction: 'bt' });
+```
 
-    // jQuery
-    $('#logo').loadgo('resetprogress');
+### Set progress
+### `$element.loadgo('setprogress', <number>)` | `Loadgo.options(<element>, <number>)`
 
-    // Javascript
-    Loadgo.resetprogress(document.getElementById('logo'));
+Set progress number to loading overlay. This number must be between `0` and `100`.
 
-**Get progress**: return current progress. This number will be between 0 and 100 (percentage).
+```
+// jQuery
+$('#logo').loadgo('setprogress', 50);
 
-    // jQuery
-    $('#logo').loadgo('getprogress');
+// Javascript
+Loadgo.setprogress(document.getElementById('logo'), 50);
+```
 
-    // Javascript
-    Loadgo.getprogress(document.getElementById('logo'));
+### Reset progress
+### `$element.loadgo('resetprogress')` | `Loadgo.resetprogress(<element>)`
 
-**Loop**: sets overlay to loop indefinitely until stopped. This is useful for situations where you have no way of measuring the progress. This method accepts a duration(ms) parameter to customize animation speed.
+Reset current progress. This is really useful when you are using the same element for multiple loads, and you need to reset all before starting a new one.
 
-    // jQuery
-    $('#logo').loadgo('loop', 10);
+```
+// jQuery
+$('#logo').loadgo('resetprogress');
 
-    // Javascript
-    Loadgo.loop(document.getElementById('logo'), 10);
+// Javascript
+Loadgo.resetprogress(document.getElementById('logo'));
+```
 
-**Stop**: stops the loop and shows the full image. Since loops are indefinite we need to use this method to manually stop it.
+### Get progress
+### `$element.loadgo('getprogress')` | `Loadgo.getprogress(<element>)`
 
-    // jQuery
-    $('#logo').loadgo('stop');
+Get current progress. This number will be between `0` and `100`.
 
-    // Javascript
-    Loadgo.stop(document.getElementById('logo'));
+```
+// jQuery
+$('#logo').loadgo('getprogress');
 
-### Real example
+// Javascript
+Loadgo.getprogress(document.getElementById('logo'));
+```
+
+### Start loop
+### `$element.loadgo('loop', <number>)` | `Loadgo.loop(<element>, <number>)`
+
+Sets overlay to loop indefinitely until stopped. This is useful for situations where you have no way of measuring the progress. This method accepts a duration (ms) parameter to customize animation speed.
+
+```
+// jQuery
+$('#logo').loadgo('loop', 10);
+
+// Javascript
+Loadgo.loop(document.getElementById('logo'), 10);
+```
+
+### Stop loop
+### `$element.loadgo('stop')` | `Loadgo.stop(<element>)`
+
+Stops the loop previously initiated with `loop` method and shows the full image. Since loops are indefinite we need to use this method to manually stop it.
+
+```
+// jQuery
+$('#logo').loadgo('stop');
+
+// Javascript
+Loadgo.stop(document.getElementById('logo'));
+```
+
+### Destroy
+### `$element.loadgo('destroy')` | `Loadgo.destroy(<element>)`
+
+Removes all plugin properties and restore everything. This method will also removes `div` elements created (`loadgo-container` and `loadgo-overlay`), so make sure that you are not using them for anything else before calling `destroy`.
+
+```
+// jQuery
+$('#logo').loadgo('destroy');
+
+// Javascript
+Loadgo.destroy(document.getElementById('logo'));
+```
+
+## Real example
 
 In your webpage, you are using a jQuery plugin like [Uploadify](http://www.uploadify.com/) to give your users a way to upload files to you page (for example: update his/her web avatar). Most of these plugins provide events like `onUploadStart`, `onUploadProgress` or `onUploadComplete`. These events have variables which give you a lot of information about your current load progress (file size, current uploaded bytes, etc).
 
 You can use this information with **LoadGo** to update logo overlay like this:
+```
+// Set LoadGo on your Logo
+$('#logo').loadgo();
 
-    // Set LoadGo on your Logo
-    $('#logo').loadgo();
-
-    // Set Uploadify on your upload input
-    $('#uploadinput').uploadify({
-       // init options...
-       onUploadStart: function (event) {
-         // Upload is going to start, so we need to reset loadgo
-         $('#logo').loadgo('resetprogress');
-       },
-       onUploadProgress: function (event) {
-        // We receive some bytes on our upload and update loadgo progress,
-        // but first, we should calculate total uploaded percentage
-        var p = event.bytesLoaded / event.bytesTotal;
-        $('#logo').loadgo('setprogress', p);
-      },
-      onUploadComplete: function (event) {
-        // Upload complete
-      }
-    });
-
+// Set Uploadify on your upload input
+$('#uploadinput').uploadify({
+  // init options...
+  onUploadStart: function (event) {
+    // Upload is going to start, so we need to reset loadgo
+    $('#logo').loadgo('resetprogress');
+  },
+  onUploadProgress: function (event) {
+    // We receive some bytes on our upload and update loadgo progress,
+    // but first, we should calculate total uploaded percentage
+    var p = event.bytesLoaded / event.bytesTotal;
+    $('#logo').loadgo('setprogress', p);
+  },
+  onUploadComplete: function (event) {
+    // Upload complete
+  }
+});
+```
 **LoadGo** is under MIT License. Feel free to download, modify and adapt it to your own purposes. If you find any bug, send a pull request or write an issue.
+
+## Credits
+
+Say hello! :)
+
+**Fran Verona**
+* [http://franverona.com](http://franverona.com)
+* [@franverona](https://twitter.com/franverona)

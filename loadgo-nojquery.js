@@ -1,6 +1,6 @@
 /**
- * @preserve LoadGo v2.0 (http://franverona.com/loadgo)
- * 2016 - Fran Verona
+ * @preserve LoadGo v2.2 (http://franverona.com/loadgo)
+ * 2017 - Fran Verona
  * Licensed under MIT (https://github.com/franverona/loadgo/blob/master/LICENSE)
  */
 
@@ -8,68 +8,94 @@
 
   // Rudimentary indexOf method for < IE 8 compatibility
   var indexOf = function (array, element) {
-    if (array)
-    for (var i = 0, l = array.length; i < l; i++) {
+    for (var i = 0, l = array.length; i < l; i++) 
       if (array[i] === element)
         return i;
-    }
     return -1;
   };
 
-  // Get CSS style
-  // http://stackoverflow.com/a/22744598/552669
-  var getStyle = function (el, prop) {
-    if (typeof(getComputedStyle) !== 'undefined') {
-      return getComputedStyle(el).getPropertyValue(prop);
-    } else {
-      return el.currentStyle[prop];
+  // Combine obj2 with obj1. If properties are equal, it will be overwritten.
+  // For example: obj1.direction = obj2.direction
+  var extend = function (obj1, obj2) {
+    var result = {}, obj1Clone, obj2Clone;
+    if (typeof obj1 === 'undefined') {
+      obj2Clone = JSON.parse(JSON.stringify(obj2));
+      if (obj2.resize)
+        obj2Clone.resize = obj2.resize;     // Functions won't be serialized, so we need to do it manually
+      result = obj2Clone;
     }
-  };
+    else if (typeof obj2 === 'undefined') {
+      obj1Clone = JSON.parse(JSON.stringify(obj1));
+      if (obj1.resize)
+        obj1Clone.resize = obj1.resize;     // Functions won't be serialized, so we need to do it manually
+      result = obj1Clone;
+    }
+    else {
+      obj1Clone = JSON.parse(JSON.stringify(obj1));
+      if (obj1.resize)
+        obj1Clone.resize = obj1.resize;     // Functions won't be serialized, so we need to do it manually
+      obj1 = obj1Clone;
 
-  // Extend JSON properties
-  var extend = function () {
-    for (var i = 1; i < arguments.length; i++)
-      for (var key in arguments[i])
-          if ( arguments[i].hasOwnProperty(key))
-            arguments[0][key] = arguments[i][key];
-    return arguments[0];
+      obj2Clone = JSON.parse(JSON.stringify(obj2));
+      if (obj2.resize)
+        obj2Clone.resize = obj2.resize;     // Functions won't be serialized, so we need to do it manually
+      obj2 = obj2Clone;
+
+      result = obj1;
+      for (var prop in obj2) 
+        result[prop] = obj2[prop];
+    }
+    return result;
   };
 
   // Get Loadgo properties for element
   var getProperties = function (elementId) {
-    for (var i = 0, l = domElements.length; i < l; i++) {
-      if (domElements[i].id === elementId) {
+    for (var i = 0, l = domElements.length; i < l; i++) 
+      if (domElements[i].id === elementId) 
         return domElements[i].properties;
-      }
-    }
     return null;
   };
 
   // Get array index on domElements array
   var getIndex = function (elementId) {
-    for (var i = 0, l = domElements.length; i < l; i++) {
-      if (domElements[i].id === elementId) {
+    for (var i = 0, l = domElements.length; i < l; i++) 
+      if (domElements[i].id === elementId) 
         return i;
-      }
-    }
     return -1;
   };
 
-  // Check if element is a validDOM selector (provided by document.getElementById)
-  var checkElement = function (element) {
-
-    if (typeof(element) === 'undefined' || element === null) {
-      console.warn('LoadGo selector must exists.');
+  // Returns true if element is valid; false otherwise
+  var elementIsValid = function (element) {
+    if (typeof element === 'undefined' || element === null) 
       return false;
-    }
 
-    if (typeof(element.length) !== 'undefined') {
-      console.error('LoadGo selector must be an id. Please, set a valid DOM id; also check if you have more than one DOM element with the same id.');
-      return false;
-    }
+    if (element.nodeName !== 'IMG')
+      throw new Error('LoadGo only works on img elements.');
+
+    if (element.length > 1) 
+      throw new Error('LoadGo only works on one element at a time. Try with a valid #id.');
 
     return true;
+  };
 
+  // Parse padding and margin properties to return a valid number
+  var parseOffset = function (element, property) {
+    var measure = element.style[property]
+    if (measure === 'auto') {
+      if (property.toLowerCase().indexOf('left') !== -1 || property.toLowerCase().indexOf('right') !== -1)
+        return parseFloat(element.offsetLeft);
+      if (property.toLowerCase().indexOf('top') !== -1 || property.toLowerCase().indexOf('bottom') !== -1)
+        return parseFloat(element.offsetTop);
+    }
+    
+    if (measure.indexOf('px') !== -1) 
+      return parseFloat(measure);
+    
+    return 0;
+  };
+
+  var randomId = function () {
+    return new Date().getTime().toString();
   };
 
   // Array to store all Loadgo elements
@@ -96,60 +122,56 @@
    */
   Loadgo.init = function (element, useroptions) {
     
-    if (!checkElement(element)) return;
+    if (!elementIsValid(element))
+      return;
 
-    var options = (typeof(useroptions) !== 'undefined')? useroptions : {};
-    options = extend({}, defaultOptions, options);
-
-    // Check for valid direction
-    var validDirections = ['lr', 'rl', 'bt', 'tb'];
-    if (indexOf(validDirections, options.direction.toLowerCase()) === -1) {
-      console.warn('LoadGo requires a valid direction. "' + options.direction + '" provided. Using default value: "lr".');
-      options.direction = 'lr';
+    var domElementsIndex = getIndex(element.id);
+    if (domElementsIndex === -1) {
+      domElements.push({
+        id:           element.id,
+        properties:   {}
+      });
+      domElementsIndex = domElements.length - 1;
     }
+    else
+      // Plugin options. We need to reset options to avoid future errors
+      domElements[domElementsIndex].properties = {};
+
+    var pluginOptions = Loadgo.options(element, useroptions);
 
     var overlay = document.createElement('div');
+    overlay.id = 'loadgo-' + randomId();    // We need to set a random id so we can retrieve it later when need it
 
+    // Overlay classes
     var overlayClasses = ['loadgo-overlay'];
-    if (options['class']) {
-      overlayClasses.push(options['class']);
-    }
+    if (pluginOptions['class']) 
+      overlayClasses.push(pluginOptions['class']);
     overlay.className = overlayClasses.join(' ');
-    overlay.style.backgroundColor = options.bgcolor;
-    overlay.style.opacity = options.opacity;
 
+    // Overlay background color
+    overlay.style.backgroundColor = pluginOptions.bgcolor;
+
+    // Overlay opacity
+    overlay.style.opacity = pluginOptions.opacity;
+
+    // Overlay width
     var gbc = element.getBoundingClientRect();
-    if (gbc.width) {
+    if (gbc.width) 
       overlay.style.width = gbc.width + 'px';   // for modern browsers
-    } else {
+    else 
       overlay.style.width = element.offsetWidth;  // for oldIE
-    }
-    if (gbc.height) {
+    
+    // Overlay height
+    if (gbc.height) 
       overlay.style.height = gbc.height + 'px';   // for modern browsers
-    } else {
+    else 
       overlay.style.height = element.offsetWidth;  // for oldIE
-    }
 
-    var ppl = parseFloat(getStyle(element.parentNode, 'padding-left')),
-        eml = parseFloat(getStyle(element, 'margin-left')) ,
-        epl = parseFloat(getStyle(element, 'padding-left'));
-
-    if (isNaN(ppl))
-      ppl = 0;
-    if (isNaN(eml))
-      eml = 0;
-    if (isNaN(epl))
-      epl = 0;
-
-    var computedLeft = ppl + eml + epl;
-    overlay.style.left = computedLeft + 'px';
-    overlay.style.top = '0';
+    // Overlay will be positioned absolute
     overlay.style.position = 'absolute';
 
-    //
     // CSS animation
-    //
-    if (options.animated) {
+    if (pluginOptions.animated) {
       overlay.style['transition'] = 'all 0.6s ease';
       overlay.style['-webkit-transition'] = 'all 0.6s ease';
       overlay.style['-moz-transition'] = 'all 0.6s ease';
@@ -157,67 +179,37 @@
       overlay.style['-o-transition'] = 'all 0.6s ease';
     }
 
-    //
     // Filters
-    // 
-    if (options.filter) {
-      var filters = ['blur', 'grayscale', 'sepia', 'hue-rotate', 'invert', 'opacity'];
-      if (indexOf(filters, options.filter) !== -1) {
-        switch (options.filter) {
-          case 'blur':
-            element.style['-webkit-filter'] = options.filter + '(10px)';
-            break;
-          case 'hue-rotate':
-            element.style['-webkit-filter'] =  options.filter + '(360deg)';
-            break;
-          case 'opacity':
-            element.style['-webkit-filter'] =  options.filter + '(0)';
-            break;
-          default:
-            element.style['-webkit-filter'] =  options.filter + '(1)';
-        }
-        if (options.animated) {
-          element.style['transition'] =  '0.6s filter ease';
-          element.style['-webkit-transition'] =  '0.6s -webkit-filter ease';
-          element.style['-moz-transition'] =  '0.6s -moz-filter ease';
-          element.style['-ms-transition'] =  '0.6s -ms-filter ease';
-          element.style['-o-transition'] =  '0.6s -o-filter ease';
-        }
-      }
-      else {
-        console.error('Invalid value for "filter" option. Possible values: blur, grayscale, sepia, hue-rotate, invert, opacity.');
-        return;
+    if (pluginOptions.filter) {
+      if (pluginOptions.filter === 'blur') 
+        element.style['-webkit-filter'] = pluginOptions.filter + '(10px)';
+      else if (pluginOptions.filter === 'hue-rotate') 
+        element.style['-webkit-filter'] =  pluginOptions.filter + '(360deg)';
+      else if (pluginOptions.filter === 'opacity') 
+        element.style['-webkit-filter'] =  pluginOptions.filter + '(0)';
+      else
+        element.style['-webkit-filter'] =  pluginOptions.filter + '(1)';
+      
+      if (pluginOptions.animated) {
+        element.style['transition'] =  '0.6s filter ease';
+        element.style['-webkit-transition'] =  '0.6s -webkit-filter ease';
+        element.style['-moz-transition'] =  '0.6s -moz-filter ease';
+        element.style['-ms-transition'] =  '0.6s -ms-filter ease';
+        element.style['-o-transition'] =  '0.6s -o-filter ease';
       }
     }
 
-    //
     // Background image
-    //
-    if (options.image) {
-      var bgposition;
-      switch (options.direction) {
-        case 'lr':
-          bgposition = '100% 0%';
-          break;
-        case 'rl':
-          // Right to left animation
-          bgposition = '0% 50%';
-          break;
-        case 'bt':
-          // Bottom to top animation
-          bgposition = '100% 0%';
-          break;
-        case 'tb':
-          // Top to bottom animation
-          bgposition = '0% 100%';
-          break;
-        default:
-          // Left to right animation
-          bgposition = '100% 50%';
-          break;
-      }
+    if (pluginOptions.image) {
+      var bgposition = '100% 0%';  // Left to right animation by default
+      if (pluginOptions.direction === 'rl')
+        bgposition = '0% 50%';    // Right to left animation
+      else if (pluginOptions.direction === 'bt')
+        bgposition = '100% 0%';   // Bottom to top animation
+      else if (pluginOptions.direction === 'tb')
+        bgposition = '0% 100%';   // Top to bottom animation
 
-      overlay.style['background-image'] = 'url("' + options.image + '")';
+      overlay.style['background-image'] = 'url("' + pluginOptions.image + '")';
       overlay.style['background-repeat'] = 'no-repeat';
       overlay.style['background-size'] = 'cover';
       overlay.style['background-color'] = 'transparent';
@@ -225,78 +217,175 @@
 
     }
 
-    // Store Loadgo properties
-    var domElementsIndex = getIndex(element.id), loadgoProperties = {
-      overlay:    (options.filter === null)? overlay : null,
-      width:      parseFloat(overlay.style.width),
-      height:     parseFloat(overlay.style.height),
-      progress:   0,
-      direction:  options.direction,
-      filter:     options.filter
+    var pluginData = {
+      progress: 0
     };
-    if (domElementsIndex !== -1) {
-      domElements[domElementsIndex].properties = loadgoProperties;
-    }
-    else {
-      domElements.push({
-        id:           element.id,
-        properties:   loadgoProperties
-      });
+
+    // Insert overlay only if "filter" option is not provided. If user sets a filter, it can be applied directly to the image logo
+    if (pluginOptions.filter === null) {
+      
+      // The DOM tree will look like this:
+      // <div class="loadgo-container"><element />><overlay /></div>
+      
+      // Simulates a jQuery 'wrapAll' behaviour in pure JS
+      var container = document.createElement('div');
+      container.className = 'loadgo-container';
+      container.style.position = 'relative';
+      element.before(container);
+      container.appendChild(element);
+
+      container.appendChild(overlay);
+
+      // We need to add margins and paddings to set the overlay exactly above our image
+      var pl = parseOffset(element, 'paddingLeft'), 
+          pr = parseOffset(element, 'paddingRight'), 
+          pt = parseOffset(element, 'paddingTop'), 
+          pb = parseOffset(element, 'paddingBottom'),
+          ml = parseOffset(element, 'marginLeft'), 
+          mr = parseOffset(element, 'marginRight'), 
+          mt = parseOffset(element, 'marginTop'), 
+          mb = parseOffset(element, 'marginBottom');
+
+      if (pluginOptions.direction === 'lr') {
+        // Left to right animation
+        overlay.style.right = (pr + mr) + 'px';
+        overlay.style.top = (pt + mt) + 'px';
+      } else if (pluginOptions.direction === 'rl') {
+        // Right to left animation
+        overlay.style.left = (pl + ml) + 'px';
+        overlay.style.top = (pt + mt) + 'px';
+      } else if (pluginOptions.direction === 'bt') {
+        // Bottom to top animation
+        overlay.style.top = (pt + mt) + 'px';
+        overlay.style.left = (pl + ml) + 'px';
+      } else if (pluginOptions.direction === 'tb') {
+        // Top to bottom animation
+        overlay.style.bottom = (pb + mb) + 'px';
+        overlay.style.left = (pl + ml) + 'px';
+      }
+
+      // Saves overlay element + overlay current dimensions
+      pluginData.overlay = overlay.id;
+      pluginData.width = overlay.clientWidth;
+      pluginData.height = overlay.clientHeight;
     }
 
-    // 'inserAfter' jQuery function in pure JS (http://stackoverflow.com/a/4793630/552669)
-    if (options.filter === null)
-      element.parentNode.insertBefore(overlay, element.nextSibling);
+    // Store overlay + progress into element properties
+    domElements[domElementsIndex].properties = extend(pluginOptions, pluginData);
 
     // Resize event
-    if (options.resize) {
-      if (window.addEventListener) {
-        window.addEventListener('resize', options.resize, false);
-      }
-      else {
-        window.attachEvent('resize', options.resize);
-      }
-    }
-    else {
-      var resizeFunction = function () {
-        var data = getProperties(element.id);
-        if (data !== null) {
-          var overlay = data.overlay, 
-                    w = element.getBoundingClientRect().width, 
-                    h = element.getBoundingClientRect().height,
-                  ppl = parseFloat(getStyle(element.parentNode, 'padding-left')),
-                  eml = parseFloat(getStyle(element, 'margin-left')),
-                  epl = parseFloat(getStyle(element, 'padding-left'));
+    var resizeFunction = function () {
+      var data = getProperties(element.id), elementIndex = getIndex(element.id);
+      if (data !== null) {
+        var overlay = document.getElementById(data.overlay), gbc = element.getBoundingClientRect();
 
-          if (isNaN(ppl))
-            ppl = 0;
-          if (isNaN(eml))
-            eml = 0;
-          if (isNaN(epl))
-            epl = 0;
+        if (overlay) {
 
-          if (overlay) {
-            overlay.style.width = w + 'px';
-            overlay.style.height = h + 'px';
-            overlay.style.left = computedLeft + 'px';
+          // Overlay width
+          if (gbc.width) 
+            overlay.style.width = gbc.width + 'px';   // for modern browsers
+          else 
+            overlay.style.width = element.offsetWidth;  // for oldIE
+          
+          // Overlay height
+          if (gbc.height) 
+            overlay.style.height = gbc.height + 'px';   // for modern browsers
+          else 
+            overlay.style.height = element.offsetWidth;  // for oldIE
+
+          // We need to add margins and paddings to set the overlay exactly above our image
+          var pl = parseOffset(element, 'paddingLeft'), 
+              pr = parseOffset(element, 'paddingRight'), 
+              pt = parseOffset(element, 'paddingTop'), 
+              pb = parseOffset(element, 'paddingBottom'),
+              ml = parseOffset(element, 'marginLeft'), 
+              mr = parseOffset(element, 'marginRight'), 
+              mt = parseOffset(element, 'marginTop'), 
+              mb = parseOffset(element, 'marginBottom');
+
+          if (pluginOptions.direction === 'lr') {
+            // Left to right animation
+            overlay.style.right = (pr + mr) + 'px';
+            overlay.style.top = (pt + mt) + 'px';
+          } else if (pluginOptions.direction === 'rl') {
+            // Right to left animation
+            overlay.style.left = (pl + ml) + 'px';
+            overlay.style.top = (pt + mt) + 'px';
+          } else if (pluginOptions.direction === 'bt') {
+            // Bottom to top animation
+            overlay.style.top = (pt + mt) + 'px';
+            overlay.style.left = (pl + ml) + 'px';
+          } else if (pluginOptions.direction === 'tb') {
+            // Top to bottom animation
+            overlay.style.bottom = (pb + mb) + 'px';
+            overlay.style.left = (pl + ml) + 'px';
           }
 
-          domElements[getIndex(element.id)].properties.overlay = overlay;
-          domElements[getIndex(element.id)].properties.width = w;
-          domElements[getIndex(element.id)].properties.height = h;
+          // Saves overlay element + overlay current dimensions
+          domElements[elementIndex].properties.width = parseFloat(overlay.style.width);
+          domElements[elementIndex].properties.height = parseFloat(overlay.style.height);
 
-          var progress = data.progress;
-          Loadgo.setprogress(element, progress);
+          Loadgo.setprogress(element, data.progress);
         }
-      };
 
-      if (window.addEventListener) {
-        window.addEventListener('resize', resizeFunction, false);
       }
-      else {
-        window.attachEvent('resize', resizeFunction);
-      }
+    };
+
+    if (pluginOptions.resize)
+      resizeFunction = pluginOptions.resize;
+
+    if (window.addEventListener) 
+      window.addEventListener('resize', resizeFunction, false);
+    else 
+      window.attachEvent('onresize', resizeFunction);
+      
+  };
+
+  Loadgo.options = function (element, useroptions) {
+
+    if (!elementIsValid(element))
+      return;
+
+    // Store Loadgo properties
+    var domElementsIndex = getIndex(element.id);
+    if (domElementsIndex === -1)
+      return;
+
+    var currentOptions = domElements[domElementsIndex].properties;
+
+    // If no param is provided, then is a 'get'
+    if (JSON.stringify(currentOptions) !== '{}')
+      return currentOptions;
+
+    if (typeof useroptions !== 'undefined') {
+      // Parse to number the 'opacity' option
+      if (typeof useroptions.opacity !== 'undefined')
+        useroptions.opacity = parseFloat(useroptions.opacity);
     }
+
+    if (JSON.stringify(currentOptions) === '{}') 
+      currentOptions = extend(defaultOptions, useroptions);
+    else
+      currentOptions = extend(currentOptions, useroptions);
+
+    // Check for valid direction
+    var validDirections = ['lr', 'rl', 'bt', 'tb'];
+    if (indexOf(validDirections, currentOptions.direction.toLowerCase()) === -1) 
+      // Invalid value for "direction" option. Possible values: blur, grayscale, sepia, hue-rotate, invert, opacity. Using default value: "lr".
+      currentOptions.direction = 'lr';
+
+    // Check for valid filter
+    if (currentOptions.filter) {
+      var validFilters = ['blur', 'grayscale', 'sepia', 'hue-rotate', 'invert', 'opacity'];
+      if (indexOf(validFilters, currentOptions.filter.toLowerCase()) === -1) 
+        // Invalid value for "filter" option. Possible values: blur, grayscale, sepia, hue-rotate, invert, opacity. This option will be ignored.
+        currentOptions.filter = null;
+    }
+
+    // Store user options with default options
+    domElements[domElementsIndex].properties = currentOptions;
+
+    return currentOptions;
 
   };
 
@@ -307,69 +396,41 @@
    */
   Loadgo.setprogress = function (element, progress) {
 
-    if (!checkElement(element)) return;
-
-    if (getIndex(element.id) === -1) {
-      console.error('Trying to set progress for a non initialized element. You have to run "init" method first.');
+    if (!elementIsValid(element))
       return;
-    }
 
-    if (progress < 0 || progress > 100) {
-      console.error('LoadGo expects progress number between 0 (0%) and 100 (100%).');
+    // LoadGo expects progress number between 0 (0%) and 100 (100%).
+    if (progress < 0 || progress > 100) 
       return;
-    }
     
     var data = getProperties(element.id);
 
     if (data !== null) {
-      var _w, _h, overlay = data.overlay, 
+      var _w, _h, overlay = document.getElementById(data.overlay), 
                 w = data.width, 
                 h = data.height;
 
       if (overlay) {
-        var direction = data.direction,
-                  ppl = parseFloat(getStyle(element.parentNode, 'padding-left')),
-                  eml = parseFloat(getStyle(element, 'margin-left')) ,
-                  epl = parseFloat(getStyle(element, 'padding-left'));
-
-        if (isNaN(ppl))
-          ppl = 0;
-        if (isNaN(eml))
-          eml = 0;
-        if (isNaN(epl))
-          epl = 0;
-
-        var computedLeft = ppl + eml + epl;
-
-        switch (direction) {
-          case 'lr':
-            // Left to right animation
-            _w = w * (1 - progress / 100);
-            overlay.style.width = _w + 'px';
-            overlay.style.left = (w - _w) + computedLeft + 'px';
-            break;
-          case 'rl':
-            // Right to left animation
-            _w = w * (1 - progress / 100);
-            overlay.style.width = _w + 'px';
-            break;
-          case 'bt':
-            // Bottom to top animation
-            _h = h * (1 - progress / 100);
-            overlay.style.height = _h + 'px';
-            break;
-          case 'tb':
-            // Top to bottom animation
-            _h = h * (1 - progress / 100);
-            overlay.style.height = _h + 'px';
-            overlay.style.top = (h - _h) + 'px';
-            break;
-          default:
-            // Left to right animation
-            _w = w * (1 - progress / 100);
-            overlay.style.width = _w + 'px';
-            overlay.style.left = (w - _w) + computedLeft + 'px';
+        var direction = data.direction;
+        if (direction === 'lr') {
+          // Left to right animation
+          _w = w * (1 - progress / 100);
+          overlay.style.width = _w + 'px';
+        } else if (direction === 'rl') {
+          // Right to left animation
+          _w = w * (1 - progress / 100);
+          overlay.style.width = _w + 'px';
+        } else if (direction === 'bt') {
+          // Bottom to top animation
+          _h = h * (1 - progress / 100);
+          overlay.style.height = _h + 'px';
+        } else if (direction === 'tb') {
+          // Top to bottom animation
+          _h = h * (1 - progress / 100);
+          overlay.style.height = _h + 'px';
+          overlay.style.top = (h - _h) + 'px';
         }
+
       } 
       else {
         var filter = data.filter, p;
@@ -404,7 +465,8 @@
    */
   Loadgo.getprogress = function (element) {
 
-    if (!checkElement(element)) return;
+    if (!elementIsValid(element))
+      return;
 
     var properties = getProperties(element.id);
     return (properties !== null)? properties.progress : 0;
@@ -415,13 +477,7 @@
    * @param  {DOM} element  DOM element using document.getElementById
    */
   Loadgo.resetprogress = function (element) {
-
-    if (!checkElement(element)) return;
-
-    var index = getIndex(element.id);
-    if (index !== -1) {
-      domElements[index].properties.progress = 0;
-    }
+    Loadgo.setprogress(element, 0);
   };
 
   /**
@@ -431,7 +487,8 @@
    */
   Loadgo.loop = function (element, duration) {
 
-    if (!checkElement(element)) return;
+    if (!elementIsValid(element))
+      return;
 
     if (getIndex(element.id) === -1) {
       console.error('Trying to loop a non initialized element. You have to run "init" method first.');
@@ -466,13 +523,14 @@
       }
       // Remove transition animation
       // Can be replaced with animated: false in the initializer
-      var overlay = domElements[domIndex].properties.overlay;
-      overlay.style['transition'] = 'none';
-      overlay.style['-webkit-transition'] = 'none';
-      overlay.style['-moz-transition'] = 'none';
-      overlay.style['-ms-transition'] = 'none';
-      overlay.style['-o-transition'] = 'none';
-      domElements[domIndex].properties.overlay = overlay;
+      var overlay = document.getElementById(domElements[domIndex].properties.overlay);
+      if (overlay) {
+        overlay.style['transition'] = 'none';
+        overlay.style['-webkit-transition'] = 'none';
+        overlay.style['-moz-transition'] = 'none';
+        overlay.style['-ms-transition'] = 'none';
+        overlay.style['-o-transition'] = 'none';
+      }
 
       Loadgo.setprogress(element, domElements[domIndex].properties.progress);
 
@@ -483,7 +541,8 @@
   // Stops the loop interval and shows image
   Loadgo.stop = function (element) {
 
-    if (!checkElement(element)) return;
+    if (!elementIsValid(element))
+      return;
 
     if (getIndex(element.id) === -1) {
       console.error('Trying to stop loop for a non initialized element. You have to run "init" method first.');
@@ -492,6 +551,31 @@
 
     clearInterval(domElements[getIndex(element.id)].properties.interval);
     Loadgo.setprogress(element, 100);
+  };
+
+  /**
+   * Remove all plugin properties
+   * @param  {DOM} element  DOM element using document.getElementById
+   */
+  Loadgo.destroy = function (element) {
+    var domElementsIndex = getIndex(element.id);
+    if (domElementsIndex === -1) 
+      return;   // element was never initialized
+    
+    var opt = Loadgo.options(element);
+    domElements.splice(domElementsIndex);
+    element.before(container);
+
+    var container = element.parentNode, parent = container.parentNode, overlay = document.getElementById(opt.overlay);
+    if (overlay) 
+      if (overlay.parentNode)
+        container.removeChild(opt.overlay)      // Removes overlay
+    
+    if (parent) {
+      parent.appendChild(element);            // Moves image to "loadgo-container" parent
+      parent.removeChild(container);          // Removes "loadgo-container" element
+    }
+
   };
 
   window.Loadgo = Loadgo;
