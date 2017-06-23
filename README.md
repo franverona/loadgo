@@ -2,8 +2,6 @@
 
 ![Batman Example](batman.gif)
 
-![Disney Example](disney.gif)
-
 **LoadGo** is a Javascript plugin that allows you to create a progress bar using your own images.
 
 - Perfect for logo animation when user is waiting for something to be loaded (a website, retrieving information, updating status, etc.)
