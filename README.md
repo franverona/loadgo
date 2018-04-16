@@ -75,7 +75,14 @@ Or even better, assign a CSS class and forget about `>`:
 
 ## Changelog
 
-**2.2** - Latest release (23-06-2017)
+**2.2.1** - Latest release (16-04-2017)
+
+* Code style
+* Javascript: setProgress method now checks if element exists.
+* Added Gruntfile.
+* Fixed Javascript examples.
+
+**2.2** - (23-06-2017)
 
 * Added a new method: `destroy`.
 * Added tests (more will be added in the future).
@@ -117,10 +124,10 @@ Tests are done using [Mocha](https://mochajs.org/).
 **(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/libraries/LoadGo), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
 ```
 <!-- If you use jQuery -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2/loadgo.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2.1/loadgo.min.js"></script>
 
 <!-- If you don't use jQuery -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2/loadgo-nojquery.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2.1/loadgo-nojquery.min.js"></script>
 ```
 ### Development environment
 
