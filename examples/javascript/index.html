@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="author" content="franverona">
     <meta name="description" content="Javascript plugin for using your own images as a progress bar">
-    <meta name="keywords" content="loadgo jquery plugin progress bar javascript html5 web development">
+    <meta name="keywords" content="loadgo Javascript plugin progress bar javascript html5 web development">
 
     <title>LoadGo - Your own images as a progress bar</title>
 
@@ -44,10 +44,15 @@
           <div class="row" style="margin-top:10px;">
             <div class="col-md-6 col-md-offset-3">
               <h4>
-                <strong>jQuery</strong>
+                <strong>Javascript</strong>
               </h4>
               <pre class="language-javascript">
-$('#disney').loadgo();</pre>
+// Default - Javascript
+var disney = document.getElementById('disney');
+disney.src = '../logos/disney.png';
+disney.onload = function () {
+  Loadgo.init(disney);
+};</pre>
             </div>
           </div>
           <div class="row" style="margin-top:10px;">
@@ -74,14 +79,19 @@ $('#disney').loadgo();</pre>
           <div class="row" style="margin-top:10px;">
             <div class="col-md-6 col-md-offset-3">
               <h4>
-                <strong>jQuery</strong>
+                <strong>Javascript</strong>
               </h4>
               <pre class="language-javascript">
-$('#superman').loadgo({
-  'opacity':    0.2,
-  'animated':   false,
-  'bgcolor':    '#01AEF0'
-});</pre>
+// Opacity, no animation and background color - Javascript
+var superman = document.getElementById('superman');
+superman.src = '../logos/superman.png';
+superman.onload = function () {
+  Loadgo.init(superman, {
+    'opacity': 0.2,
+    'animated': false,
+    'bgcolor': '#01AEF0'
+  });
+};</pre>
             </div>
           </div>
           <div class="row" style="margin-top:10px;">
@@ -108,13 +118,18 @@ $('#superman').loadgo({
           <div class="row" style="margin-top:10px;">
             <div class="col-md-6 col-md-offset-3">
               <h4>
-                <strong>jQuery</strong>
+                <strong>Javascript</strong>
               </h4>
               <pre class="language-javascript">
-$('#batman').loadgo({
-  'opacity':  1,
-  'image':    'batman-overlay.png'
-});</pre>
+// Overlay - Javascript
+var batman = document.getElementById('batman');
+batman.src = '../logos/batman.png';
+batman.onload = function () {
+  Loadgo.init(batman, {
+    'opacity': 1,
+    'image': '../logos/batman-overlay.png'
+  });
+};</pre>
             </div>
           </div>
           <div class="row" style="margin-top:10px;">
@@ -141,10 +156,14 @@ $('#batman').loadgo({
             <div class="row" style="margin-top:20px;">
               <div class="col-md-6" style="margin-bottom:20px;">
                 <pre class="col-md-12 language-javascript">
-// Left to Right - jQuery
-$('#jurassiclr').loadgo({
-  'direction':    'lr'
-});
+// Left to Right - Javascript
+var jurassiclr = document.getElementById('jurassiclr');
+jurassiclr.src = '../logos/jurassic.png';
+jurassiclr.onload = function () {
+  Loadgo.init(jurassiclr, {
+    'direction': 'lr'
+  });
+};
 </pre>
                 <div class="col-sm-12">
                   <img id="jurassiclr" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -160,10 +179,14 @@ $('#jurassiclr').loadgo({
               </div>
               <div class="col-md-6" style="margin-bottom:20px;">
                 <pre class="col-md-12 language-javascript">
-// Right to Left - jQuery
-$('#jurassicrl').loadgo({
-  'direction':    'rl'
-});
+// Right to Left - Javascript
+var jurassicrl = document.getElementById('jurassicrl');
+jurassicrl.src = '../logos/jurassic.png';
+jurassicrl.onload = function () {
+  Loadgo.init(jurassicrl, {
+    'direction': 'rl'
+  });
+};
 </pre>
                 <div class="col-sm-12">
                   <img id="jurassicrl" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -181,10 +204,14 @@ $('#jurassicrl').loadgo({
             <div class="row" style="margin-top:20px;">
               <div class="col-md-6" style="margin-bottom:20px;">
                 <pre class="col-md-12 language-javascript">
-// Bottom to Top - jQuery
-$('#jurassicbt').loadgo({
-  'direction':    'bt'
-});
+// Top to Bottom - Javascript
+var jurassictb = document.getElementById('jurassictb');
+jurassictb.src = '../logos/jurassic.png';
+jurassictb.onload = function () {
+  Loadgo.init(jurassictb, {
+    'direction': 'tb'
+  });
+};
 </pre>
                 <div class="col-sm-12">
                   <img id="jurassicbt" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -200,10 +227,14 @@ $('#jurassicbt').loadgo({
               </div>
               <div class="col-md-6" style="margin-bottom:20px;">
                 <pre class="col-md-12 language-javascript">
-// Top to Bottom - jQuery
-$('#jurassictb').loadgo({
-  'direction':    'tb'
-});
+// Bottom to Top - Javascript
+var jurassicbt = document.getElementById('jurassicbt');
+jurassicbt.src = '../logos/jurassic.png';
+jurassicbt.onload = function () {
+  Loadgo.init(jurassicbt, {
+    'direction': 'bt'
+  });
+};
 </pre>
                 <div class="col-sm-12">
                   <img id="jurassictb" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -227,10 +258,14 @@ $('#jurassictb').loadgo({
           <div class="row" style="margin-top:20px;">
             <div class="col-md-6" style="margin-bottom:20px;">
               <pre class="col-md-12 language-javascript">
-// Sepia - jQuery
-$('#spidermanSepia').loadgo({
-  'filter':    'sepia'
-});
+// Sepia - Javascript
+var spidermanSepia = document.getElementById('spidermanSepia');
+spidermanSepia.src = '../logos/spiderman.png';
+spidermanSepia.onload = function () {
+  Loadgo.init(spidermanSepia, {
+    'filter': 'sepia'
+  });
+};
 </pre>
               <div class="col-sm-12"  style="margin-top:30px">
                 <img id="spidermanSepia" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -246,10 +281,14 @@ $('#spidermanSepia').loadgo({
             </div>
             <div class="col-md-6" style="margin-bottom:20px;">
               <pre class="col-md-12 language-javascript">
-// Blur - jQuery
-$('#spidermanBlur').loadgo({
-  'filter':    'blur'
-});
+// Blur - Javascript
+var spidermanBlur = document.getElementById('spidermanBlur');
+spidermanBlur.src = '../logos/spiderman.png';
+spidermanBlur.onload = function () {
+  Loadgo.init(spidermanBlur, {
+    'filter': 'blur'
+  });
+};
 </pre>
               <div class="col-sm-12"  style="margin-top:30px">
                 <img id="spidermanBlur" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -267,10 +306,14 @@ $('#spidermanBlur').loadgo({
           <div class="row" style="margin-top:20px;">
             <div class="col-md-6" style="margin-bottom:20px;">
               <pre class="col-md-12 language-javascript">
-// Invert - jQuery
-$('#spidermanInvert').loadgo({
-  'filter':    'invert'
-});
+// Invert - Javascript
+var spidermanInvert = document.getElementById('spidermanInvert');
+spidermanInvert.src = '../logos/spiderman.png';
+spidermanInvert.onload = function () {
+  Loadgo.init(spidermanInvert, {
+    'filter': 'invert'
+  });
+};
 </pre>
               <div class="col-sm-12"  style="margin-top:30px">
                 <img id="spidermanInvert" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -286,10 +329,14 @@ $('#spidermanInvert').loadgo({
             </div>
             <div class="col-md-6" style="margin-bottom:20px;">
               <pre class="col-md-12 language-javascript">
-// Hue Rotate - jQuery
-$('#spidermanHue').loadgo({
-  'filter':    'hue-rotate'
-});
+// Hue - Javascript
+var spidermanHue = document.getElementById('spidermanHue');
+spidermanHue.src = '../logos/spiderman.png';
+spidermanHue.onload = function () {
+  Loadgo.init(spidermanHue, {
+    'filter': 'hue-rotate'
+  });
+};
 </pre>
               <div class="col-sm-12"  style="margin-top:30px">
                 <img id="spidermanHue" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -308,10 +355,13 @@ $('#spidermanHue').loadgo({
           <div class="row" style="margin-top:20px;">
             <div class="col-md-6" style="margin-bottom:20px;">
               <pre class="col-md-12 language-javascript">
-// Opacity - jQuery
-$('#spidermanOpacity').loadgo({
-  'filter':    'opacity'
-});
+// Opacity - Javascript
+var spidermanOpacity = document.getElementById('spidermanOpacity');
+spidermanOpacity.onload = function () {
+  Loadgo.init(spidermanOpacity, {
+    'filter': 'opacity'
+  });
+};
 </pre>
               <div class="col-sm-12"  style="margin-top:30px">
                 <img id="spidermanOpacity" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
@@ -327,10 +377,14 @@ $('#spidermanOpacity').loadgo({
             </div>
             <div class="col-md-6" style="margin-bottom:20px;">
               <pre class="col-md-12 language-javascript">
-// Grayscale - jQuery
-$('#spidermanGrayscale').loadgo({
-  'filter':    'grayscale'
-});
+// Grayscale - Javascript
+var spidermanGrayscale = document.getElementById('spidermanGrayscale');
+spidermanGrayscale.src = '../logos/spiderman.png';
+spidermanGrayscale.onload = function () {
+  Loadgo.init(spidermanGrayscale, {
+    'filter': 'grayscale'
+  });
+};
 </pre>
               <div class="col-sm-12"  style="margin-top:30px">
                 <img id="spidermanGrayscale" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
