@@ -1,6 +1,6 @@
 ## What is LoadGo?
 
-![Batman Example](batman.gif)
+![Batman Example](doc-assets/loadgo-batman-js.gif)
 
 **LoadGo** is a Javascript plugin that allows you to create a progress bar using your own images.
 
@@ -124,10 +124,10 @@ Tests are done using [Mocha](https://mochajs.org/).
 **(17-Oct-2015)** **LoadGo** is now hosted on [cdnjs](https://cdnjs.com/libraries/LoadGo), so you can link it directly. Thanks so much to cdnjs team for their quickly response! ([issue#5927](https://github.com/cdnjs/cdnjs/issues/5927))
 ```
 <!-- If you use jQuery -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2.1/loadgo.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2.1/jquery-loadgo.min.js"></script>
 
 <!-- If you don't use jQuery -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2.1/loadgo-nojquery.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/LoadGo/2.2.1/js-jquery-loadgo.min.js"></script>
 ```
 ### Development environment
 
@@ -138,18 +138,18 @@ Tests are done using [Mocha](https://mochajs.org/).
 3. Insert the following code in your webpage:
 ```
 <!-- If you use jQuery -->
-<script type="text/javascript" src="loadgo/loadgo.js"></script>
+<script type="text/javascript" src="loadgo/jquery-loadgo.js"></script>
 
 <!-- If you don't use jQuery -->
-<script type="text/javascript" src="loadgo/loadgo-nojquery.js"></script>
+<script type="text/javascript" src="loadgo/js-loadgo.js"></script>
 ```
 You can also use the [minified](http://en.wikipedia.org/wiki/Minification_(programming)) version:
 ```
 <!-- If you use jQuery -->
-<script type="text/javascript" src="loadgo/loadgo.min.js"></script>
+<script type="text/javascript" src="loadgo/jquery-loadgo.min.js"></script>
 
 <!-- If you don't use jQuery -->
-<script type="text/javascript" src="loadgo/loadgo-nojquery.min.js"></script>
+<script type="text/javascript" src="loadgo/js-jquery-loadgo.min.js"></script>
 ```
 
 **LoadGo** needs fully loaded images in order to read its dimensions properly. If you are not sure when this is going to happen, you can use this piece of code with each image:

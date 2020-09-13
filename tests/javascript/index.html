@@ -20,13 +20,12 @@
 <body>
   <div id="mocha"></div>
 
-  <script src="https://cdn.rawgit.com/Automattic/expect.js/0.3.1/index.js"></script>
   <script src="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chai/4.0.2/chai.js"></script>
 
   <script>mocha.setup('bdd')</script>
-  <script src="../../loadgo-nojquery.js?v=2.2"></script>
-  <script src="tests.js?v=2.2"></script>
+  <script src="../../src/js-loadgo.js?v=3.0.0"></script>
+  <script src="tests.js?v=3.0.0"></script>
   <script>
     mocha.run();
   </script>

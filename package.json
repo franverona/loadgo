@@ -1,9 +1,9 @@
 {
-  "name": "LoadGo",
-  "version": "2.2.1",
+  "name": "loadgo",
+  "version": "3.0.0",
   "description": "LoadGo is a Javascript plugin for using your logo as a progress bar",
   "author": "Fran Verona <franverona@gmail.com>",
-  "homepage": "http://franverona.com/loadgo",
+  "homepage": "https://franverona.com/loadgo",
   "keywords": [
     "jquery",
     "javascript",
@@ -13,8 +13,8 @@
     "bar",
     "image"
   ],
-  "demo": "http://franverona.com/loadgo",
-  "docs": "http://franverona.com/loadgo",
+  "demo": "https://franverona.com/loadgo",
+  "docs": "https://franverona.com/loadgo",
   "bugs": "https://github.com/franverona/loadgo/issues",
   "license": "MIT",
   "contributors": [
@@ -28,14 +28,33 @@
     "type": "git",
     "url": "https://github.com/franverona/loadgo.git"
   },
+  "scripts": {
+    "build": "gulp",
+    "test": "mocha --timeout=5000 tests/jquery.test.js"
+  },
+  "engineStrict": true,
+  "engines": {
+    "node": ">=10.0"
+  },
   "dependencies": {
-    "jquery": ">=1.11.3"
+    "jquery": "^3.5.1"
   },
   "devDependencies": {
-    "grunt": "1.0.1",
-    "grunt-contrib-clean": "1.1.0",
-    "grunt-contrib-uglify": "3.3.0",
-    "grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
-    "grunt-text-replace": "^0.4.0"
+    "@babel/core": "^7.11.6",
+    "@babel/preset-env": "^7.11.5",
+    "chai": "^4.2.0",
+    "del": "^5.1.0",
+    "eslint": "^7.8.1",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-rename": "^2.0.0",
+    "gulp-string-replace": "^1.1.2",
+    "gulp-uglify": "^3.0.2",
+    "jsdom": "^16.4.0",
+    "mocha": "^8.1.3",
+    "prettier-eslint": "^11.0.0",
+    "should": "^13.2.3"
   }
 }

@@ -1,19 +1,19 @@
 var assert = chai.assert;
 
-var container, image;   // Javascript objects
+var container, image; // Javascript objects
 
 function runSteps(fns) {
   if (!fns.length) return;
 
-  var current = fns[0], rest = fns.slice(1);
+  var current = fns[0],
+    rest = fns.slice(1);
   requestAnimationFrame(function () {
     current();
     runSteps(rest);
   });
 }
 
-beforeEach( () => {
-
+beforeEach(() => {
   // Add test div: all tests which involve DOM addition must be inside this div
   var testContainer = document.getElementById('test');
   if (typeof testContainer === 'undefined' || testContainer === null) {
@@ -31,25 +31,22 @@ beforeEach( () => {
   container.appendChild(image);
 
   document.getElementById('test').appendChild(container);
-
 });
 
-afterEach( () => {
+afterEach(() => {
   // Clean test body (https://stackoverflow.com/a/3955238/552669)
   var testContainer = document.getElementById('test');
-  while (testContainer.firstChild) 
+  while (testContainer.firstChild)
     testContainer.removeChild(testContainer.firstChild);
 
   var testResize = document.getElementById('test-resize');
-  if (testResize)
-    testResize.parentElement.removeChild(testResize);
+  if (testResize) testResize.parentElement.removeChild(testResize);
 
   // Clear Loadgo elements store
   Loadgo.destroy(image);
 });
 
 describe('JS - Initialization', () => {
-
   it('LoadGo script adds without error ', () => {
     assert.equal(typeof window.Loadgo, 'object');
   });
@@ -68,543 +65,1077 @@ describe('JS - Initialization', () => {
     assert.throws(fn, Error);
   });
 
-  it('It should have a div with class "loadgo-overlay" on default init', () => {
-    Loadgo.init(image);
-    var exists = false;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        exists = true;
-        break;
-      }
-    }
-    assert.equal( exists, true );
-  });
+  it('It should have a div with class "loadgo-overlay" on default init', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            let exists = false;
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                exists = true;
+                break;
+              }
+            }
 
+            assert.equal(exists, true);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
+  });
 });
 
-describe('JS - Default properties', () => {
-
+describe('JS - Default properties', (done) => {
   // Background color
-  it('Background color must be #FFFFFF by default', () => {
-    Loadgo.init(image);
-    assert.equal( Loadgo.options(image).bgcolor, '#FFFFFF' );
+  it('Background color must be #FFFFFF by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            assert.equal(Loadgo.options(image).bgcolor, '#FFFFFF');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
-  it('Background color must be #FFAA00 if #FFAA00 is provided', () => {
+  it('Background color must be #FFAA00 if #FFAA00 is provided', (done) => {
     Loadgo.init(image, {
-      bgcolor: '#FFAA00'
+      bgcolor: '#FFAA00',
+      on: {
+        init: () => {
+          try {
+            assert.equal(Loadgo.options(image).bgcolor, '#FFAA00');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.equal( Loadgo.options(image).bgcolor, '#FFAA00' );
   });
 
   // Opacity
-  it('Opacity must be 0.5 by default', () => {
-    Loadgo.init(image);
-    assert.equal( Loadgo.options(image).opacity, '0.5' );
+  it('Opacity must be 0.5 by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            assert.equal(Loadgo.options(image).opacity, '0.5');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
-  it('Opacity must be 0.8 if 0.8 is provided', () => {
+  it('Opacity must be 0.8 if 0.8 is provided', (done) => {
     Loadgo.init(image, {
-      opacity: "0.8"
+      opacity: '0.8',
+      on: {
+        init: () => {
+          try {
+            assert.equal(Loadgo.options(image).opacity, '0.8');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.equal( Loadgo.options(image).opacity, '0.8' );
   });
 
   // Animated
-  it('Animated must be TRUE by default', () => {
-    Loadgo.init(image);
-    assert.ok( Loadgo.options(image).animated );
+  it('Animated must be TRUE by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).animated);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
-  it('Animated must be FALSE if FALSE is provided', () => {
+  it('Animated must be FALSE if FALSE is provided', (done) => {
     Loadgo.init(image, {
-      animated:   false
+      animated: false,
+      on: {
+        init: () => {
+          try {
+            assert.ok(!Loadgo.options(image).animated);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( !Loadgo.options(image).animated );
   });
 
-  it('Animated must be TRUE if TRUE is provided', () => {
+  it('Animated must be TRUE if TRUE is provided', (done) => {
     Loadgo.init(image, {
-      animated:   true
+      animated: true,
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).animated);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( Loadgo.options(image).animated );
   });
 
   // Image
-  it('Overlay image must be NULL by default', () => {
-    Loadgo.init(image);
-    assert.ok( Loadgo.options(image).image === null );
-  });
-
-  it('Overlay image must be "logo.png" if "logo.png" is provided', () => {
+  it('Overlay image must be NULL by default', (done) => {
     Loadgo.init(image, {
-      image:  'logo.png'
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).image === null);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( Loadgo.options(image).image === 'logo.png' );
   });
 
-  // Class 
-  it('Class must be NULL by default', () => {
-    Loadgo.init(image);
-    assert.ok( Loadgo.options(image).class === null );
-  });
-
-  it('Class must add "my-class" to overlay classes if "my-class" is provided', () => {
+  it('Overlay image must be "logo.png" if "logo.png" is provided', (done) => {
     Loadgo.init(image, {
-      class:  'my-class'
+      image: 'logo.png',
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).image === 'logo.png');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( Loadgo.options(image).class === 'my-class' );
+  });
+
+  // Class
+  it('Class must be NULL by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).class === null);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
+  });
+
+  it('Class must add "my-class" to overlay classes if "my-class" is provided', (done) => {
+    Loadgo.init(image, {
+      class: 'my-class',
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).class === 'my-class');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
   // Direction
-  it('Direction must be "lr" by default', () => {
-    Loadgo.init(image);
-    assert.ok( Loadgo.options(image).direction === 'lr' );
+  it('Direction must be "lr" by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).direction === 'lr');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
-  it('Direction must be "rl" if "rl" is provided', () => {
+  it('Direction must be "rl" if "rl" is provided', (done) => {
     Loadgo.init(image, {
-      direction:  'rl'
+      direction: 'rl',
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).direction === 'rl');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( Loadgo.options(image).direction === 'rl' );
   });
 
-  it('Direction must be set to default "lr" if provided direction is not a valid direction', () => {
+  it('Direction must be set to default "lr" if provided direction is not a valid direction', (done) => {
     Loadgo.init(image, {
-      direction:  'left-to-right'
+      direction: 'left-to-right',
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).direction === 'lr');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( Loadgo.options(image).direction === 'lr' );
   });
 
   // Filter
-  it('Filter must be NULL by default', () => {
-    Loadgo.init(image);
-    assert.ok( Loadgo.options(image).filter === null );
+  it('Filter must be NULL by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).filter === null);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
-  it('Filter must be "blur" if "blur" is provided', () => {
+  it('Filter must be "blur" if "blur" is provided', (done) => {
     Loadgo.init(image, {
-      filter: 'blur'
+      filter: 'blur',
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).filter === 'blur');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( Loadgo.options(image).filter === 'blur' );
   });
 
-  it('Filter must be set to default NULL if provided filter is not a valid filter', () => {
+  it('Filter must be set to default NULL if provided filter is not a valid filter', (done) => {
     Loadgo.init(image, {
-      filter: 'invalid-filter'
+      filter: 'invalid-filter',
+      on: {
+        init: () => {
+          try {
+            assert.ok(Loadgo.options(image).filter === null);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
     });
-    assert.ok( Loadgo.options(image).filter === null );
   });
 
   // Resize
-  it('Resize must execute default function by default', () => {
-    Loadgo.init(image);
+  it('Resize must execute default function by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            var preResize = document.getElementById('test-resize') !== null;
 
-    var preResize = document.getElementById('test-resize') !== null;
+            window.dispatchEvent(new Event('resize'));
 
-    window.dispatchEvent(new Event('resize'));
+            var postResize = document.getElementById('test-resize') !== null;
 
-    var postResize = document.getElementById('test-resize') !== null;
+            assert.ok(preResize === postResize);
+          } catch (e) {
+            done(e);
+          }
 
-    assert.ok( preResize === postResize );
+          done();
+        }
+      }
+    });
   });
 
-  it('Resize must execute custom function if provided', () => {
+  it('Resize must execute custom function if provided', (done) => {
     Loadgo.init(image, {
       resize: function () {
         var testResize = document.createElement('div');
         testResize.id = 'test-resize';
         document.getElementsByTagName('body')[0].appendChild(testResize);
+      },
+      on: {
+        init: () => {
+          try {
+            var preResize = document.getElementById('test-resize') !== null;
+
+            window.dispatchEvent(new Event('resize'));
+
+            var postResize = document.getElementById('test-resize') !== null;
+
+            assert.ok(preResize !== postResize);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
     });
-
-    var preResize = document.getElementById('test-resize') !== null;
-
-    window.dispatchEvent(new Event('resize'));
-
-    var postResize = document.getElementById('test-resize') !== null;
-
-    console.log(preResize, postResize)
-
-    assert.ok( preResize !== postResize );
   });
-
 });
 
 describe('JS - Overlay render', () => {
+  it('LoadGo only creates one overlay', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            let exists = 0;
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                exists += 1;
+              }
+            }
 
-  it('LoadGo only creates one overlay', () => {
-    Loadgo.init(image);
-    var exists = 0;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) 
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) 
-        exists++;
-    
-    assert.equal( exists, 1 );
+            assert.equal(exists, 1);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
   // Dimensions
-  it('Overlay and image sizes are equal', ( done ) => {
-    image.onload = function () {
-      var imageWidth = parseFloat(this.width), imageHeight = parseFloat(this.height);
-      Loadgo.init(image);
-      var overlayWidth = -1, overlayHeight = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayWidth = parseFloat(container.childNodes[0].childNodes[i].style.width);
-          overlayHeight = parseFloat(container.childNodes[0].childNodes[i].style.height);
-          break;
+  it('Overlay and image sizes are equal', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          const imageWidth = parseFloat(event.target.width);
+          const imageHeight = parseFloat(event.target.height);
+
+          try {
+            let overlayWidth = -1;
+            let overlayHeight = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayWidth = parseFloat(nodes[i].style.width);
+                overlayHeight = parseFloat(nodes[i].style.height);
+                break;
+              }
+            }
+            assert.equal(overlayWidth, imageWidth);
+            assert.equal(overlayHeight, imageHeight);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayWidth, imageWidth );
-      assert.equal( overlayHeight, imageHeight );
-      done();
-    };
+    });
   });
 
-  it('Overlay width must be half of image width when progress is set to 50% for "left to right" direction', ( done ) => {
-    image.onload = function () {
-      var imageWidth = parseFloat(this.width);
-      Loadgo.init(image);
-      Loadgo.setprogress(image, 50);
-      var overlayWidth = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayWidth = parseFloat(container.childNodes[0].childNodes[i].style.width);
-          break;
+  it('Overlay width must be half of image width when progress is set to 50% for "left to right" direction', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageWidth = parseFloat(event.target.width);
+
+          try {
+            let overlayWidth = -1;
+            let overlayHeight = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayWidth = parseFloat(nodes[i].style.width);
+                break;
+              }
+            }
+            assert.equal(overlayWidth, imageWidth / 2);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayWidth, imageWidth / 2 );
-      done();
-    };
+    });
   });
 
-  it('Overlay height will not change when progress is set to 50% for "left to right" direction', ( done ) => {
-    image.onload = function () {
-      var imageHeight = parseFloat(this.height);
-      Loadgo.init(image);
-      Loadgo.setprogress(image, 50);
-      var overlayHeight = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayHeight = parseFloat(container.childNodes[0].childNodes[i].style.height);
-          break;
+  it('Overlay height will not change when progress is set to 50% for "left to right" direction', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageHeight = parseFloat(event.target.height);
+
+          try {
+            let overlayHeight = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayHeight = parseFloat(nodes[i].style.height);
+                break;
+              }
+            }
+            assert.equal(overlayHeight, imageHeight);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayHeight, imageHeight );
-      done();
-    };
+    });
   });
 
-  it('Overlay width must be half of image width when progress is set to 50% for "right to left" direction', ( done ) => {
-    image.onload = function () {
-      var imageWidth = parseFloat(this.width);
-      Loadgo.init(image, {
-        direction: 'rl'
-      });
-      Loadgo.setprogress(image, 50);
-      var overlayWidth = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayWidth = parseFloat(container.childNodes[0].childNodes[i].style.width);
-          break;
+  it('Overlay width must be half of image width when progress is set to 50% for "right to left" direction', (done) => {
+    Loadgo.init(image, {
+      direction: 'rl',
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageWidth = parseFloat(event.target.width);
+
+          try {
+            let overlayWidth = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayWidth = parseFloat(nodes[i].style.width);
+                break;
+              }
+            }
+            assert.equal(overlayWidth, imageWidth / 2);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayWidth, imageWidth / 2 );
-      done();
-    };
+    });
   });
 
-  it('Overlay height will not change when progress is set to 50% for "right to left" direction', ( done ) => {
-    image.onload = function () {
-      var imageHeight = parseFloat(this.height);
-      Loadgo.init(image, {
-        direction: 'rl'
-      });
-      Loadgo.setprogress(image, 50);
-      var overlayHeight = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayHeight = parseFloat(container.childNodes[0].childNodes[i].style.height);
-          break;
+  it('Overlay height will not change when progress is set to 50% for "right to left" direction', (done) => {
+    Loadgo.init(image, {
+      direction: 'rl',
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageHeight = parseFloat(event.target.height);
+
+          try {
+            let overlayHeight = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayHeight = parseFloat(nodes[i].style.height);
+                break;
+              }
+            }
+            assert.equal(overlayHeight, imageHeight);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayHeight, imageHeight );
-      done();
-    };
+    });
   });
 
-  it('Overlay height must be half of image height when progress is set to 50% for "top to bottom" direction', ( done ) => {
-    image.onload = function () {
-      var imageHeight = parseFloat(this.height);
-      Loadgo.init(image, {
-        direction: 'tb'
-      });
-      Loadgo.setprogress(image, 50);
-      var overlayHeight = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayHeight = parseFloat(container.childNodes[0].childNodes[i].style.height);
-          break;
+  it('Overlay height must be half of image height when progress is set to 50% for "top to bottom" direction', (done) => {
+    Loadgo.init(image, {
+      direction: 'tb',
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageHeight = parseFloat(event.target.height);
+
+          try {
+            let overlayHeight = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayHeight = parseFloat(nodes[i].style.height);
+                break;
+              }
+            }
+            assert.equal(overlayHeight, imageHeight / 2);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayHeight, imageHeight / 2 );   // rounded
-      done();
-    };
+    });
   });
 
-  it('Overlay width will not change when progress is set to 50% for "top to bottom" direction', ( done ) => {
-    image.onload = function () {
-      var imageWidth = parseFloat(this.width);
-      Loadgo.init(image, {
-        direction: 'tb'
-      });
-      Loadgo.setprogress(image, 50);
-      var overlayWidth = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayWidth = parseFloat(container.childNodes[0].childNodes[i].style.width);
-          break;
+  it('Overlay width will not change when progress is set to 50% for "top to bottom" direction', (done) => {
+    Loadgo.init(image, {
+      direction: 'tb',
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageWidth = parseFloat(event.target.width);
+
+          try {
+            let overlayWidth = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayWidth = parseFloat(nodes[i].style.width);
+                break;
+              }
+            }
+            assert.equal(overlayWidth, imageWidth);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayWidth, imageWidth );
-      done();
-    };
+    });
   });
 
-  it('Overlay height must be half of image height when progress is set to 50% for "bottom to top" direction', ( done ) => {
-    image.onload = function () {
-      var imageHeight = parseFloat(this.height);
-      Loadgo.init(image, {
-        direction: 'bt'
-      });
-      Loadgo.setprogress(image, 50);
-      var overlayHeight = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayHeight = parseFloat(container.childNodes[0].childNodes[i].style.height);
-          break;
+  it('Overlay height must be half of image height when progress is set to 50% for "bottom to top" direction', (done) => {
+    Loadgo.init(image, {
+      direction: 'bt',
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageHeight = parseFloat(event.target.height);
+
+          try {
+            let overlayHeight = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayHeight = parseFloat(nodes[i].style.height);
+                break;
+              }
+            }
+            assert.equal(overlayHeight, imageHeight / 2);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayHeight, imageHeight / 2 );
-      done();
-    };
+    });
   });
 
-  it('Overlay width will not change when progress is set to 50% for "bottom to top" direction', ( done ) => {
-    image.onload = function () {
-      var imageWidth = parseFloat(this.width);
-      Loadgo.init(image, {
-        direction: 'bt'
-      });
-      Loadgo.setprogress(image, 50);
-      var overlayWidth = -1;
-      for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-        if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-          overlayWidth = parseFloat(container.childNodes[0].childNodes[i].style.width);
-          break;
+  it('Overlay width will not change when progress is set to 50% for "bottom to top" direction', (done) => {
+    Loadgo.init(image, {
+      direction: 'bt',
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          const imageWidth = parseFloat(event.target.width);
+          const imageHeight = parseFloat(event.target.height);
+
+          try {
+            let overlayWidth = -1;
+
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlayWidth = parseFloat(nodes[i].style.width);
+                break;
+              }
+            }
+            assert.equal(overlayWidth, imageWidth);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
         }
       }
-      assert.equal( overlayWidth, imageWidth );
-      done();
-    };
+    });
   });
 
   // Animation
-  it('Overlay has CSS animations by default', () => {
-    Loadgo.init(image);
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+  it('Overlay has CSS animations by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+            assert.equal(overlay.style.transition, 'all 0.6s ease 0s');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.equal( overlay.style.transition, 'all 0.6s ease' );
+    });
   });
 
-  it('Overlay has CSS animations added if "animated" is set to TRUE', () => {
+  it('Overlay has CSS animations added if "animated" is set to TRUE', (done) => {
     Loadgo.init(image, {
-      animated:   true
-    });
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+      animated: true,
+      on: {
+        init: () => {
+          try {
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+            assert.equal(overlay.style.transition, 'all 0.6s ease 0s');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.equal( overlay.style.transition, 'all 0.6s ease' );
+    });
   });
 
-  it('Overlay does not have any CSS animation added if "animated" is set to FALSE', () => {
+  it('Overlay does not have any CSS animation added if "animated" is set to FALSE', (done) => {
     Loadgo.init(image, {
-      animated:   false
-    });
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+      animated: false,
+      on: {
+        init: () => {
+          try {
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+            assert.equal(overlay.style.transition, '');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.equal( overlay.style.transition, '' );
+    });
   });
 
   // Background color
-  it('Overlay color is "#FFFFFF" by default', () => {
-    Loadgo.init(image);
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+  it('Overlay color is "#FFFFFF" by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+            assert.equal(overlay.style.backgroundColor, 'rgb(255, 255, 255)');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.equal( overlay.style.backgroundColor, 'rgb(255, 255, 255)' );
+    });
   });
 
-  it('Overlay color is "#FF0000" if "bgcolor" is set to "#FF0000"', () => {
+  it('Overlay color is "#FF0000" if "bgcolor" is set to "#FF0000"', (done) => {
     Loadgo.init(image, {
-      bgcolor: '#FF0000'
-    });
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+      bgcolor: '#FF0000',
+      on: {
+        init: () => {
+          try {
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+            assert.equal(overlay.style.backgroundColor, 'rgb(255, 0, 0)');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.equal( overlay.style.backgroundColor, 'rgb(255, 0, 0)' );
+    });
   });
 
   // Opacity
-  it('Overlay opacity is "0.5" by default', () => {
-    Loadgo.init(image);
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+  it('Overlay opacity is "0.5" by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+            assert.equal(overlay.style.opacity, 0.5);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.equal( overlay.style.opacity, 0.5 );
+    });
   });
 
-  it('Overlay opacity is "0.8" if "opacity" is set to "0.8"', () => {
+  it('Overlay opacity is "0.8" if "opacity" is set to "0.8"', (done) => {
     Loadgo.init(image, {
-      opacity: 0.8
-    });
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+      opacity: 0.8,
+      on: {
+        init: () => {
+          try {
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+            assert.equal(overlay.style.opacity, 0.8);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.equal( overlay.style.opacity, 0.8 );
+    });
   });
 
   // Filters
-  it('Image filter will not be applied by default', () => {
-    Loadgo.init(image);
-    assert.equal( image.style.filter, '' );
-  });
-
-  it('Image filter will not be applied if an unknown filter is provided', () => {
+  it('Image filter will not be applied by default', (done) => {
     Loadgo.init(image, {
-      filter: 'this-filter-does-not-exist'
-    });
-    assert.equal( image.style.filter, '' );
-  });
+      on: {
+        init: () => {
+          try {
+            assert.equal(image.style.filter, '');
+          } catch (e) {
+            done(e);
+          }
 
-  it('Image filter will be "sepia" if "filter" is set to "sepia"', () => {
-    Loadgo.init(image, {
-      filter: 'sepia'
-    });
-    assert.equal( image.style.filter, 'sepia(1)' );
-  });
-
-  it('Overlay will not be created if "filter" option is set to a valid filter', () => {
-    Loadgo.init(image, {
-      filter: 'sepia'
-    });
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+          done();
+        }
       }
-    }
-    assert.equal( overlay, null );
+    });
   });
 
-  it('Overlay will be created if "filter" option is set to a non valid filter', () => {
+  it('Image filter will not be applied if an unknown filter is provided', (done) => {
     Loadgo.init(image, {
-      filter: 'this-filter-does-not-exist'
-    });
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+      filter: 'this-filter-does-not-exist',
+      on: {
+        init: () => {
+          try {
+            assert.equal(image.style.filter, '');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.ok( overlay !== null );
+    });
+  });
+
+  it('Image filter will be "sepia" if "filter" is set to "sepia"', (done) => {
+    Loadgo.init(image, {
+      filter: 'sepia',
+      on: {
+        init: () => {
+          try {
+            assert.equal(image.style.filter, 'sepia(1)');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
+  });
+
+  it('Overlay will not be created if "filter" option is set to a valid filter', (done) => {
+    Loadgo.init(image, {
+      filter: 'sepia',
+      on: {
+        init: () => {
+          try {
+            let overlay;
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+
+            assert.equal(overlay, null);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
+  });
+
+  it('Overlay will be created if "filter" option is set to a non valid filter', (done) => {
+    Loadgo.init(image, {
+      filter: 'this-filter-does-not-exist',
+      on: {
+        init: () => {
+          try {
+            let overlay;
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+
+            assert.ok(overlay !== null);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
   // Image
-  it('Overlay does not have background image by default', () => {
-    Loadgo.init(image);
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
-      }
-    }
-    assert.equal( overlay.style.backgroundImage, '' );
-  });
-
-  it('Overlay have "logo.png" as background image if "image" property is set to "logo.png"', () => {
+  it('Overlay does not have background image by default', (done) => {
     Loadgo.init(image, {
-      image:  'logo.png'
-    });
-    var overlay;
-    for (var i = 0, l = container.childNodes[0].childNodes.length; i < l; i++) {
-      if (container.childNodes[0].childNodes[i].className.indexOf('loadgo-overlay') !== -1) {
-        overlay = container.childNodes[0].childNodes[i];
-        break;
+      on: {
+        init: () => {
+          try {
+            let overlay;
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+
+            assert.equal(overlay.style.backgroundImage, '');
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
       }
-    }
-    assert.ok( overlay.style.backgroundImage.indexOf('logo.png') > -1 );
+    });
   });
 
+  it('Overlay have "logo.png" as background image if "image" property is set to "logo.png"', (done) => {
+    Loadgo.init(image, {
+      image: 'logo.png',
+      on: {
+        init: () => {
+          try {
+            let overlay;
+            const nodes = container.childNodes[0].childNodes;
+            for (let i = 0, l = nodes.length; i < l; i++) {
+              if (nodes[i].className.indexOf('loadgo-overlay') !== -1) {
+                overlay = nodes[i];
+                break;
+              }
+            }
+
+            assert.ok(overlay.style.backgroundImage.indexOf('logo.png') > -1);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
+  });
 });
 
-describe('JS - Get/Set progress', () => {
+describe('JS - Get/Set progress', () => {
+  it('Progress will be 0 by default', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          try {
+            assert.equal(Loadgo.getprogress(image), 0);
+          } catch (e) {
+            done(e);
+          }
 
-  it('Progress will be 0 by default', () => {
-    Loadgo.init(image);
-    assert.equal(Loadgo.getprogress(image), 0);
+          done();
+        }
+      }
+    });
   });
 
-  it('Progress will be 50 after setting it', () => {
-    Loadgo.init(image);
-    Loadgo.setprogress(image, 50);
-    assert.equal(Loadgo.getprogress(image), 50);
+  it('Progress will be 50 after setting it', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 50);
+        },
+        setprogress: () => {
+          try {
+            assert.equal(Loadgo.getprogress(image), 50);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
   it('Progress will be 0 if trying to get progress for a non initialized element', () => {
     assert.equal(Loadgo.getprogress(image), 0);
   });
 
-  it('Progress will not change if a value < 0 or value > 100 is provided', () => {
-    Loadgo.init(image);
-    var currentProgress = Loadgo.getprogress(image);
-    Loadgo.setprogress(image, -500);
-    Loadgo.setprogress(image, 500);
-    assert.equal(Loadgo.getprogress(image), currentProgress);
+  it('Progress will not change if a value < 0 is provided', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, -500);
+        },
+        setprogress: () => {
+          try {
+            assert.equal(Loadgo.getprogress(image), 0);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
   });
 
+  it('Progress will not change if a value > 100 is provided', (done) => {
+    Loadgo.init(image, {
+      on: {
+        init: () => {
+          Loadgo.setprogress(image, 500);
+        },
+        setprogress: () => {
+          try {
+            assert.equal(Loadgo.getprogress(image), 0);
+          } catch (e) {
+            done(e);
+          }
+
+          done();
+        }
+      }
+    });
+  });
 });
