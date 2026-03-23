@@ -1,201 +1,150 @@
-// Default example
-var disneyInterval;
+const intervals = {}
 
-// Example with some options
-var supermanInterval;
+function playDemo(id, index) {
+  if (intervals[id]) {
+    window.clearInterval(intervals[id])
+    intervals[id] = null
+  }
 
-// Example with overlay
-var batmanInterval;
+  $(`#demo-msg-${index}`).animate({ opacity: '0' })
+  $(`#demo-progress-${index}`).animate({ opacity: '1' })
 
-// Examples with directions
-var jurassicIntervalLR;
-var jurassicIntervalRL;
-var jurassicIntervalBT;
-var jurassicIntervalTB;
+  let p = 0
+  $(`#${id}`).loadgo('resetprogress')
+  $(`#demo-progress-${index}`).html('0%')
 
-// Examples with filters
-var spidermanSepiaInterval;
-var spidermanBlurInterval;
-var spidermanInvertInterval;
-var spidermanOpacityInterval;
-var spidermanHueInterval;
-var spidermanGrayscaleInterval;
-
-function playDemo (id, index, interval) {
-  $('#demo-msg-' + index).animate({
-    'opacity': '0'
-  });
-  $('#demo-progress-' + index).animate({
-    'opacity': '1'
-  });
-  var p = 0;
-  $('#' + id).loadgo('resetprogress');
-  $('#demo-progress-' + index).html('0%');
-  window.setTimeout(function () {
-    interval = window.setInterval(function (){
-      if ($('#' + id).loadgo('getprogress') === 100) {
-        window.clearInterval(interval);
-        $('#demo-msg-' + index).animate({
-          'opacity': '1'
-        });
-        $('#demo-progress-' + index).animate({
-          'opacity': '0'
-        });
-        return;
+  window.setTimeout(() => {
+    intervals[id] = window.setInterval(() => {
+      if ($(`#${id}`).loadgo('getprogress') === 100) {
+        window.clearInterval(intervals[id])
+        intervals[id] = null
+        $(`#demo-msg-${index}`).animate({ opacity: '1' })
+        $(`#demo-progress-${index}`).animate({ opacity: '0' })
+        return
       }
 
-      var prog = p * 10;
-      $('#' + id).loadgo('setprogress', prog);
-      $('#demo-progress-' + index).html(prog + '%');
-      p++;
-    }, 150);
-  }, 300);
+      const prog = p * 10
+      $(`#${id}`).loadgo('setprogress', prog)
+      $(`#demo-progress-${index}`).html(`${prog}%`)
+      p++
+    }, 150)
+  }, 300)
 }
 
-$(window).load(function () {
+$(document).ready(() => {
+  // Example #1
+  $('#disney')
+    .on('load', () => {
+      $('#disney').loadgo()
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#disney").load(function() {
-    // Example #1
-    $('#disney').loadgo();
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  // Example #2
+  $('#superman')
+    .on('load', () => {
+      $('#superman').loadgo({
+        opacity: 0.2,
+        animated: false,
+        bgcolor: '#01AEF0',
+      })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#superman").load(function() {
-    // Example #2
-    $('#superman').loadgo({
-      'opacity': 0.2,
-      'animated': false,
-      'bgcolor': '#01AEF0'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  // Example #3
+  $('#batman')
+    .on('load', () => {
+      $('#batman').loadgo({
+        opacity: 1,
+        image: '../logos/batman-overlay.png',
+      })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#batman").load(function() {
-    // Example #3
-    $('#batman').loadgo({
-      'opacity': 1,
-      'image': '../logos/batman-overlay.png'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  // Example #4
+  $('#jurassiclr')
+    .on('load', () => {
+      $('#jurassiclr').loadgo({ direction: 'lr' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#jurassiclr").load(function() {
-    // Example #4
-    $('#jurassiclr').loadgo({
-      'direction': 'lr'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  $('#jurassicrl')
+    .on('load', () => {
+      $('#jurassicrl').loadgo({ direction: 'rl' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#jurassicrl").load(function() {
-    // Example #4
-    $('#jurassicrl').loadgo({
-      'direction': 'rl'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  $('#jurassictb')
+    .on('load', () => {
+      $('#jurassictb').loadgo({ direction: 'tb' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#jurassictb").load(function() {
-    // Example #4
-    $('#jurassictb').loadgo({
-      'direction': 'tb'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  $('#jurassicbt')
+    .on('load', () => {
+      $('#jurassicbt').loadgo({ direction: 'bt' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#jurassicbt").load(function() {
-    // Example #4
-    $('#jurassicbt').loadgo({
-      'direction': 'bt'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  // Example #5
+  $('#spidermanSepia')
+    .on('load', () => {
+      $('#spidermanSepia').loadgo({ filter: 'sepia' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#spidermanSepia").load(function() {
-    // Example #5
-    $('#spidermanSepia').loadgo({
-      'filter': 'sepia'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  $('#spidermanBlur')
+    .on('load', () => {
+      $('#spidermanBlur').loadgo({ filter: 'blur' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#spidermanBlur").load(function() {
-    // Example #5
-    $('#spidermanBlur').loadgo({
-      'filter': 'blur'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  $('#spidermanInvert')
+    .on('load', () => {
+      $('#spidermanInvert').loadgo({ filter: 'invert' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#spidermanInvert").load(function() {
-    // Example #5
-    $('#spidermanInvert').loadgo({
-      'filter': 'invert'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  $('#spidermanHue')
+    .on('load', () => {
+      $('#spidermanHue').loadgo({ filter: 'hue-rotate' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#spidermanHue").load(function() {
-    // Example #5
-    $('#spidermanHue').loadgo({
-      'filter': 'hue-rotate'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
+  $('#spidermanOpacity')
+    .on('load', () => {
+      $('#spidermanOpacity').loadgo({ filter: 'opacity' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
 
-  $("#spidermanOpacity").load(function() {
-    // Example #5
-    $('#spidermanOpacity').loadgo({
-      'filter': 'opacity'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
-
-  $("#spidermanGrayscale").load(function() {
-    // Example #5
-    $('#spidermanGrayscale').loadgo({
-      'filter': 'grayscale'
-    });
-  }).each(function() {
-    if (this.complete) {
-      $(this).load();
-    }
-  });
-
-});
+  $('#spidermanGrayscale')
+    .on('load', () => {
+      $('#spidermanGrayscale').loadgo({ filter: 'grayscale' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
+})

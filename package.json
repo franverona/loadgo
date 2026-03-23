@@ -1,9 +1,8 @@
 {
-  "name": "LoadGo",
-  "version": "2.2.1",
-  "description": "LoadGo is a Javascript plugin for using your logo as a progress bar",
-  "author": "Fran Verona <franverona@gmail.com>",
-  "homepage": "http://franverona.com/loadgo",
+  "name": "loadgo",
+  "version": "3.0.0",
+  "description": "A lightweight JavaScript plugin that transforms your logo into a custom progress bar.",
+  "author": "Fran Verona",
   "keywords": [
     "jquery",
     "javascript",
@@ -13,10 +12,18 @@
     "bar",
     "image"
   ],
-  "demo": "http://franverona.com/loadgo",
-  "docs": "http://franverona.com/loadgo",
+  "homepage": "https://github.com/franverona/loadgo",
   "bugs": "https://github.com/franverona/loadgo/issues",
   "license": "MIT",
+  "type": "module",
+  "main": "dist/loadgo-vanilla.min.js",
+  "exports": {
+    ".": "./dist/loadgo-vanilla.min.js",
+    "./jquery": "./dist/loadgo.min.js"
+  },
+  "files": [
+    "dist/"
+  ],
   "contributors": [
     {
       "name": "Carlos Feliciano Barba",
@@ -28,14 +35,43 @@
     "type": "git",
     "url": "https://github.com/franverona/loadgo.git"
   },
-  "dependencies": {
-    "jquery": ">=1.11.3"
+  "peerDependencies": {
+    "jquery": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "jquery": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "npm run clean && npm run minify && npm run stamp",
+    "clean": "rm -rf dist",
+    "minify": "mkdir -p dist && terser loadgo.js -o dist/loadgo.min.js --comments /preserve/ && terser loadgo-vanilla.js -o dist/loadgo-vanilla.min.js --comments /preserve/",
+    "stamp": "node scripts/stamp.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint loadgo.js loadgo-vanilla.js scripts/ examples/ tests/",
+    "lint:fix": "eslint --fix loadgo.js loadgo-vanilla.js scripts/ examples/ tests/",
+    "format": "prettier --write loadgo.js loadgo-vanilla.js \"scripts/**/*.js\" \"examples/**/*.js\" \"tests/**/*.js\"",
+    "format:check": "prettier --check loadgo.js loadgo-vanilla.js \"scripts/**/*.js\" \"examples/**/*.js\" \"tests/**/*.js\"",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build"
+  },
+  "lint-staged": {
+    "*.js": ["prettier --write"]
   },
   "devDependencies": {
-    "grunt": "1.0.1",
-    "grunt-contrib-clean": "1.1.0",
-    "grunt-contrib-uglify": "3.3.0",
-    "grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
-    "grunt-text-replace": "^0.4.0"
+    "@commitlint/cli": "^20.5.0",
+    "jquery": "^4.0.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "husky": "^9.1.7",
+    "jsdom": "^26.0.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.0.0",
+    "terser": "^5.0.0",
+    "vitest": "^3.0.0"
   }
 }

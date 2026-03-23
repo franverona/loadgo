@@ -1,12 +1,15 @@
-# dependencies
+# Dependencies
 /node_modules
 
-# misc
+# OS
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+*.swp
+*.swo
 
 npm-debug.log*
 yarn-debug.log*
