@@ -9,80 +9,47 @@
 
     <title>LoadGo - Your own images as a progress bar</title>
 
-    <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
-
-    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
-
-    <style>
-      h4 {
-        font-weight: normal;
-        line-height: 1.5;
-      }
-    </style>
-
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
+  <body class="bg-white">
 
-    <div class="container" style="padding-top:20px;padding-bottom:60px;background: #fff;">
-      <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-          <h2 style="border-bottom: 1px solid #ddd;padding-bottom: 10px;">LoadGo - Javascript Examples</h2>
-          <ul style="margin-top: 20px">
-            <li><h4><a href="http://franverona.com/loadgo">Official Site</a></h4></li>
-            <li><h4><a href="http://github.com/franverona/loadgo">Github</a></h4></li>
-          </ul>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-        <div id="examples">
-          <h3>Example #1: default</h3>
+    <div class="max-w-4xl mx-auto px-4 pt-5 pb-16">
 
-          <h4>
-            Image logo with default properties.
-          </h4>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-md-6 col-md-offset-3">
-              <h4>
-                <strong>Javascript</strong>
-              </h4>
-              <pre class="language-javascript">
-// Default - Javascript
+      <h2 class="text-2xl font-semibold border-b border-gray-200 pb-3 mb-2">LoadGo - Javascript Examples</h2>
+      <ul class="mt-4 mb-8">
+        <li><a href="https://github.com/franverona/loadgo" class="text-blue-600 hover:underline">GitHub</a></li>
+      </ul>
+
+      <div id="examples">
+
+        <!-- Example 1 -->
+        <h3 class="text-xl font-semibold mt-8 mb-2">Example #1: default</h3>
+        <p class="text-gray-700 mb-4">Image logo with default properties.</p>
+        <div class="flex justify-center mb-4">
+          <pre class="bg-gray-100 rounded p-4 font-mono text-sm w-full max-w-lg overflow-x-auto">// Default - Javascript
 var disney = document.getElementById('disney');
 disney.src = '../logos/disney.png';
 disney.onload = function () {
   Loadgo.init(disney);
 };</pre>
-            </div>
+        </div>
+        <div class="flex justify-center mb-4">
+          <img id="disney" src="../logos/disney.png" alt="Disney Logo" class="max-w-full h-auto mx-auto logo" />
+        </div>
+        <div class="text-center">
+          <div id="demo-progress-2" class="mb-2 text-base font-bold opacity-0">0 %</div>
+          <div id="demo-msg-2">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('disney', 2);">
+              Start
+            </button>
           </div>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-sm-4 col-sm-offset-4">
-              <img id="disney" src="../logos/disney.png" alt="Disney Logo" class="img-responsive logo" style="margin: 0 auto;" />
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-md-12 text-center">
-              <div id="demo-progress-2" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-              <div id="demo-msg-2">
-                <button class="btn btn-primary" onclick="playDemo('disney', 2, disneyInterval);">
-                  Start
-                </button>
-              </div>
-            </div>
-          </div>
+        </div>
 
-          <h3>Example #2: opacity, no transition animation and background color</h3>
-
-          <h4>
-            Image logo with opacity set to <code>0.2</code>, without width transition when changing progress and background set to <code>#01AEF0</code>
-          </h4>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-md-6 col-md-offset-3">
-              <h4>
-                <strong>Javascript</strong>
-              </h4>
-              <pre class="language-javascript">
-// Opacity, no animation and background color - Javascript
+        <!-- Example 2 -->
+        <h3 class="text-xl font-semibold mt-10 mb-2">Example #2: opacity, no transition animation and background color</h3>
+        <p class="text-gray-700 mb-4">Image logo with opacity set to <code class="bg-gray-100 px-1 rounded">0.2</code>, without width transition when changing progress and background set to <code class="bg-gray-100 px-1 rounded">#01AEF0</code></p>
+        <div class="flex justify-center mb-4">
+          <pre class="bg-gray-100 rounded p-4 font-mono text-sm w-full max-w-lg overflow-x-auto">// Opacity, no animation and background color - Javascript
 var superman = document.getElementById('superman');
 superman.src = '../logos/superman.png';
 superman.onload = function () {
@@ -92,36 +59,24 @@ superman.onload = function () {
     'bgcolor': '#01AEF0'
   });
 };</pre>
-            </div>
+        </div>
+        <div class="flex justify-center mb-4">
+          <img id="superman" src="../logos/superman.png" alt="Superman Logo" class="max-w-full h-auto mx-auto logo" />
+        </div>
+        <div class="text-center">
+          <div id="demo-progress-3" class="mb-2 text-base font-bold opacity-0">0 %</div>
+          <div id="demo-msg-3">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('superman', 3);">
+              Start
+            </button>
           </div>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-sm-4 col-sm-offset-4">
-              <img id="superman" src="../logos/superman.png" alt="Disney Logo" class="img-responsive logo" style="margin: 0 auto;" />
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-md-12 text-center">
-              <div id="demo-progress-3" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-              <div id="demo-msg-3">
-                <button class="btn btn-primary" onclick="playDemo('superman', 3, supermanInterval);">
-                  Start
-                </button>
-              </div>
-            </div>
-          </div>
+        </div>
 
-          <h3>Example #3: image overlay</h3>
-
-          <h4>
-            Image logo is the original (in this case, Batman's logo with yellow background) and overlay image is the one with some filter, or other effect pretty similar to the original image logo (in this case, Batman's logo with white background).
-          </h4>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-md-6 col-md-offset-3">
-              <h4>
-                <strong>Javascript</strong>
-              </h4>
-              <pre class="language-javascript">
-// Overlay - Javascript
+        <!-- Example 3 -->
+        <h3 class="text-xl font-semibold mt-10 mb-2">Example #3: image overlay</h3>
+        <p class="text-gray-700 mb-4">Image logo is the original (in this case, Batman's logo with yellow background) and overlay image is the one with some filter, or other effect pretty similar to the original image logo (in this case, Batman's logo with white background).</p>
+        <div class="flex justify-center mb-4">
+          <pre class="bg-gray-100 rounded p-4 font-mono text-sm w-full max-w-lg overflow-x-auto">// Overlay - Javascript
 var batman = document.getElementById('batman');
 batman.src = '../logos/batman.png';
 batman.onload = function () {
@@ -130,284 +85,247 @@ batman.onload = function () {
     'image': '../logos/batman-overlay.png'
   });
 };</pre>
-            </div>
+        </div>
+        <div class="flex justify-center mb-4">
+          <img id="batman" src="../logos/batman.png" alt="Batman Logo" class="max-w-full h-auto mx-auto logo" />
+        </div>
+        <div class="text-center">
+          <div id="demo-progress-4" class="mb-2 text-base font-bold opacity-0">0 %</div>
+          <div id="demo-msg-4">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('batman', 4);">
+              Start
+            </button>
           </div>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-sm-4 col-sm-offset-4">
-              <img id="batman" src="../logos/batman.png" alt="Batman Logo" class="img-responsive logo" style="margin: 0 auto;" />
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <div class="col-md-12 text-center">
-              <div id="demo-progress-4" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-              <div id="demo-msg-4">
-                <button class="btn btn-primary" onclick="playDemo('batman', 4, batmanInterval);">
-                  Start
-                </button>
-              </div>
-            </div>
-          </div>
+        </div>
 
-          <h3>Example #4: playing with directions</h3>
+        <!-- Example 4 -->
+        <h3 class="text-xl font-semibold mt-10 mb-2">Example #4: playing with directions</h3>
+        <p class="text-gray-700 mb-4">Loading animation can be set from: left to right (<code class="bg-gray-100 px-1 rounded">lr</code>), right to left (<code class="bg-gray-100 px-1 rounded">rl</code>), bottom to top (<code class="bg-gray-100 px-1 rounded">bt</code>) or top to bottom (<code class="bg-gray-100 px-1 rounded">tb</code>).</p>
 
-            <h4>
-              Loading animation can be set from: left to right (<code>lt</code>), right to left (<code>rl</code>), bottom to top (<code>bt</code>) or top to bottom (<code>tb</code>).
-            </h4>
-            <div class="row" style="margin-top:20px;">
-              <div class="col-md-6" style="margin-bottom:20px;">
-                <pre class="col-md-12 language-javascript">
-// Left to Right - Javascript
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Left to Right - Javascript
 var jurassiclr = document.getElementById('jurassiclr');
 jurassiclr.src = '../logos/jurassic.png';
 jurassiclr.onload = function () {
   Loadgo.init(jurassiclr, {
     'direction': 'lr'
   });
-};
-</pre>
-                <div class="col-sm-12">
-                  <img id="jurassiclr" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
-                </div>
-                <div class="col-sm-12 text-center">
-                  <div id="demo-progress-5" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                  <div id="demo-msg-5">
-                    <button class="btn btn-primary" onclick="playDemo('jurassiclr', 5, jurassicIntervalLR);">
-                      Start
-                    </button>
-                  </div>
-                </div>
+};</pre>
+            <div class="flex justify-center mb-2">
+              <img id="jurassiclr" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center">
+              <div id="demo-progress-5" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-5">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('jurassiclr', 5);">
+                  Start
+                </button>
               </div>
-              <div class="col-md-6" style="margin-bottom:20px;">
-                <pre class="col-md-12 language-javascript">
-// Right to Left - Javascript
+            </div>
+          </div>
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Right to Left - Javascript
 var jurassicrl = document.getElementById('jurassicrl');
 jurassicrl.src = '../logos/jurassic.png';
 jurassicrl.onload = function () {
   Loadgo.init(jurassicrl, {
     'direction': 'rl'
   });
-};
-</pre>
-                <div class="col-sm-12">
-                  <img id="jurassicrl" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
-                </div>
-                <div class="col-sm-12 text-center">
-                  <div id="demo-progress-6" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                  <div id="demo-msg-6">
-                    <button class="btn btn-primary" onclick="playDemo('jurassicrl', 6, jurassicIntervalRL);">
-                      Start
-                    </button>
-                  </div>
-                </div>
+};</pre>
+            <div class="flex justify-center mb-2">
+              <img id="jurassicrl" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center">
+              <div id="demo-progress-6" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-6">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('jurassicrl', 6);">
+                  Start
+                </button>
               </div>
             </div>
-            <div class="row" style="margin-top:20px;">
-              <div class="col-md-6" style="margin-bottom:20px;">
-                <pre class="col-md-12 language-javascript">
-// Top to Bottom - Javascript
-var jurassictb = document.getElementById('jurassictb');
-jurassictb.src = '../logos/jurassic.png';
-jurassictb.onload = function () {
-  Loadgo.init(jurassictb, {
-    'direction': 'tb'
-  });
-};
-</pre>
-                <div class="col-sm-12">
-                  <img id="jurassicbt" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
-                </div>
-                <div class="col-sm-12 text-center">
-                  <div id="demo-progress-7" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                  <div id="demo-msg-7">
-                    <button class="btn btn-primary" onclick="playDemo('jurassicbt', 7, jurassicIntervalBT);">
-                      Start
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-6" style="margin-bottom:20px;">
-                <pre class="col-md-12 language-javascript">
-// Bottom to Top - Javascript
+          </div>
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Bottom to Top - Javascript
 var jurassicbt = document.getElementById('jurassicbt');
 jurassicbt.src = '../logos/jurassic.png';
 jurassicbt.onload = function () {
   Loadgo.init(jurassicbt, {
     'direction': 'bt'
   });
-};
-</pre>
-                <div class="col-sm-12">
-                  <img id="jurassictb" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="img-responsive logo" style="margin: 0 auto;" />
-                </div>
-                <div class="col-sm-12 text-center">
-                  <div id="demo-progress-8" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                  <div id="demo-msg-8">
-                    <button class="btn btn-primary" onclick="playDemo('jurassictb', 8, jurassicIntervalTB);">
-                      Start
-                    </button>
-                  </div>
-                </div>
+};</pre>
+            <div class="flex justify-center mb-2">
+              <img id="jurassicbt" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center">
+              <div id="demo-progress-7" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-7">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('jurassicbt', 7);">
+                  Start
+                </button>
               </div>
             </div>
+          </div>
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Top to Bottom - Javascript
+var jurassictb = document.getElementById('jurassictb');
+jurassictb.src = '../logos/jurassic.png';
+jurassictb.onload = function () {
+  Loadgo.init(jurassictb, {
+    'direction': 'tb'
+  });
+};</pre>
+            <div class="flex justify-center mb-2">
+              <img id="jurassictb" src="../logos/jurassic.png" alt="Jurassic Park Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center">
+              <div id="demo-progress-8" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-8">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('jurassictb', 8);">
+                  Start
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <h3>Example #5: filters</h3>
+        <!-- Example 5 -->
+        <h3 class="text-xl font-semibold mt-10 mb-2">Example #5: filters</h3>
+        <p class="text-gray-700 mb-4">CSS3 image filters applied for progress instead of an overlay. Filters can be: <code class="bg-gray-100 px-1 rounded">sepia</code>, <code class="bg-gray-100 px-1 rounded">blur</code>, <code class="bg-gray-100 px-1 rounded">invert</code>, <code class="bg-gray-100 px-1 rounded">hue-rotate</code>, <code class="bg-gray-100 px-1 rounded">opacity</code> or <code class="bg-gray-100 px-1 rounded">grayscale</code>.</p>
 
-          <h4>
-            CSS3 image filters applied for progress instead of an overlay. Filters can be: <code>sepia</code>, <code>blur</code>, <code>invert</code>, <code>hue-rotate</code>, <code>opacity</code> or <code>gayscale</code>.
-          </h4>
-          <div class="row" style="margin-top:20px;">
-            <div class="col-md-6" style="margin-bottom:20px;">
-              <pre class="col-md-12 language-javascript">
-// Sepia - Javascript
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Sepia - Javascript
 var spidermanSepia = document.getElementById('spidermanSepia');
 spidermanSepia.src = '../logos/spiderman.png';
 spidermanSepia.onload = function () {
   Loadgo.init(spidermanSepia, {
     'filter': 'sepia'
   });
-};
-</pre>
-              <div class="col-sm-12"  style="margin-top:30px">
-                <img id="spidermanSepia" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
-              </div>
-              <div class="col-sm-12 text-center" style="margin-top:10px">
-                <div id="demo-progress-9" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                <div id="demo-msg-9">
-                  <button class="btn btn-primary" onclick="playDemo('spidermanSepia', 9, spidermanSepiaInterval);">
-                    Start
-                  </button>
-                </div>
+};</pre>
+            <div class="flex justify-center mt-6 mb-2">
+              <img id="spidermanSepia" src="../logos/spiderman.png" alt="Spiderman Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center mt-2">
+              <div id="demo-progress-9" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-9">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('spidermanSepia', 9);">
+                  Start
+                </button>
               </div>
             </div>
-            <div class="col-md-6" style="margin-bottom:20px;">
-              <pre class="col-md-12 language-javascript">
-// Blur - Javascript
+          </div>
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Blur - Javascript
 var spidermanBlur = document.getElementById('spidermanBlur');
 spidermanBlur.src = '../logos/spiderman.png';
 spidermanBlur.onload = function () {
   Loadgo.init(spidermanBlur, {
     'filter': 'blur'
   });
-};
-</pre>
-              <div class="col-sm-12"  style="margin-top:30px">
-                <img id="spidermanBlur" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
-              </div>
-              <div class="col-sm-12 text-center" style="margin-top:10px">
-                <div id="demo-progress-10" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                <div id="demo-msg-10">
-                  <button class="btn btn-primary" onclick="playDemo('spidermanBlur', 10, spidermanBlurInterval);">
-                    Start
-                  </button>
-                </div>
+};</pre>
+            <div class="flex justify-center mt-6 mb-2">
+              <img id="spidermanBlur" src="../logos/spiderman.png" alt="Spiderman Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center mt-2">
+              <div id="demo-progress-10" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-10">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('spidermanBlur', 10);">
+                  Start
+                </button>
               </div>
             </div>
           </div>
-          <div class="row" style="margin-top:20px;">
-            <div class="col-md-6" style="margin-bottom:20px;">
-              <pre class="col-md-12 language-javascript">
-// Invert - Javascript
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Invert - Javascript
 var spidermanInvert = document.getElementById('spidermanInvert');
 spidermanInvert.src = '../logos/spiderman.png';
 spidermanInvert.onload = function () {
   Loadgo.init(spidermanInvert, {
     'filter': 'invert'
   });
-};
-</pre>
-              <div class="col-sm-12"  style="margin-top:30px">
-                <img id="spidermanInvert" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
-              </div>
-              <div class="col-sm-12 text-center" style="margin-top:10px">
-                <div id="demo-progress-11" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                <div id="demo-msg-11">
-                  <button class="btn btn-primary" onclick="playDemo('spidermanInvert', 11, spidermanInvertInterval);">
-                    Start
-                  </button>
-                </div>
+};</pre>
+            <div class="flex justify-center mt-6 mb-2">
+              <img id="spidermanInvert" src="../logos/spiderman.png" alt="Spiderman Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center mt-2">
+              <div id="demo-progress-11" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-11">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('spidermanInvert', 11);">
+                  Start
+                </button>
               </div>
             </div>
-            <div class="col-md-6" style="margin-bottom:20px;">
-              <pre class="col-md-12 language-javascript">
-// Hue - Javascript
+          </div>
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Hue Rotate - Javascript
 var spidermanHue = document.getElementById('spidermanHue');
 spidermanHue.src = '../logos/spiderman.png';
 spidermanHue.onload = function () {
   Loadgo.init(spidermanHue, {
     'filter': 'hue-rotate'
   });
-};
-</pre>
-              <div class="col-sm-12"  style="margin-top:30px">
-                <img id="spidermanHue" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
-              </div>
-              <div class="col-sm-12 text-center" style="margin-top:10px">
-                <div id="demo-progress-12" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                <div id="demo-msg-12">
-                  <button class="btn btn-primary" onclick="playDemo('spidermanHue', 12, spidermanHueInterval);">
-                    Start
-                  </button>
-                </div>
+};</pre>
+            <div class="flex justify-center mt-6 mb-2">
+              <img id="spidermanHue" src="../logos/spiderman.png" alt="Spiderman Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center mt-2">
+              <div id="demo-progress-12" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-12">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('spidermanHue', 12);">
+                  Start
+                </button>
               </div>
             </div>
           </div>
-
-          <div class="row" style="margin-top:20px;">
-            <div class="col-md-6" style="margin-bottom:20px;">
-              <pre class="col-md-12 language-javascript">
-// Opacity - Javascript
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Opacity - Javascript
 var spidermanOpacity = document.getElementById('spidermanOpacity');
 spidermanOpacity.onload = function () {
   Loadgo.init(spidermanOpacity, {
     'filter': 'opacity'
   });
-};
-</pre>
-              <div class="col-sm-12"  style="margin-top:30px">
-                <img id="spidermanOpacity" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
-              </div>
-              <div class="col-sm-12 text-center" style="margin-top:10px">
-                <div id="demo-progress-13" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                <div id="demo-msg-13">
-                  <button class="btn btn-primary" onclick="playDemo('spidermanOpacity', 13, spidermanOpacityInterval);">
-                    Start
-                  </button>
-                </div>
+};</pre>
+            <div class="flex justify-center mt-6 mb-2">
+              <img id="spidermanOpacity" src="../logos/spiderman.png" alt="Spiderman Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center mt-2">
+              <div id="demo-progress-13" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-13">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('spidermanOpacity', 13);">
+                  Start
+                </button>
               </div>
             </div>
-            <div class="col-md-6" style="margin-bottom:20px;">
-              <pre class="col-md-12 language-javascript">
-// Grayscale - Javascript
+          </div>
+          <div>
+            <pre class="bg-gray-100 rounded p-4 font-mono text-sm overflow-x-auto mb-4">// Grayscale - Javascript
 var spidermanGrayscale = document.getElementById('spidermanGrayscale');
 spidermanGrayscale.src = '../logos/spiderman.png';
 spidermanGrayscale.onload = function () {
   Loadgo.init(spidermanGrayscale, {
     'filter': 'grayscale'
   });
-};
-</pre>
-              <div class="col-sm-12"  style="margin-top:30px">
-                <img id="spidermanGrayscale" src="../logos/spiderman.png" alt="spiderman Logo" class="img-responsive logo" style="margin: 0 auto;" />
-              </div>
-              <div class="col-sm-12 text-center" style="margin-top:10px">
-                <div id="demo-progress-14" style="margin-bottom:10px;font-size:16px;opacity:0;font-weight:bold;">0 %</div>
-                <div id="demo-msg-14">
-                  <button class="btn btn-primary" onclick="playDemo('spidermanGrayscale', 14, spidermanGrayscaleInterval);">
-                    Start
-                  </button>
-                </div>
+};</pre>
+            <div class="flex justify-center mt-6 mb-2">
+              <img id="spidermanGrayscale" src="../logos/spiderman.png" alt="Spiderman Logo" class="max-w-full h-auto mx-auto logo" />
+            </div>
+            <div class="text-center mt-2">
+              <div id="demo-progress-14" class="mb-2 text-base font-bold opacity-0">0 %</div>
+              <div id="demo-msg-14">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playDemo('spidermanGrayscale', 14);">
+                  Start
+                </button>
               </div>
             </div>
           </div>
-
         </div>
-        <hr/>
+
+        <hr class="mt-10 border-gray-200" />
       </div>
     </div>
 
-  </body>
-
-  <script type="text/javascript" src="../../loadgo-nojquery.js"></script>
+  <script type="text/javascript" src="../../loadgo-vanilla.js"></script>
   <script type="text/javascript" src="main.js"></script>
 
 </html>
