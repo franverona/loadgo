@@ -4,7 +4,7 @@ import globals from 'globals'
 export default [
   js.configs.recommended,
   {
-    files: ['loadgo.js', 'loadgo-vanilla.js'],
+    files: ['packages/core/loadgo.js', 'packages/core/loadgo-vanilla.js'],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'script',
@@ -54,7 +54,7 @@ export default [
     },
   },
   {
-    files: ['tests/**/*.test.js'],
+    files: ['packages/core/tests/**/*.test.js'],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'module',

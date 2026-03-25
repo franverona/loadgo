@@ -2,113 +2,66 @@
 
 Developer notes for this repository. Covers build system, architecture decisions, and conventions that are not obvious from the code alone.
 
-## Commands
+## Monorepo
 
-```bash
-npm install          # Install dev dependencies (also sets up Husky hooks via "prepare")
-npm run build        # Full build: clean → minify → types → stamp
-npm run clean        # Remove dist/ folder
-npm run minify       # Minify both source files into dist/
-npm run types        # Copy .d.ts declaration files from types/ into dist/
-npm run stamp        # Inject version + year into source and dist files
-npm test             # Run tests (Vitest)
-npm run test:watch   # Run tests in watch mode
-npm run lint         # ESLint on all JS files (including tests)
-npm run lint:fix     # ESLint with auto-fix
-npm run format       # Prettier write on all JS files (including tests)
-npm run format:check # Prettier check (no writes)
-```
+This is an **npm workspaces monorepo**. The root is private and holds shared tooling (ESLint, Prettier, Vitest, Husky, commitlint, devDependencies). Publishable packages live under `packages/`.
 
-**Tests**: CLI-based via Vitest + jsdom. Test files:
-- `tests/loadgo-vanilla.test.js` — vanilla JS implementation
-- `tests/loadgo.test.js` — jQuery implementation
+**Versioning is lockstep** — all packages share the same version number. When cutting a release, bump both root `package.json` and `packages/core/package.json` to the same version before publishing.
 
-Note: Tests that depend on real browser layout (overlay pixel dimensions after `setprogress`) are not included — jsdom does not run a layout engine, so `clientWidth`/`getBoundingClientRect()` return 0. Those behaviours are best verified manually in a browser via the `examples/` folder.
+Future packages (`packages/react/`, `packages/vue/`, etc.) follow the same layout as `packages/core/`.
 
 ## npm publishing
 
-Package published as `loadgo` on npmjs.com. Publishing is manual.
+Each package is published independently from its own directory.
 
 **To cut a release:**
 ```bash
-npm version patch   # or minor / major — bumps package.json, commits, creates tag
+# Bump version in root and in the package being released
+npm version patch    # or minor / major — run from repo root
+cd packages/core && npm version patch   # same version
+
 git push && git push --tags
-npm publish         # prepublishOnly runs npm run build first
+cd packages/core && npm publish   # prepublishOnly runs npm run build first
 ```
 
-**What gets published** (`files` field): `dist/`, `README.md`, `LICENSE` — source files and `types/` are excluded.
-
-**`exports` map:**
-| Import | JS | Types |
-|---|---|---|
-| `loadgo` | `dist/loadgo-vanilla.min.js` | `dist/loadgo-vanilla.d.ts` |
-| `loadgo/jquery` | `dist/loadgo.min.js` | `dist/loadgo.d.ts` |
-
-**`peerDependencies`**: jQuery `>=4.0.0`, marked optional — only needed for the jQuery build.
-**`devDependencies`**: jQuery is also kept here so tests can import it.
-
-Preview publish contents at any time with `npm pack --dry-run`.
+`npm pack --dry-run` (from `packages/core/`) previews what gets published. Only `dist/` is included — source, `types/`, and tests are excluded via the `files` field.
 
 ## Build system
 
-- **Minification**: `terser` — outputs to `dist/loadgo.min.js` and `dist/loadgo-vanilla.min.js`
-- **Type declarations**: source `.d.ts` files live in `types/`; `npm run types` copies them to `dist/`
-- **Stamping**: `scripts/stamp.js` (ESM) — replaces version and copyright year in source and dist files
-- **No Grunt** — fully replaced by npm scripts
+- **Minification**: `terser` with `--comments /^!/` — preserves the `/*!` license comment in minified output.
+- **Stamping**: `scripts/stamp.js` lives at repo root and accepts a package directory argument (`node ../../scripts/stamp.js .`), so each package reads its own `package.json` for the version — not the root one.
+- **Type declarations**: source `.d.ts` files live in `packages/core/types/`; copied to `packages/core/dist/` by `npm run types`.
+- **No Grunt** — fully replaced by npm scripts.
+
+## Tests
+
+CLI-based via Vitest + jsdom. Tests dynamically load source via `eval()` — the path resolves relative to each test file, so they work correctly from `packages/core/tests/`.
+
+Tests that depend on real browser layout (`clientWidth`, `getBoundingClientRect`) are not included — jsdom has no layout engine. Verify those manually via the `examples/` folder.
 
 ## CI (GitHub Actions)
 
-Workflow: `.github/workflows/ci.yml` — runs on push to `main` and on PRs targeting `main`.
+Three parallel jobs: **lint**, **test**, **build** — all run from repo root and cover all packages automatically. Skipped when only non-code files change.
 
-Three parallel jobs: **lint** (`eslint` + `prettier --check`), **test** (`vitest run`), **build** (`npm run build`).
-
-Skipped automatically when only non-code files change (`**.md`, `LICENSE`, `.gitignore`, images).
-
-Dependabot (`.github/dependabot.yml`) opens weekly PRs for npm dependency updates, grouped as a single dev-dependencies PR.
-
-## Git hooks (Husky)
-
-- **pre-commit**: runs `lint-staged` → `prettier --write` on staged `*.js` files
-- **commit-msg**: runs `commitlint` → enforces [Conventional Commits](https://www.conventionalcommits.org/) format
+Dependabot opens weekly grouped PRs for npm dependency updates.
 
 ## Architecture
 
-Two **independent, parallel implementations** with identical APIs:
+Two independent parallel implementations in `packages/core/`, both with identical APIs:
 
 - `loadgo.js` — jQuery 4 plugin (`$('#logo').loadgo(...)`)
 - `loadgo-vanilla.js` — Vanilla JS (`Loadgo.init(el, options)`)
 
-Both ship minified counterparts in `dist/` generated by `npm run build`.
+**How it works**: `init` wraps the `<img>` in a `div.loadgo-container` and injects a `div.loadgo-overlay`. Progress shrinks/grows the overlay (width for `lr`/`rl`, height for `bt`/`tb`). Resize events recalculate dimensions.
 
-**How the plugin works**: On `init`, the plugin wraps the target `<img>` in a `div.loadgo-container` and injects a `div.loadgo-overlay` on top. Progress is represented by shrinking/growing the overlay (width for horizontal directions, height for vertical). Window resize events recalculate overlay dimensions to stay responsive.
-
-**Core API** (same for both implementations):
-- `init(options)` — initialize; attaches container + overlay to DOM
-- `setprogress(0–100)` — animate overlay to represent progress
-- `getprogress()` — return current progress value
-- `resetprogress()` — set progress back to 0
-- `loop(duration)` — run indefinite animation loop
-- `stop()` — stop loop and reveal full image
-- `destroy()` — remove overlay and unwrap container
-
-**Key options**: `bgcolor`, `opacity`, `animated`, `animationDuration`, `animationEasing`, `direction` (`lr|rl|bt|tb`), `image`, `class`, `filter`, `resize`, `onProgress`, `ariaLabel`.
-
-**State storage**: jQuery version uses jQuery's `.data()` per element; vanilla version uses a module-level array of `{ id, properties }` objects keyed by element ID.
-
-## Type declarations
-
-Source declaration files live in `types/` and are not published directly:
-- `types/loadgo-vanilla.d.ts` — declares `LoadgoOptions`, `LoadgoAPI`, and the `Loadgo` global
-- `types/loadgo.d.ts` — augments the global `JQuery` interface with typed `loadgo()` overloads
-
-`npm run types` copies both into `dist/` as part of the build. Only the `dist/` copies are published.
+**State storage**: jQuery version uses `.data()` per element; vanilla version uses a module-level `[{ id, properties }]` array keyed by element ID.
 
 ## Code style
 
-- ES6+: `const`/`let`, arrow functions, template literals, spread operator, `.includes()`, `.find()`, `.findIndex()`
-- ESLint 9 flat config (`eslint.config.js`) with per-directory settings
-- Prettier (`.prettierrc`): single quotes, no semicolons, 2-space indent, trailing commas, 100-char print width
-- `"type": "module"` in `package.json` — all config files (ESLint, commitlint, stamp script) use ESM
+- ES6+: `const`/`let`, arrow functions, template literals, `.includes()`, `.find()`, `.findIndex()`
+- ESLint 9 flat config at repo root with per-directory settings
+- Prettier: single quotes, no semicolons, 2-space indent, trailing commas, 100-char print width
+- `"type": "module"` in root `package.json` — all config files and scripts use ESM
 
 ## jQuery 4 compatibility notes
 
