@@ -333,8 +333,8 @@ npm run test:watch # watch mode
 ```
 
 Test files:
-- `tests/loadgo-vanilla.test.js` — vanilla JS implementation
-- `tests/loadgo.test.js` — jQuery implementation
+- `packages/core/tests/loadgo-vanilla.test.js` — vanilla JS implementation
+- `packages/core/tests/loadgo.test.js` — jQuery implementation
 
 > Note: Tests that depend on real browser layout (overlay pixel dimensions after `setprogress`) are not included — jsdom has no layout engine, so `getBoundingClientRect()` and `clientWidth` return 0. Those behaviours can be verified manually using the `examples/` folder.
 

@@ -1,81 +1,32 @@
 {
-  "name": "loadgo",
-  "version": "3.1.0",
-  "description": "A lightweight JavaScript plugin that transforms your logo into a custom progress bar.",
-  "author": "Fran Verona",
-  "keywords": [
-    "jquery",
-    "javascript",
-    "plugin",
-    "loadgo",
-    "progress",
-    "bar",
-    "image"
-  ],
-  "homepage": "https://github.com/franverona/loadgo",
-  "bugs": "https://github.com/franverona/loadgo/issues",
-  "license": "MIT",
+  "name": "loadgo-monorepo",
+  "private": true,
   "type": "module",
-  "main": "dist/loadgo-vanilla.min.js",
-  "types": "dist/loadgo-vanilla.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/loadgo-vanilla.d.ts",
-      "default": "./dist/loadgo-vanilla.min.js"
-    },
-    "./jquery": {
-      "types": "./dist/loadgo.d.ts",
-      "default": "./dist/loadgo.min.js"
-    }
-  },
-  "files": [
-    "dist/"
+  "workspaces": [
+    "packages/*"
   ],
-  "contributors": [
-    {
-      "name": "Carlos Feliciano Barba",
-      "email": "c.feliciano2009@gmail.com",
-      "url": "https://github.com/carloscheddar"
-    }
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/franverona/loadgo.git"
-  },
-  "peerDependencies": {
-    "jquery": ">=4.0.0"
-  },
-  "peerDependenciesMeta": {
-    "jquery": {
-      "optional": true
-    }
-  },
   "scripts": {
-    "build": "npm run clean && npm run minify && npm run types && npm run stamp",
-    "clean": "rm -rf dist",
-    "minify": "mkdir -p dist && terser loadgo.js -o dist/loadgo.min.js --comments /preserve/ && terser loadgo-vanilla.js -o dist/loadgo-vanilla.min.js --comments /preserve/",
-    "types": "cp types/loadgo-vanilla.d.ts dist/loadgo-vanilla.d.ts && cp types/loadgo.d.ts dist/loadgo.d.ts",
-    "stamp": "node scripts/stamp.js",
+    "build": "npm run build --workspaces",
+    "clean": "npm run clean --workspaces",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint loadgo.js loadgo-vanilla.js scripts/ examples/ tests/",
-    "lint:fix": "eslint --fix loadgo.js loadgo-vanilla.js scripts/ examples/ tests/",
-    "format": "prettier --write loadgo.js loadgo-vanilla.js \"scripts/**/*.js\" \"examples/**/*.js\" \"tests/**/*.js\"",
-    "format:check": "prettier --check loadgo.js loadgo-vanilla.js \"scripts/**/*.js\" \"examples/**/*.js\" \"tests/**/*.js\"",
-    "prepare": "husky",
-    "prepublishOnly": "npm run build"
+    "lint": "eslint packages/core/loadgo.js packages/core/loadgo-vanilla.js scripts/ examples/ packages/core/tests/",
+    "lint:fix": "eslint --fix packages/core/loadgo.js packages/core/loadgo-vanilla.js scripts/ examples/ packages/core/tests/",
+    "format": "prettier --write packages/core/loadgo.js packages/core/loadgo-vanilla.js \"scripts/**/*.js\" \"examples/**/*.js\" \"packages/core/tests/**/*.js\"",
+    "format:check": "prettier --check packages/core/loadgo.js packages/core/loadgo-vanilla.js \"scripts/**/*.js\" \"examples/**/*.js\" \"packages/core/tests/**/*.js\"",
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.js": ["prettier --write"]
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
-    "jquery": "^4.0.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "husky": "^9.1.7",
+    "jquery": "^4.0.0",
     "jsdom": "^29.0.1",
     "lint-staged": "^16.4.0",
     "prettier": "^3.0.0",

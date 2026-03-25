@@ -1,0 +1,53 @@
+{
+  "name": "loadgo",
+  "version": "3.1.0",
+  "description": "A lightweight JavaScript plugin that transforms your logo into a custom progress bar.",
+  "author": "Fran Verona",
+  "keywords": ["jquery", "javascript", "plugin", "loadgo", "progress", "bar", "image"],
+  "homepage": "https://github.com/franverona/loadgo",
+  "bugs": "https://github.com/franverona/loadgo/issues",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/loadgo-vanilla.min.js",
+  "types": "dist/loadgo-vanilla.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/loadgo-vanilla.d.ts",
+      "default": "./dist/loadgo-vanilla.min.js"
+    },
+    "./jquery": {
+      "types": "./dist/loadgo.d.ts",
+      "default": "./dist/loadgo.min.js"
+    }
+  },
+  "files": ["dist/"],
+  "contributors": [
+    {
+      "name": "Carlos Feliciano Barba",
+      "email": "c.feliciano2009@gmail.com",
+      "url": "https://github.com/carloscheddar"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/franverona/loadgo.git"
+  },
+  "peerDependencies": {
+    "jquery": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "jquery": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "npm run clean && npm run minify && npm run types && npm run stamp",
+    "clean": "rm -rf dist",
+    "minify": "mkdir -p dist && terser loadgo.js -o dist/loadgo.min.js --comments /^!/ && terser loadgo-vanilla.js -o dist/loadgo-vanilla.min.js --comments /^!/",
+    "types": "cp types/loadgo-vanilla.d.ts dist/loadgo-vanilla.d.ts && cp types/loadgo.d.ts dist/loadgo.d.ts",
+    "stamp": "node ../../scripts/stamp.js .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  }
+}
