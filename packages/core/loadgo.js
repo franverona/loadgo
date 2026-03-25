@@ -25,6 +25,11 @@ if (typeof jQuery === 'undefined')
         throw new Error('LoadGo only works on one element at a time. Try with a valid #id.')
       }
 
+      // If already initialized, destroy first to prevent nested containers
+      if (typeof $this.data('loadgo') !== 'undefined') {
+        methods.destroy.call(this)
+      }
+
       // Plugin options. We need to reset options to avoid future errors
       $this.data('loadgo-options', {})
 
@@ -432,9 +437,11 @@ if (typeof jQuery === 'undefined')
 
         // Remove transition animation
         // Can be replaced with animated: false in the initializer
-        data.overlay.css({
-          transition: 'none',
-        })
+        if (data.overlay) {
+          data.overlay.css({
+            transition: 'none',
+          })
+        }
 
         $(image).loadgo('setprogress', data.progress)
       }, duration)
@@ -468,6 +475,10 @@ if (typeof jQuery === 'undefined')
       }
 
       $(window).off('resize', options.resizeFunction)
+
+      if (options.interval) {
+        clearInterval(options.interval)
+      }
 
       if (options.overlay) {
         options.overlay.remove() // Removes overlay

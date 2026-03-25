@@ -91,17 +91,21 @@
       return
     }
 
-    let domElementsIndex = getIndex(element.id)
-    if (domElementsIndex === -1) {
-      domElements.push({
-        id: element.id,
-        properties: {},
-      })
-      domElementsIndex = domElements.length - 1
-    } else {
-      // Plugin options. We need to reset options to avoid future errors
-      domElements[domElementsIndex].properties = {}
+    // Assign a generated id to elements that have none, to prevent empty-string key collisions
+    if (!element.id) {
+      element.id = uniqueId()
     }
+
+    // If already initialized, destroy first to prevent nested containers and listener leaks
+    if (getIndex(element.id) !== -1) {
+      Loadgo.destroy(element)
+    }
+
+    domElements.push({
+      id: element.id,
+      properties: {},
+    })
+    const domElementsIndex = domElements.length - 1
 
     const pluginOptions = Loadgo.options(element, useroptions)
 
@@ -126,14 +130,14 @@
     if (gbc.width) {
       overlay.style.width = `${gbc.width}px` // for modern browsers
     } else {
-      overlay.style.width = element.offsetWidth // for oldIE
+      overlay.style.width = `${element.offsetWidth}px` // for oldIE
     }
 
     // Overlay height
     if (gbc.height) {
       overlay.style.height = `${gbc.height}px` // for modern browsers
     } else {
-      overlay.style.height = element.offsetHeight // for oldIE
+      overlay.style.height = `${element.offsetHeight}px` // for oldIE
     }
 
     // Overlay will be positioned absolute
@@ -268,14 +272,14 @@
             if (resizeGbc.width) {
               resizeOverlay.style.width = `${resizeGbc.width}px` // for modern browsers
             } else {
-              resizeOverlay.style.width = element.offsetWidth // for oldIE
+              resizeOverlay.style.width = `${element.offsetWidth}px` // for oldIE
             }
 
             // Overlay height
             if (resizeGbc.height) {
               resizeOverlay.style.height = `${resizeGbc.height}px` // for modern browsers
             } else {
-              resizeOverlay.style.height = element.offsetHeight // for oldIE
+              resizeOverlay.style.height = `${element.offsetHeight}px` // for oldIE
             }
 
             // We need to add margins and paddings to set the overlay exactly above our image
@@ -554,7 +558,9 @@
       return
     }
 
-    clearInterval(domElements[getIndex(element.id)].properties.interval)
+    const idx = getIndex(element.id)
+    clearInterval(domElements[idx].properties.interval)
+    domElements[idx].properties.interval = null
     Loadgo.setprogress(element, 100)
   }
 
@@ -570,6 +576,9 @@
 
     const opt = Loadgo.options(element)
     window.removeEventListener('resize', opt.resizeFunction)
+    if (opt.interval) {
+      clearInterval(opt.interval)
+    }
     domElements.splice(domElementsIndex, 1)
 
     const loadgoContainer = element.parentNode
@@ -580,7 +589,7 @@
         overlay.parentNode.removeChild(overlay) // Removes overlay
       }
       if (parent) {
-        parent.appendChild(element) // Moves image back to original parent
+        loadgoContainer.before(element) // Moves image back to its original position
         parent.removeChild(loadgoContainer) // Removes "loadgo-container" element
       }
     } else {
