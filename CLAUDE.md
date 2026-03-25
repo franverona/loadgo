@@ -27,15 +27,14 @@ Note: Tests that depend on real browser layout (overlay pixel dimensions after `
 
 ## npm publishing
 
-Package published as `loadgo` on npmjs.com. Publishing is automated via `.github/workflows/release.yml` — triggered when a `v*` tag is pushed.
+Package published as `loadgo` on npmjs.com. Publishing is manual.
 
 **To cut a release:**
 ```bash
 npm version patch   # or minor / major — bumps package.json, commits, creates tag
 git push && git push --tags
+npm publish         # prepublishOnly runs npm run build first
 ```
-
-Pushing the tag triggers the workflow, which runs `npm publish` automatically (`prepublishOnly` runs `npm run build` first).
 
 **What gets published** (`files` field): `dist/`, `README.md`, `LICENSE` — source files and `types/` are excluded.
 

@@ -54,13 +54,10 @@ chore: bump dependencies
 
 ## Releasing (maintainers only)
 
-Releases are automated via GitHub Actions. To publish a new version:
+To publish a new version:
 
 ```bash
-npm version patch   # or minor / major
+npm version patch   # or minor / major — bumps package.json, commits, creates tag
 git push && git push --tags
+npm publish         # prepublishOnly runs npm run build automatically
 ```
-
-Pushing the tag triggers `.github/workflows/release.yml`, which builds and publishes to npm automatically.
-
-**Required secret**: `NPM_TOKEN` must be set in **Settings → Secrets and variables → Actions**. Generate it on npmjs.com under **Access Tokens → Generate New Token (Classic) → Automation**.
