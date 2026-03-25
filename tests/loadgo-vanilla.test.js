@@ -172,7 +172,17 @@ describe('JS - Overlay render', () => {
 
   it('sets CSS transition when animated is true', () => {
     Loadgo.init(image, { animated: true })
-    expect(getOverlay().style.transition).toBe('all 0.6s ease')
+    expect(getOverlay().style.transition).toContain('ease')
+  })
+
+  it('uses custom animationDuration', () => {
+    Loadgo.init(image, { animationDuration: 1.2 })
+    expect(getOverlay().style.transition).toContain('1.2s')
+  })
+
+  it('uses custom animationEasing', () => {
+    Loadgo.init(image, { animationEasing: 'linear' })
+    expect(getOverlay().style.transition).toContain('linear')
   })
 
   it('does not set CSS transition when animated is false', () => {
@@ -203,7 +213,7 @@ describe('JS - Overlay render', () => {
 
   it('does not apply a filter to the image by default', () => {
     Loadgo.init(image)
-    expect(image.style['-webkit-filter'] ?? '').toBe('')
+    expect(image.style['filter'] ?? '').toBe('')
   })
 
   it('sets background image on overlay when image option is provided', () => {
@@ -280,5 +290,142 @@ describe('JS - Destroy', () => {
     Loadgo.init(image, { filter: 'sepia' })
     Loadgo.destroy(image)
     expect(image.parentElement).toBe(container)
+  })
+})
+
+describe('JS - Re-initialization', () => {
+  it('re-initializing the same element creates only one overlay', () => {
+    Loadgo.init(image)
+    Loadgo.init(image)
+    expect(image.parentElement.querySelectorAll('.loadgo-overlay').length).toBe(1)
+  })
+
+  it('re-initializing resets progress to 0', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 75)
+    Loadgo.init(image)
+    expect(Loadgo.getprogress(image)).toBe(0)
+  })
+
+  it('re-initializing applies new options', () => {
+    Loadgo.init(image, { bgcolor: '#FF0000' })
+    Loadgo.init(image, { bgcolor: '#00FF00' })
+    expect(Loadgo.options(image).bgcolor).toBe('#00FF00')
+  })
+})
+
+describe('JS - loop()/stop() in filter mode', () => {
+  it('loop() does not throw in filter mode', () => {
+    Loadgo.init(image, { filter: 'blur' })
+    expect(() => Loadgo.loop(image, 100)).not.toThrow()
+    Loadgo.stop(image)
+  })
+
+  it('stop() does not throw in filter mode', () => {
+    Loadgo.init(image, { filter: 'blur' })
+    Loadgo.loop(image, 100)
+    expect(() => Loadgo.stop(image)).not.toThrow()
+  })
+
+  it('stop() in filter mode sets progress to 100', () => {
+    Loadgo.init(image, { filter: 'blur' })
+    Loadgo.loop(image, 100)
+    Loadgo.stop(image)
+    expect(Loadgo.getprogress(image)).toBe(100)
+  })
+})
+
+describe('JS - ARIA attributes', () => {
+  it('overlay has role="progressbar"', () => {
+    Loadgo.init(image)
+    expect(getOverlay().getAttribute('role')).toBe('progressbar')
+  })
+
+  it('overlay has aria-valuemin="0" and aria-valuemax="100"', () => {
+    Loadgo.init(image)
+    expect(getOverlay().getAttribute('aria-valuemin')).toBe('0')
+    expect(getOverlay().getAttribute('aria-valuemax')).toBe('100')
+  })
+
+  it('overlay aria-valuenow starts at 0', () => {
+    Loadgo.init(image)
+    expect(getOverlay().getAttribute('aria-valuenow')).toBe('0')
+  })
+
+  it('overlay aria-valuenow updates on setprogress', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 60)
+    expect(getOverlay().getAttribute('aria-valuenow')).toBe('60')
+  })
+
+  it('overlay has default aria-label "Loading"', () => {
+    Loadgo.init(image)
+    expect(getOverlay().getAttribute('aria-label')).toBe('Loading')
+  })
+
+  it('overlay uses custom ariaLabel', () => {
+    Loadgo.init(image, { ariaLabel: 'Image loading' })
+    expect(getOverlay().getAttribute('aria-label')).toBe('Image loading')
+  })
+
+  it('filter mode: image gets role="progressbar"', () => {
+    Loadgo.init(image, { filter: 'blur' })
+    expect(image.getAttribute('role')).toBe('progressbar')
+  })
+
+  it('filter mode: image aria-valuenow updates on setprogress', () => {
+    Loadgo.init(image, { filter: 'blur' })
+    Loadgo.setprogress(image, 40)
+    expect(image.getAttribute('aria-valuenow')).toBe('40')
+  })
+
+  it('filter mode: destroy removes ARIA attributes from image', () => {
+    Loadgo.init(image, { filter: 'blur' })
+    Loadgo.destroy(image)
+    expect(image.getAttribute('role')).toBeNull()
+    expect(image.getAttribute('aria-valuenow')).toBeNull()
+  })
+})
+
+describe('JS - onProgress callback', () => {
+  it('onProgress is called when setprogress is called', () => {
+    let received = null
+    Loadgo.init(image, { onProgress: (p) => (received = p) })
+    Loadgo.setprogress(image, 42)
+    expect(received).toBe(42)
+  })
+
+  it('onProgress is called with 0 when resetprogress is called', () => {
+    let received = null
+    Loadgo.init(image, { onProgress: (p) => (received = p) })
+    Loadgo.setprogress(image, 50)
+    Loadgo.resetprogress(image)
+    expect(received).toBe(0)
+  })
+
+  it('onProgress is not called for out-of-range values', () => {
+    let callCount = 0
+    Loadgo.init(image, { onProgress: () => callCount++ })
+    Loadgo.setprogress(image, -1)
+    Loadgo.setprogress(image, 101)
+    expect(callCount).toBe(0)
+  })
+})
+
+describe('JS - Resize listener cleanup', () => {
+  it('custom resize listener is not called after destroy()', () => {
+    let callCount = 0
+    Loadgo.init(image, { resize: () => callCount++ })
+    window.dispatchEvent(new Event('resize'))
+    expect(callCount).toBe(1)
+    Loadgo.destroy(image)
+    window.dispatchEvent(new Event('resize'))
+    expect(callCount).toBe(1)
+  })
+
+  it('default resize listener is removed after destroy() without throwing', () => {
+    Loadgo.init(image)
+    Loadgo.destroy(image)
+    expect(() => window.dispatchEvent(new Event('resize'))).not.toThrow()
   })
 })

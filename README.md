@@ -44,6 +44,32 @@ import 'loadgo/jquery'
 
 You can also use the minified versions from the `dist/` folder (`dist/loadgo.min.js` / `dist/loadgo-vanilla.min.js`).
 
+## TypeScript
+
+Type declarations are included in the package — no `@types/*` install needed.
+
+**Vanilla JS** — `Loadgo` is available as both a named export and a global:
+
+```ts
+import type { LoadgoOptions } from 'loadgo'
+
+const options: LoadgoOptions = { direction: 'bt', opacity: 0.8 }
+Loadgo.init(document.getElementById('logo') as HTMLImageElement, options)
+```
+
+**jQuery plugin** — importing `loadgo/jquery` augments the global `JQuery` interface automatically:
+
+```ts
+import 'loadgo/jquery'
+
+$('#logo').loadgo({ direction: 'bt' })
+$('#logo').loadgo('setprogress', 50)
+
+const progress: number = $('#logo').loadgo('getprogress')
+```
+
+> The jQuery types require `@types/jquery` to be installed in your project.
+
 ## Quick Start
 
 ```html
@@ -108,11 +134,60 @@ Loadgo.init(document.getElementById('logo'));
 | `bgcolor` | `String` | `#FFFFFF` | Overlay background color (hex or RGB). Disabled when `image` is set. |
 | `opacity` | `Number` | `0.5` | Overlay transparency. |
 | `animated` | `Boolean` | `true` | Enable CSS transitions on `setprogress`. |
+| `animationDuration` | `Number` | `0.6` | CSS transition duration in seconds. Only applies when `animated` is `true`. |
+| `animationEasing` | `String` | `ease` | CSS transition easing function (any valid CSS `transition-timing-function`). Only applies when `animated` is `true`. |
 | `direction` | `String` | `lr` | Animation direction: `lr` (left→right), `rl` (right→left), `bt` (bottom→top), `tb` (top→bottom). |
 | `image` | `String` | `null` | URL for a background image on the overlay instead of a solid color. |
 | `class` | `String` | `null` | CSS class applied to the overlay. |
-| `filter` | `String` | `null` | CSS image filter. Values: `blur`, `grayscale`, `sepia`, `hue-rotate`, `invert`, `opacity`. |
-| `resize` | `Function` | built-in | Custom overlay resize function. LoadGo provides a default implementation. |
+| `filter` | `String` | `null` | CSS image filter applied directly to the `img`. Values: `blur`, `grayscale`, `sepia`, `hue-rotate`, `invert`, `opacity`. No overlay is created when this is set. |
+| `resize` | `Function` | built-in | Custom window resize handler. When provided, replaces the built-in one entirely. |
+| `onProgress` | `Function` | `null` | Callback invoked after every `setprogress` call, receiving the current progress value (0–100). |
+| `ariaLabel` | `String` | `Loading` | Text for the `aria-label` attribute on the progressbar element. |
+
+### onProgress callback
+
+Use `onProgress` to react every time the progress value changes — for example to update a separate counter:
+
+```js
+// jQuery
+$('#logo').loadgo({
+  onProgress: (progress) => {
+    document.getElementById('counter').textContent = `${progress}%`
+  },
+})
+
+// Pure JavaScript
+Loadgo.init(document.getElementById('logo'), {
+  onProgress: (progress) => {
+    document.getElementById('counter').textContent = `${progress}%`
+  },
+})
+```
+
+### Custom animation timing
+
+```js
+// Slow, linear transition
+$('#logo').loadgo({ animationDuration: 1.5, animationEasing: 'linear' })
+
+// Snappy, with a bounce effect
+Loadgo.init(document.getElementById('logo'), {
+  animationDuration: 0.3,
+  animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+})
+```
+
+### Accessibility
+
+LoadGo automatically adds `role="progressbar"`, `aria-valuemin`, `aria-valuemax`, and `aria-valuenow` to the overlay element (or to the `img` itself when `filter` mode is used). The `aria-valuenow` attribute is kept in sync with the current progress value on every `setprogress` call.
+
+Use `ariaLabel` to provide a meaningful label for screen readers:
+
+```js
+$('#logo').loadgo({ ariaLabel: 'File upload progress' })
+
+Loadgo.init(document.getElementById('logo'), { ariaLabel: 'File upload progress' })
+```
 
 ### Methods
 
@@ -287,6 +362,14 @@ If you have CSS rules using child selectors like `div > img`, you may need to up
 ```
 
 ## Changelog
+
+**3.1.0** — 2026
+- Added `onProgress` callback option — fires on every `setprogress` call with the current value.
+- Added ARIA support: overlay (or image in filter mode) gets `role="progressbar"` and `aria-valuenow` kept in sync automatically. Configurable via `ariaLabel` option.
+- Added `animationDuration` and `animationEasing` options — animation timing is no longer hardcoded to `0.6s ease`.
+- Added TypeScript declarations for both vanilla and jQuery builds — no `@types/*` install needed.
+- Fixed memory leak: window resize listener is now properly removed on `destroy`.
+- Vendor prefix `-webkit-filter` replaced with standard `filter`.
 
 **3.0** — 2026
 - Dropped jQuery < 4 support; updated for jQuery 4 breaking changes (`$.inArray`, `$.removeData`, `.load()` event shorthand).

@@ -1,6 +1,6 @@
 {
   "name": "loadgo",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "A lightweight JavaScript plugin that transforms your logo into a custom progress bar.",
   "author": "Fran Verona",
   "keywords": [
@@ -17,9 +17,16 @@
   "license": "MIT",
   "type": "module",
   "main": "dist/loadgo-vanilla.min.js",
+  "types": "dist/loadgo-vanilla.d.ts",
   "exports": {
-    ".": "./dist/loadgo-vanilla.min.js",
-    "./jquery": "./dist/loadgo.min.js"
+    ".": {
+      "types": "./dist/loadgo-vanilla.d.ts",
+      "default": "./dist/loadgo-vanilla.min.js"
+    },
+    "./jquery": {
+      "types": "./dist/loadgo.d.ts",
+      "default": "./dist/loadgo.min.js"
+    }
   },
   "files": [
     "dist/"
@@ -44,9 +51,10 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && npm run minify && npm run stamp",
+    "build": "npm run clean && npm run minify && npm run types && npm run stamp",
     "clean": "rm -rf dist",
     "minify": "mkdir -p dist && terser loadgo.js -o dist/loadgo.min.js --comments /preserve/ && terser loadgo-vanilla.js -o dist/loadgo-vanilla.min.js --comments /preserve/",
+    "types": "cp types/loadgo-vanilla.d.ts dist/loadgo-vanilla.d.ts && cp types/loadgo.d.ts dist/loadgo.d.ts",
     "stamp": "node scripts/stamp.js",
     "test": "vitest run",
     "test:watch": "vitest",

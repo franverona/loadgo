@@ -1,5 +1,5 @@
 /**
- * @preserve LoadGo v3.0.0 (https://github.com/franverona/loadgo)
+ * @preserve LoadGo v3.1.0 (https://github.com/franverona/loadgo)
  * 2026 - Fran Verona
  * Licensed under MIT (https://github.com/franverona/loadgo/blob/master/LICENSE)
  */
@@ -10,7 +10,7 @@ if (typeof jQuery === 'undefined')
   )
 ;(function ($) {
   const methods = {
-    init: function (useroptions) {
+    init: function (userOptions) {
       const $this = $(this)
 
       if ($this.length === 0) {
@@ -28,7 +28,7 @@ if (typeof jQuery === 'undefined')
       // Plugin options. We need to reset options to avoid future errors
       $this.data('loadgo-options', {})
 
-      const pluginOptions = $this.loadgo('options', useroptions)
+      const pluginOptions = $this.loadgo('options', userOptions)
 
       const _w = $this[0].getBoundingClientRect().width
       const _h = $this[0].getBoundingClientRect().height
@@ -45,13 +45,10 @@ if (typeof jQuery === 'undefined')
       const $overlay = $(overlayWithOptions)
 
       if (pluginOptions.animated) {
-        const overlayCSS = 'width 0.6s ease, height 0.6s ease, top 0.6s ease'
+        const d = pluginOptions.animationDuration
+        const e = pluginOptions.animationEasing
         $overlay.css({
-          transition: overlayCSS,
-          '-webkit-transition': overlayCSS,
-          '-moz-transition': overlayCSS,
-          '-ms-transition': overlayCSS,
-          '-o-transition': overlayCSS,
+          transition: `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`,
         })
       }
 
@@ -59,24 +56,30 @@ if (typeof jQuery === 'undefined')
         $overlay.addClass(pluginOptions['class'])
       }
 
+      // ARIA progressbar attributes — set on the overlay in normal mode, or on the image in filter mode
+      const $ariaTarget = pluginOptions.filter ? $this : $overlay
+      $ariaTarget.attr({
+        role: 'progressbar',
+        'aria-valuemin': '0',
+        'aria-valuemax': '100',
+        'aria-valuenow': '0',
+        'aria-label': pluginOptions.ariaLabel,
+      })
+
       if (pluginOptions.filter) {
         if (pluginOptions.filter === 'blur') {
-          $this.css({ '-webkit-filter': `${pluginOptions.filter}(10px)` })
+          $this.css({ filter: `${pluginOptions.filter}(10px)` })
         } else if (pluginOptions.filter === 'hue-rotate') {
-          $this.css({ '-webkit-filter': `${pluginOptions.filter}(360deg)` })
+          $this.css({ filter: `${pluginOptions.filter}(360deg)` })
         } else if (pluginOptions.filter === 'opacity') {
-          $this.css({ '-webkit-filter': `${pluginOptions.filter}(0)` })
+          $this.css({ filter: `${pluginOptions.filter}(0)` })
         } else {
-          $this.css({ '-webkit-filter': `${pluginOptions.filter}(1)` })
+          $this.css({ filter: `${pluginOptions.filter}(1)` })
         }
 
         if (pluginOptions.animated) {
           $this.css({
-            transition: '0.6s filter ease',
-            '-webkit-transition': '0.6s -webkit-filter ease',
-            '-moz-transition': '0.6s -moz-filter ease',
-            '-ms-transition': '0.6s -ms-filter ease',
-            '-o-transition': '0.6s -o-filter ease',
+            transition: `${pluginOptions.animationDuration}s filter ${pluginOptions.animationEasing}`,
           })
         }
       }
@@ -95,7 +98,7 @@ if (typeof jQuery === 'undefined')
           'background-image': `url("${pluginOptions.image}")`,
           'background-repeat': 'no-repeat',
           'background-size': 'cover',
-          'background-color': 'none',
+          'background-color': 'transparent',
           'background-position': bgposition,
         })
       }
@@ -125,15 +128,19 @@ if (typeof jQuery === 'undefined')
         if (pluginOptions.direction === 'lr') {
           // Left to right animation
           $overlay.css('right', `${pr + mr}px`)
+          $overlay.css('top', `${pt + mt}px`)
         } else if (pluginOptions.direction === 'rl') {
           // Right to left animation
           $overlay.css('left', `${pl + ml}px`)
+          $overlay.css('top', `${pt + mt}px`)
         } else if (pluginOptions.direction === 'bt') {
           // Bottom to top animation
           $overlay.css('top', `${pt + mt}px`)
+          $overlay.css('left', `${pl + ml}px`)
         } else if (pluginOptions.direction === 'tb') {
           // Top to bottom animation
           $overlay.css('bottom', `${pb + mb}px`)
+          $overlay.css('left', `${pl + ml}px`)
         }
 
         // Saves overlay element + overlay current dimensions
@@ -142,75 +149,107 @@ if (typeof jQuery === 'undefined')
         pluginData.height = $overlay.height()
       }
 
-      $this.data('loadgo', pluginData)
-
       // Resize event
+      let resizeHandler
       if (pluginOptions.resize) {
-        $(window).on('resize', pluginOptions.resize)
+        resizeHandler = pluginOptions.resize
       } else {
-        $(window).on('resize', () => {
-          const $element = $this
-          const data = $element.data('loadgo')
+        let resizeTimer
+        let rafPending = false
+        resizeHandler = () => {
+          if (rafPending) return
+          rafPending = true
+          requestAnimationFrame(() => {
+            rafPending = false
+            const $element = $this
+            const data = $element.data('loadgo')
 
-          if (typeof data === 'undefined') {
-            return
-          }
-
-          const $resizeOverlay = data.overlay
-          const progress = data.progress
-          const $width = $element.width()
-          const $height = $element.height()
-
-          const storedData = {
-            progress: data.progress,
-            width: $width,
-            height: $height,
-          }
-
-          if ($resizeOverlay) {
-            $resizeOverlay.css({
-              width: `${$width}px`,
-              height: `${$height}px`,
-            })
-
-            // We need to add margins and paddings to set the overlay exactly above our image
-            const pl = parseFloat($element.css('padding-left'))
-            const pr = parseFloat($element.css('padding-right'))
-            const pt = parseFloat($element.css('padding-top'))
-            const pb = parseFloat($element.css('padding-bottom'))
-            const ml = parseFloat($element.css('margin-left'))
-            const mr = parseFloat($element.css('margin-right'))
-            const mt = parseFloat($element.css('margin-top'))
-            const mb = parseFloat($element.css('margin-bottom'))
-
-            if (pluginOptions.direction === 'lr') {
-              // Left to right animation
-              $resizeOverlay.css('right', `${pr + mr}px`)
-            } else if (pluginOptions.direction === 'rl') {
-              // Right to left animation
-              $resizeOverlay.css('left', `${pl + ml}px`)
-            } else if (pluginOptions.direction === 'bt') {
-              // Bottom to top animation
-              $resizeOverlay.css('top', `${pt + mt}px`)
-            } else if (pluginOptions.direction === 'tb') {
-              // Top to bottom animation
-              $resizeOverlay.css('bottom', `${pb + mb}px`)
+            if (typeof data === 'undefined') {
+              return
             }
 
-            storedData.overlay = $resizeOverlay
-          }
+            const $resizeOverlay = data.overlay
+            const progress = data.progress
+            const $width = $element.width()
+            const $height = $element.height()
 
-          $element.data('loadgo', $.extend({}, data, storedData))
+            const storedData = {
+              progress: data.progress,
+              width: $width,
+              height: $height,
+            }
 
-          $this.loadgo('setprogress', progress)
-        })
+            if ($resizeOverlay) {
+              // Disable transition while resizing to avoid janky animations
+              if (pluginOptions.animated) {
+                $resizeOverlay.css('transition', '')
+              }
+
+              $resizeOverlay.css({
+                width: `${$width}px`,
+                height: `${$height}px`,
+              })
+
+              // We need to add margins and paddings to set the overlay exactly above our image
+              const pl = parseFloat($element.css('padding-left'))
+              const pr = parseFloat($element.css('padding-right'))
+              const pt = parseFloat($element.css('padding-top'))
+              const pb = parseFloat($element.css('padding-bottom'))
+              const ml = parseFloat($element.css('margin-left'))
+              const mr = parseFloat($element.css('margin-right'))
+              const mt = parseFloat($element.css('margin-top'))
+              const mb = parseFloat($element.css('margin-bottom'))
+
+              if (pluginOptions.direction === 'lr') {
+                // Left to right animation
+                $resizeOverlay.css('right', `${pr + mr}px`)
+                $resizeOverlay.css('top', `${pt + mt}px`)
+              } else if (pluginOptions.direction === 'rl') {
+                // Right to left animation
+                $resizeOverlay.css('left', `${pl + ml}px`)
+                $resizeOverlay.css('top', `${pt + mt}px`)
+              } else if (pluginOptions.direction === 'bt') {
+                // Bottom to top animation
+                $resizeOverlay.css('top', `${pt + mt}px`)
+                $resizeOverlay.css('left', `${pl + ml}px`)
+              } else if (pluginOptions.direction === 'tb') {
+                // Top to bottom animation
+                $resizeOverlay.css('bottom', `${pb + mb}px`)
+                $resizeOverlay.css('left', `${pl + ml}px`)
+              }
+
+              storedData.overlay = $resizeOverlay
+
+              // Re-enable transition once resizing stops
+              if (pluginOptions.animated) {
+                clearTimeout(resizeTimer)
+                resizeTimer = setTimeout(() => {
+                  const d = pluginOptions.animationDuration
+                  const e = pluginOptions.animationEasing
+                  $resizeOverlay.css(
+                    'transition',
+                    `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`,
+                  )
+                }, 150)
+              }
+            }
+
+            $element.data('loadgo', $.extend({}, data, storedData))
+
+            $this.loadgo('setprogress', progress)
+          })
+        }
       }
+
+      pluginData.resizeFunction = resizeHandler
+      $this.data('loadgo', pluginData)
+      $(window).on('resize', resizeHandler)
     },
 
-    options: function (useroptions) {
+    options: function (userOptions) {
       const $this = $(this)
       let currentOptions = $this.data('loadgo-options')
-      const options = typeof useroptions !== 'undefined' ? useroptions : {}
+      const options = typeof userOptions !== 'undefined' ? userOptions : {}
       const defaults = {
         bgcolor: '#FFFFFF', //  Overlay color
         opacity: 0.5, //  Overlay opacity
@@ -220,6 +259,10 @@ if (typeof jQuery === 'undefined')
         resize: null, //  Resize functions (optional)
         direction: 'lr', //  Direction animation (optional)
         filter: null, //  Image filter (optional)
+        onProgress: null, //  Callback fired on every setprogress call
+        ariaLabel: 'Loading', //  Value for aria-label on the progressbar
+        animationDuration: 0.6, //  CSS transition duration in seconds
+        animationEasing: 'ease', //  CSS transition easing function
       }
 
       // Parse to number the 'opacity' option
@@ -260,7 +303,7 @@ if (typeof jQuery === 'undefined')
 
     /**
      * Set progress by percentage
-     * @param  {int} progress Progress in percentage
+     * @param  {number} progress Progress value (between 0 and 100)
      */
     setprogress: function (progress) {
       // LoadGo expects progress number between 0 (0%) and 100 (100%).
@@ -298,34 +341,45 @@ if (typeof jQuery === 'undefined')
           // Top to bottom animation
           overlayHeight = $height * (1 - progress / 100)
           $overlay[0].style.height = `${overlayHeight}px`
+          $overlay[0].style.top = `${$height - overlayHeight}px`
         }
 
+        $overlay[0].setAttribute('aria-valuenow', progress)
         storedData.overlay = $overlay
       } else {
+        $(this)[0].setAttribute('aria-valuenow', progress)
         const $filter = pluginOptions.filter
         let p
         switch ($filter) {
           case 'blur':
-            p = (100 - progress) / 10
-            jQuery(this).css({ '-webkit-filter': `${$filter}(${p}px)` })
+            p = (100 - progress) / 10 // maps 0–100% progress to 10px–0px blur radius
+            jQuery(this).css({ filter: `${$filter}(${p}px)` })
             break
           case 'hue-rotate':
             p = (progress * 360) / 100
-            jQuery(this).css({ '-webkit-filter': `${$filter}(${p}deg)` })
+            jQuery(this).css({ filter: `${$filter}(${p}deg)` })
             break
           case 'opacity':
             p = progress / 100
-            jQuery(this).css({ '-webkit-filter': `${$filter}(${p})` })
+            jQuery(this).css({ filter: `${$filter}(${p})` })
             break
           default:
             p = 1 - progress / 100
-            $(this).css({ '-webkit-filter': `${$filter}(${p})` })
+            $(this).css({ filter: `${$filter}(${p})` })
         }
       }
 
       $(this).data('loadgo', $.extend({}, data, storedData))
+
+      const onProgress = $(this).loadgo('options').onProgress
+      if (typeof onProgress === 'function') {
+        onProgress(progress)
+      }
     },
 
+    /**
+     * Return current progress
+     */
     getprogress: function () {
       const data = $(this).data('loadgo')
       if (typeof data === 'undefined') {
@@ -335,17 +389,28 @@ if (typeof jQuery === 'undefined')
       return typeof data.progress !== 'undefined' ? data.progress : 0
     },
 
+    /**
+     * Reset progress
+     */
     resetprogress: function () {
       $(this).loadgo('setprogress', 0)
     },
 
-    // Overlay loops back and forth
+    /**
+     * Overlay loops back and forth
+     * @param  {number} duration Interval duration in ms
+     */
     loop: function (duration) {
       const data = $(this).data('loadgo')
 
-      // LoadGo requires you to stop the current loop before modifying it.
+      if (typeof data === 'undefined') {
+        console.error('Element do not have Loadgo properties.')
+        return
+      }
+
       if (data.interval) {
-        return false
+        console.error('LoadGo requires you to stop the current loop before modifying it.')
+        return
       }
 
       let toggle = true
@@ -369,24 +434,31 @@ if (typeof jQuery === 'undefined')
         // Can be replaced with animated: false in the initializer
         data.overlay.css({
           transition: 'none',
-          '-webkit-transition': 'none',
-          '-moz-transition': 'none',
-          '-ms-transition': 'none',
-          '-o-transition': 'none',
         })
 
         $(image).loadgo('setprogress', data.progress)
       }, duration)
     },
 
-    // Stops the loop interval and shows image
+    /**
+     * Stops the loop interval and shows image
+     */
     stop: function () {
       const data = $(this).data('loadgo')
+      if (typeof data === 'undefined') {
+        console.error(
+          'Trying to stop loop for a non initialized element. You have to run "init" method first.',
+        )
+        return
+      }
+
       data.interval = clearInterval(data.interval)
       $(this).loadgo('setprogress', 100)
     },
 
-    // Remove all plugin properties
+    /**
+     * Remove all plugin properties
+     */
     destroy: function () {
       const $this = $(this)
       const options = $this.data('loadgo')
@@ -395,11 +467,16 @@ if (typeof jQuery === 'undefined')
         return // element was never initialized
       }
 
+      $(window).off('resize', options.resizeFunction)
+
       if (options.overlay) {
         options.overlay.remove() // Removes overlay
 
         $this.insertBefore($this.parent()) // Moves image element before "loadgo-container"
         $this.siblings('.loadgo-container').remove() // Removes "loadgo-container" element
+      } else {
+        // Filter mode — ARIA attributes were added directly to the image; clean them up
+        $this.removeAttr('role aria-valuemin aria-valuemax aria-valuenow aria-label')
       }
 
       // Remove properties

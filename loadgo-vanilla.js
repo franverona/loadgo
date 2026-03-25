@@ -1,5 +1,5 @@
 /**
- * @preserve LoadGo v3.0.0 (https://github.com/franverona/loadgo)
+ * @preserve LoadGo v3.1.0 (https://github.com/franverona/loadgo)
  * 2026 - Fran Verona
  * Licensed under MIT (https://github.com/franverona/loadgo/blob/master/LICENSE)
  */
@@ -7,23 +7,9 @@
 ;(function () {
   // Combine obj2 with obj1. If properties are equal, obj2 wins.
   const extend = (obj1, obj2) => {
-    if (typeof obj1 === 'undefined') {
-      const clone = JSON.parse(JSON.stringify(obj2))
-      if (obj2.resize) clone.resize = obj2.resize // Functions won't be serialized, so we need to do it manually
-      return clone
-    }
-    if (typeof obj2 === 'undefined') {
-      const clone = JSON.parse(JSON.stringify(obj1))
-      if (obj1.resize) clone.resize = obj1.resize // Functions won't be serialized, so we need to do it manually
-      return clone
-    }
-
-    const clone1 = JSON.parse(JSON.stringify(obj1))
-    if (obj1.resize) clone1.resize = obj1.resize
-    const clone2 = JSON.parse(JSON.stringify(obj2))
-    if (obj2.resize) clone2.resize = obj2.resize
-
-    return { ...clone1, ...clone2 }
+    if (typeof obj1 === 'undefined') return Object.assign({}, obj2)
+    if (typeof obj2 === 'undefined') return Object.assign({}, obj1)
+    return Object.assign({}, obj1, obj2)
   }
 
   // Get Loadgo properties for element
@@ -80,13 +66,17 @@
   // Loadgo default options
   const defaultOptions = {
     bgcolor: '#FFFFFF', //  Overlay color
-    opacity: '0.5', //  Overlay opacity
+    opacity: 0.5, //  Overlay opacity
     animated: true, //  Overlay smooth animation when setting progress
     image: null, //  Overlay image
     class: null, //  Overlay CSS class
     resize: null, //  Resize functions (optional)
     direction: 'lr', //  Direction animation (optional)
     filter: null, //  Image filter (optional)
+    onProgress: null, //  Callback fired on every setprogress call
+    ariaLabel: 'Loading', //  Value for aria-label on the progressbar
+    animationDuration: 0.6, //  CSS transition duration in seconds
+    animationEasing: 'ease', //  CSS transition easing function
   }
 
   const Loadgo = window.Loadgo || {}
@@ -143,7 +133,7 @@
     if (gbc.height) {
       overlay.style.height = `${gbc.height}px` // for modern browsers
     } else {
-      overlay.style.height = element.offsetWidth // for oldIE
+      overlay.style.height = element.offsetHeight // for oldIE
     }
 
     // Overlay will be positioned absolute
@@ -151,31 +141,33 @@
 
     // CSS animation
     if (pluginOptions.animated) {
-      overlay.style['transition'] = 'all 0.6s ease'
-      overlay.style['-webkit-transition'] = 'all 0.6s ease'
-      overlay.style['-moz-transition'] = 'all 0.6s ease'
-      overlay.style['-ms-transition'] = 'all 0.6s ease'
-      overlay.style['-o-transition'] = 'all 0.6s ease'
+      overlay.style['transition'] =
+        `all ${pluginOptions.animationDuration}s ${pluginOptions.animationEasing}`
     }
+
+    // ARIA progressbar attributes — set on the overlay in normal mode, or on the image in filter mode
+    const ariaTarget = pluginOptions.filter ? element : overlay
+    ariaTarget.setAttribute('role', 'progressbar')
+    ariaTarget.setAttribute('aria-valuemin', '0')
+    ariaTarget.setAttribute('aria-valuemax', '100')
+    ariaTarget.setAttribute('aria-valuenow', '0')
+    ariaTarget.setAttribute('aria-label', pluginOptions.ariaLabel)
 
     // Filters
     if (pluginOptions.filter) {
       if (pluginOptions.filter === 'blur') {
-        element.style['-webkit-filter'] = `${pluginOptions.filter}(10px)`
+        element.style['filter'] = `${pluginOptions.filter}(10px)`
       } else if (pluginOptions.filter === 'hue-rotate') {
-        element.style['-webkit-filter'] = `${pluginOptions.filter}(360deg)`
+        element.style['filter'] = `${pluginOptions.filter}(360deg)`
       } else if (pluginOptions.filter === 'opacity') {
-        element.style['-webkit-filter'] = `${pluginOptions.filter}(0)`
+        element.style['filter'] = `${pluginOptions.filter}(0)`
       } else {
-        element.style['-webkit-filter'] = `${pluginOptions.filter}(1)`
+        element.style['filter'] = `${pluginOptions.filter}(1)`
       }
 
       if (pluginOptions.animated) {
-        element.style['transition'] = '0.6s filter ease'
-        element.style['-webkit-transition'] = '0.6s -webkit-filter ease'
-        element.style['-moz-transition'] = '0.6s -moz-filter ease'
-        element.style['-ms-transition'] = '0.6s -ms-filter ease'
-        element.style['-o-transition'] = '0.6s -o-filter ease'
+        element.style['transition'] =
+          `${pluginOptions.animationDuration}s filter ${pluginOptions.animationEasing}`
       }
     }
 
@@ -253,63 +245,83 @@
     domElements[domElementsIndex].properties = extend(pluginOptions, pluginData)
 
     // Resize event
+    let resizeTimer
+    let rafPending = false
     let resizeFunction = () => {
-      const data = getProperties(element.id)
-      const elementIndex = getIndex(element.id)
-      if (data !== null) {
-        const resizeOverlay = document.getElementById(data.overlay)
-        const resizeGbc = element.getBoundingClientRect()
+      if (rafPending) return
+      rafPending = true
+      requestAnimationFrame(() => {
+        rafPending = false
+        const data = getProperties(element.id)
+        const elementIndex = getIndex(element.id)
+        if (data !== null) {
+          const resizeOverlay = document.getElementById(data.overlay)
+          const resizeGbc = element.getBoundingClientRect()
 
-        if (resizeOverlay) {
-          // Overlay width
-          if (resizeGbc.width) {
-            resizeOverlay.style.width = `${resizeGbc.width}px` // for modern browsers
-          } else {
-            resizeOverlay.style.width = element.offsetWidth // for oldIE
+          if (resizeOverlay) {
+            // Disable transition while resizing to avoid janky animations
+            if (pluginOptions.animated) {
+              resizeOverlay.style.transition = ''
+            }
+
+            // Overlay width
+            if (resizeGbc.width) {
+              resizeOverlay.style.width = `${resizeGbc.width}px` // for modern browsers
+            } else {
+              resizeOverlay.style.width = element.offsetWidth // for oldIE
+            }
+
+            // Overlay height
+            if (resizeGbc.height) {
+              resizeOverlay.style.height = `${resizeGbc.height}px` // for modern browsers
+            } else {
+              resizeOverlay.style.height = element.offsetHeight // for oldIE
+            }
+
+            // We need to add margins and paddings to set the overlay exactly above our image
+            const pl = parseOffset(element, 'paddingLeft')
+            const pr = parseOffset(element, 'paddingRight')
+            const pt = parseOffset(element, 'paddingTop')
+            const pb = parseOffset(element, 'paddingBottom')
+            const ml = parseOffset(element, 'marginLeft')
+            const mr = parseOffset(element, 'marginRight')
+            const mt = parseOffset(element, 'marginTop')
+            const mb = parseOffset(element, 'marginBottom')
+
+            if (pluginOptions.direction === 'lr') {
+              // Left to right animation
+              resizeOverlay.style.right = `${pr + mr}px`
+              resizeOverlay.style.top = `${pt + mt}px`
+            } else if (pluginOptions.direction === 'rl') {
+              // Right to left animation
+              resizeOverlay.style.left = `${pl + ml}px`
+              resizeOverlay.style.top = `${pt + mt}px`
+            } else if (pluginOptions.direction === 'bt') {
+              // Bottom to top animation
+              resizeOverlay.style.top = `${pt + mt}px`
+              resizeOverlay.style.left = `${pl + ml}px`
+            } else if (pluginOptions.direction === 'tb') {
+              // Top to bottom animation
+              resizeOverlay.style.bottom = `${pb + mb}px`
+              resizeOverlay.style.left = `${pl + ml}px`
+            }
+
+            // Saves overlay element + overlay current dimensions
+            domElements[elementIndex].properties.width = parseFloat(resizeOverlay.style.width)
+            domElements[elementIndex].properties.height = parseFloat(resizeOverlay.style.height)
+
+            Loadgo.setprogress(element, data.progress)
+
+            // Re-enable transition once resizing stops
+            if (pluginOptions.animated) {
+              clearTimeout(resizeTimer)
+              resizeTimer = setTimeout(() => {
+                resizeOverlay.style.transition = `all ${pluginOptions.animationDuration}s ${pluginOptions.animationEasing}`
+              }, 150)
+            }
           }
-
-          // Overlay height
-          if (resizeGbc.height) {
-            resizeOverlay.style.height = `${resizeGbc.height}px` // for modern browsers
-          } else {
-            resizeOverlay.style.height = element.offsetWidth // for oldIE
-          }
-
-          // We need to add margins and paddings to set the overlay exactly above our image
-          const pl = parseOffset(element, 'paddingLeft')
-          const pr = parseOffset(element, 'paddingRight')
-          const pt = parseOffset(element, 'paddingTop')
-          const pb = parseOffset(element, 'paddingBottom')
-          const ml = parseOffset(element, 'marginLeft')
-          const mr = parseOffset(element, 'marginRight')
-          const mt = parseOffset(element, 'marginTop')
-          const mb = parseOffset(element, 'marginBottom')
-
-          if (pluginOptions.direction === 'lr') {
-            // Left to right animation
-            resizeOverlay.style.right = `${pr + mr}px`
-            resizeOverlay.style.top = `${pt + mt}px`
-          } else if (pluginOptions.direction === 'rl') {
-            // Right to left animation
-            resizeOverlay.style.left = `${pl + ml}px`
-            resizeOverlay.style.top = `${pt + mt}px`
-          } else if (pluginOptions.direction === 'bt') {
-            // Bottom to top animation
-            resizeOverlay.style.top = `${pt + mt}px`
-            resizeOverlay.style.left = `${pl + ml}px`
-          } else if (pluginOptions.direction === 'tb') {
-            // Top to bottom animation
-            resizeOverlay.style.bottom = `${pb + mb}px`
-            resizeOverlay.style.left = `${pl + ml}px`
-          }
-
-          // Saves overlay element + overlay current dimensions
-          domElements[elementIndex].properties.width = parseFloat(resizeOverlay.style.width)
-          domElements[elementIndex].properties.height = parseFloat(resizeOverlay.style.height)
-
-          Loadgo.setprogress(element, data.progress)
         }
-      }
+      })
     }
 
     if (pluginOptions.resize) {
@@ -317,6 +329,7 @@
     }
 
     window.addEventListener('resize', resizeFunction)
+    domElements[domElementsIndex].properties.resizeFunction = resizeFunction
   }
 
   Loadgo.options = function (element, useroptions) {
@@ -375,7 +388,7 @@
   /**
    * Set progress to specific value
    * @param  {DOM} element  DOM element using document.getElementById
-   * @param  {Number} progress Progress value (has to be between 0 and 100)
+   * @param  {Number} progress Progress value (between 0 and 100)
    */
   Loadgo.setprogress = function (element, progress) {
     if (!elementIsValid(element)) {
@@ -417,30 +430,37 @@
           overlay.style.height = `${_h}px`
           overlay.style.top = `${h - _h}px`
         }
+        overlay.setAttribute('aria-valuenow', progress)
       } else {
+        element.setAttribute('aria-valuenow', progress)
         const filter = data.filter
         let p
         switch (filter) {
           case 'blur':
-            p = (100 - progress) / 10
-            element.style['-webkit-filter'] = `${filter}(${p}px)`
+            p = (100 - progress) / 10 // maps 0–100% progress to 10px–0px blur radius
+            element.style['filter'] = `${filter}(${p}px)`
             break
           case 'hue-rotate':
             p = (progress * 360) / 100
-            element.style['-webkit-filter'] = `${filter}(${p}deg)`
+            element.style['filter'] = `${filter}(${p}deg)`
             break
           case 'opacity':
             p = progress / 100
-            element.style['-webkit-filter'] = `${filter}(${p})`
+            element.style['filter'] = `${filter}(${p})`
             break
           default:
             p = 1 - progress / 100
-            element.style['-webkit-filter'] = `${filter}(${p})`
+            element.style['filter'] = `${filter}(${p})`
         }
       }
     }
 
     domElements[domElementsIndex].properties.progress = progress
+
+    const onProgress = getProperties(element.id)?.onProgress
+    if (typeof onProgress === 'function') {
+      onProgress(progress)
+    }
   }
 
   /**
@@ -449,7 +469,7 @@
    */
   Loadgo.getprogress = (element) => {
     if (!elementIsValid(element)) {
-      return
+      return 0
     }
 
     const properties = getProperties(element.id)
@@ -467,7 +487,7 @@
   /**
    * Overlay loops back and forth
    * @param  {DOM} element  DOM element using document.getElementById
-   * @param  {Number} duration Interval duration in ms
+   * @param  {number} duration Interval duration in ms
    */
   Loadgo.loop = function (element, duration) {
     if (!elementIsValid(element)) {
@@ -483,12 +503,12 @@
 
     const data = getProperties(element.id)
     if (data === null) {
-      console.warn('Element do not have Loadgo properties. Maybe it is uninitialized.')
+      console.error('Element do not have Loadgo properties.')
       return
     }
 
     if (data.interval) {
-      console.warn('LoadGo requires you to stop the current loop before modifying it.')
+      console.error('LoadGo requires you to stop the current loop before modifying it.')
       return
     }
 
@@ -512,17 +532,16 @@
       const loopOverlay = document.getElementById(domElements[domIndex].properties.overlay)
       if (loopOverlay) {
         loopOverlay.style['transition'] = 'none'
-        loopOverlay.style['-webkit-transition'] = 'none'
-        loopOverlay.style['-moz-transition'] = 'none'
-        loopOverlay.style['-ms-transition'] = 'none'
-        loopOverlay.style['-o-transition'] = 'none'
       }
 
       Loadgo.setprogress(element, domElements[domIndex].properties.progress)
     }, duration)
   }
 
-  // Stops the loop interval and shows image
+  /**
+   * Stops the loop interval and shows image
+   * @param {DOM} element
+   */
   Loadgo.stop = function (element) {
     if (!elementIsValid(element)) {
       return
@@ -550,6 +569,7 @@
     }
 
     const opt = Loadgo.options(element)
+    window.removeEventListener('resize', opt.resizeFunction)
     domElements.splice(domElementsIndex, 1)
 
     const loadgoContainer = element.parentNode
@@ -563,6 +583,13 @@
         parent.appendChild(element) // Moves image back to original parent
         parent.removeChild(loadgoContainer) // Removes "loadgo-container" element
       }
+    } else {
+      // Filter mode — ARIA attributes were added directly to the image; clean them up
+      element.removeAttribute('role')
+      element.removeAttribute('aria-valuemin')
+      element.removeAttribute('aria-valuemax')
+      element.removeAttribute('aria-valuenow')
+      element.removeAttribute('aria-label')
     }
   }
 

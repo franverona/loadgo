@@ -171,6 +171,16 @@ describe('jQuery - Overlay render', () => {
     expect(getOverlay()[0].style.transition).toContain('ease')
   })
 
+  it('uses custom animationDuration', () => {
+    $image.loadgo({ animationDuration: 1.2 })
+    expect(getOverlay()[0].style.transition).toContain('1.2s')
+  })
+
+  it('uses custom animationEasing', () => {
+    $image.loadgo({ animationEasing: 'linear' })
+    expect(getOverlay()[0].style.transition).toContain('linear')
+  })
+
   it('does not set CSS transition when animated is false', () => {
     $image.loadgo({ animated: false })
     expect(getOverlay()[0].style.transition).toBe('')
@@ -199,7 +209,7 @@ describe('jQuery - Overlay render', () => {
 
   it('does not apply a filter to the image by default', () => {
     $image.loadgo()
-    expect($image[0].style['-webkit-filter'] ?? '').toBe('')
+    expect($image[0].style['filter'] ?? '').toBe('')
   })
 
   it('sets background image on overlay when image option is provided', () => {
@@ -276,5 +286,142 @@ describe('jQuery - Destroy', () => {
     $image.loadgo({ filter: 'sepia' })
     $image.loadgo('destroy')
     expect($image.parent()[0]).toBe($container[0])
+  })
+})
+
+describe('jQuery - Re-initialization', () => {
+  it('re-initializing the same element creates only one overlay', () => {
+    $image.loadgo()
+    $image.loadgo()
+    expect($image.siblings('.loadgo-overlay').length).toBe(1)
+  })
+
+  it('re-initializing resets progress to 0', () => {
+    $image.loadgo()
+    $image.loadgo('setprogress', 75)
+    $image.loadgo()
+    expect($image.loadgo('getprogress')).toBe(0)
+  })
+
+  it('re-initializing applies new options', () => {
+    $image.loadgo({ bgcolor: '#FF0000' })
+    $image.loadgo({ bgcolor: '#00FF00' })
+    expect($image.loadgo('options').bgcolor).toBe('#00FF00')
+  })
+})
+
+describe('jQuery - loop()/stop() in filter mode', () => {
+  it('loop() does not throw in filter mode', () => {
+    $image.loadgo({ filter: 'blur' })
+    expect(() => $image.loadgo('loop', 100)).not.toThrow()
+    $image.loadgo('stop')
+  })
+
+  it('stop() does not throw in filter mode', () => {
+    $image.loadgo({ filter: 'blur' })
+    $image.loadgo('loop', 100)
+    expect(() => $image.loadgo('stop')).not.toThrow()
+  })
+
+  it('stop() in filter mode sets progress to 100', () => {
+    $image.loadgo({ filter: 'blur' })
+    $image.loadgo('loop', 100)
+    $image.loadgo('stop')
+    expect($image.loadgo('getprogress')).toBe(100)
+  })
+})
+
+describe('jQuery - ARIA attributes', () => {
+  it('overlay has role="progressbar"', () => {
+    $image.loadgo()
+    expect(getOverlay().attr('role')).toBe('progressbar')
+  })
+
+  it('overlay has aria-valuemin="0" and aria-valuemax="100"', () => {
+    $image.loadgo()
+    expect(getOverlay().attr('aria-valuemin')).toBe('0')
+    expect(getOverlay().attr('aria-valuemax')).toBe('100')
+  })
+
+  it('overlay aria-valuenow starts at 0', () => {
+    $image.loadgo()
+    expect(getOverlay().attr('aria-valuenow')).toBe('0')
+  })
+
+  it('overlay aria-valuenow updates on setprogress', () => {
+    $image.loadgo()
+    $image.loadgo('setprogress', 60)
+    expect(getOverlay().attr('aria-valuenow')).toBe('60')
+  })
+
+  it('overlay has default aria-label "Loading"', () => {
+    $image.loadgo()
+    expect(getOverlay().attr('aria-label')).toBe('Loading')
+  })
+
+  it('overlay uses custom ariaLabel', () => {
+    $image.loadgo({ ariaLabel: 'Image loading' })
+    expect(getOverlay().attr('aria-label')).toBe('Image loading')
+  })
+
+  it('filter mode: image gets role="progressbar"', () => {
+    $image.loadgo({ filter: 'blur' })
+    expect($image.attr('role')).toBe('progressbar')
+  })
+
+  it('filter mode: image aria-valuenow updates on setprogress', () => {
+    $image.loadgo({ filter: 'blur' })
+    $image.loadgo('setprogress', 40)
+    expect($image.attr('aria-valuenow')).toBe('40')
+  })
+
+  it('filter mode: destroy removes ARIA attributes from image', () => {
+    $image.loadgo({ filter: 'blur' })
+    $image.loadgo('destroy')
+    expect($image.attr('role')).toBeUndefined()
+    expect($image.attr('aria-valuenow')).toBeUndefined()
+  })
+})
+
+describe('jQuery - onProgress callback', () => {
+  it('onProgress is called when setprogress is called', () => {
+    let received = null
+    $image.loadgo({ onProgress: (p) => (received = p) })
+    $image.loadgo('setprogress', 42)
+    expect(received).toBe(42)
+  })
+
+  it('onProgress is called with 0 when resetprogress is called', () => {
+    let received = null
+    $image.loadgo({ onProgress: (p) => (received = p) })
+    $image.loadgo('setprogress', 50)
+    $image.loadgo('resetprogress')
+    expect(received).toBe(0)
+  })
+
+  it('onProgress is not called for out-of-range values', () => {
+    let callCount = 0
+    $image.loadgo({ onProgress: () => callCount++ })
+    $image.loadgo('setprogress', -1)
+    $image.loadgo('setprogress', 101)
+    expect(callCount).toBe(0)
+  })
+})
+
+describe('jQuery - Resize listener cleanup', () => {
+  it('custom resize listener is not called after destroy()', () => {
+    let callCount = 0
+    $image.loadgo({ resize: () => callCount++ })
+    $(window).trigger('resize')
+    expect(callCount).toBe(1)
+    $image.loadgo('destroy')
+    $(window).trigger('resize')
+    expect(callCount).toBe(1)
+  })
+
+  it('default resize listener is removed after destroy() without throwing', () => {
+    $image.loadgo()
+    $image.loadgo('destroy')
+    expect(() => $(window).trigger('resize')).not.toThrow()
   })
 })
