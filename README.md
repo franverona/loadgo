@@ -9,6 +9,28 @@
 - Available as a jQuery plugin and a standalone pure JavaScript version.
 - Tested in modern browsers (Chrome, Firefox, Safari, Edge).
 
+## Table of contents
+
+- [Installation](#installation)
+- [TypeScript](#typescript)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+  - [How it works](#how-it-works)
+  - [Image load timing](#image-load-timing)
+  - [Initialization](#initialization)
+  - [Options](#options)
+  - [onProgress callback](#onprogress-callback)
+  - [Custom animation timing](#custom-animation-timing)
+  - [Accessibility](#accessibility)
+  - [Methods](#methods)
+- [Real-world example](#real-world-example)
+- [Examples](#examples)
+- [Tests](#tests)
+- [Breaking changes in 2.2](#breaking-changes-in-22)
+- [Changelog](#changelog)
+- [License](#license)
+- [Credits](#credits)
+
 ## Installation
 
 ### npm (recommended)
@@ -363,52 +385,7 @@ If you have CSS rules using child selectors like `div > img`, you may need to up
 
 ## Changelog
 
-**3.1.0** — 2026
-- Added `onProgress` callback option — fires on every `setprogress` call with the current value.
-- Added ARIA support: overlay (or image in filter mode) gets `role="progressbar"` and `aria-valuenow` kept in sync automatically. Configurable via `ariaLabel` option.
-- Added `animationDuration` and `animationEasing` options — animation timing is no longer hardcoded to `0.6s ease`.
-- Added TypeScript declarations for both vanilla and jQuery builds — no `@types/*` install needed.
-- Fixed memory leak: window resize listener is now properly removed on `destroy`.
-- Vendor prefix `-webkit-filter` replaced with standard `filter`.
-
-**3.0** — 2026
-- Dropped jQuery < 4 support; updated for jQuery 4 breaking changes (`$.inArray`, `$.removeData`, `.load()` event shorthand).
-- Released pure JavaScript version as the primary no-dependency alternative.
-- Replaced Grunt build with npm scripts + terser; minified files now output to `dist/`.
-- Removed Bower support.
-- Migrated source to ES6+: `const`/`let`, arrow functions, template literals, spread operator.
-- Added ESLint (flat config), Prettier, Husky, lint-staged, and commitlint.
-- Removed IE-specific code and polyfills.
-- Migrated tests from browser-based Mocha to CLI-based Vitest + jsdom (`npm test`).
-- Fixed bugs in `destroy` (incorrect `splice` call and wrong argument to `removeChild`), `loop`, and `stop` methods.
-
-**2.2.1** — 16 Apr 2017
-- Code style improvements.
-- JavaScript: `setprogress` now checks if element exists.
-- Added Gruntfile.
-- Fixed JavaScript examples.
-
-**2.2** — 23 Mar 2017
-- Added `destroy` method.
-- Added tests.
-- Fixed several bugs.
-- Changed default DOM template.
-- Improved documentation.
-- Improved JavaScript and jQuery versions.
-
-**2.1** — 12 Apr 2016
-- Fixed bug where `lr` direction was not working in the jQuery version.
-- Added examples.
-
-**2.0** — 02 Apr 2016
-- Released pure JavaScript version (no jQuery required).
-- Fixed overlay repositioning bug on window resize.
-
-**1.0.1** — 02 Nov 2015
-- Fixed `undefined` errors with newer jQuery versions.
-
-**1.0** — 15 Oct 2015
-- First release.
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
