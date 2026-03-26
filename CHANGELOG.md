@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.2 — 2026-03-26
+
+- Add missing `README.md` to npm package.
+
 ## 3.1.1 — 2026-03-26
 
 - Using `loop()` with the `filter` option active would crash immediately — the overlay doesn't exist in filter mode, but the code tried to update it anyway (jQuery).
