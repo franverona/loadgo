@@ -1,5 +1,5 @@
 /*!
- * LoadGo v3.1.0 (https://github.com/franverona/loadgo)
+ * LoadGo v3.1.1 (https://github.com/franverona/loadgo)
  * 2026 - Fran Verona
  * Licensed under MIT (https://github.com/franverona/loadgo/blob/master/LICENSE)
  */
@@ -23,6 +23,11 @@ if (typeof jQuery === 'undefined')
 
       if ($this.length > 1) {
         throw new Error('LoadGo only works on one element at a time. Try with a valid #id.')
+      }
+
+      // If already initialized, destroy first to prevent nested containers
+      if (typeof $this.data('loadgo') !== 'undefined') {
+        methods.destroy.call(this)
       }
 
       // Plugin options. We need to reset options to avoid future errors
@@ -432,9 +437,11 @@ if (typeof jQuery === 'undefined')
 
         // Remove transition animation
         // Can be replaced with animated: false in the initializer
-        data.overlay.css({
-          transition: 'none',
-        })
+        if (data.overlay) {
+          data.overlay.css({
+            transition: 'none',
+          })
+        }
 
         $(image).loadgo('setprogress', data.progress)
       }, duration)
@@ -468,6 +475,10 @@ if (typeof jQuery === 'undefined')
       }
 
       $(window).off('resize', options.resizeFunction)
+
+      if (options.interval) {
+        clearInterval(options.interval)
+      }
 
       if (options.overlay) {
         options.overlay.remove() // Removes overlay
