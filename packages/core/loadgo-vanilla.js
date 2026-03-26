@@ -38,23 +38,10 @@
     return true
   }
 
-  // Parse padding and margin properties to return a valid number
+  // Parse padding and margin properties to return a valid number (uses computed styles)
   const parseOffset = (element, property) => {
-    const measure = element.style[property]
-    if (measure === 'auto') {
-      if (property.toLowerCase().includes('left') || property.toLowerCase().includes('right')) {
-        return parseFloat(element.offsetLeft)
-      }
-      if (property.toLowerCase().includes('top') || property.toLowerCase().includes('bottom')) {
-        return parseFloat(element.offsetTop)
-      }
-    }
-
-    if (measure.includes('px')) {
-      return parseFloat(measure)
-    }
-
-    return 0
+    const measure = getComputedStyle(element)[property]
+    return parseFloat(measure) || 0
   }
 
   let _idCounter = 0
@@ -145,8 +132,9 @@
 
     // CSS animation
     if (pluginOptions.animated) {
-      overlay.style['transition'] =
-        `all ${pluginOptions.animationDuration}s ${pluginOptions.animationEasing}`
+      const d = pluginOptions.animationDuration
+      const e = pluginOptions.animationEasing
+      overlay.style['transition'] = `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`
     }
 
     // ARIA progressbar attributes — set on the overlay in normal mode, or on the image in filter mode
@@ -320,7 +308,9 @@
             if (pluginOptions.animated) {
               clearTimeout(resizeTimer)
               resizeTimer = setTimeout(() => {
-                resizeOverlay.style.transition = `all ${pluginOptions.animationDuration}s ${pluginOptions.animationEasing}`
+                const d = pluginOptions.animationDuration
+                const e = pluginOptions.animationEasing
+                resizeOverlay.style.transition = `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`
               }, 150)
             }
           }
@@ -349,21 +339,19 @@
 
     let currentOptions = domElements[domElementsIndex].properties
 
-    // If no param is provided, then is a 'get'
-    if (JSON.stringify(currentOptions) !== '{}') {
-      return currentOptions
-    }
-
-    if (typeof useroptions !== 'undefined') {
-      // Parse to number the 'opacity' option
-      if (typeof useroptions.opacity !== 'undefined') {
-        useroptions.opacity = parseFloat(useroptions.opacity)
-      }
+    // Parse to number the 'opacity' option if provided
+    if (typeof useroptions !== 'undefined' && typeof useroptions.opacity !== 'undefined') {
+      useroptions.opacity = parseFloat(useroptions.opacity)
     }
 
     if (JSON.stringify(currentOptions) === '{}') {
+      // First-time init: apply defaults then overlay user options
       currentOptions = extend(defaultOptions, useroptions)
+    } else if (typeof useroptions === 'undefined') {
+      // Getter: no options provided, return current options as-is
+      return currentOptions
     } else {
+      // Update: merge new options into existing
       currentOptions = extend(currentOptions, useroptions)
     }
 
