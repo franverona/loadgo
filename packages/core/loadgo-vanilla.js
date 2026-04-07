@@ -236,89 +236,90 @@
     domElements[domElementsIndex].properties = extend(pluginOptions, pluginData)
 
     // Resize event
-    let resizeTimer
-    let rafPending = false
-    let resizeFunction = () => {
-      if (rafPending) return
-      rafPending = true
-      requestAnimationFrame(() => {
-        rafPending = false
-        const data = getProperties(element.id)
-        const elementIndex = getIndex(element.id)
-        if (data !== null) {
-          const resizeOverlay = document.getElementById(data.overlay)
-          const resizeGbc = element.getBoundingClientRect()
-
-          if (resizeOverlay) {
-            // Disable transition while resizing to avoid janky animations
-            if (pluginOptions.animated) {
-              resizeOverlay.style.transition = ''
-            }
-
-            // Overlay width
-            if (resizeGbc.width) {
-              resizeOverlay.style.width = `${resizeGbc.width}px` // for modern browsers
-            } else {
-              resizeOverlay.style.width = `${element.offsetWidth}px` // for oldIE
-            }
-
-            // Overlay height
-            if (resizeGbc.height) {
-              resizeOverlay.style.height = `${resizeGbc.height}px` // for modern browsers
-            } else {
-              resizeOverlay.style.height = `${element.offsetHeight}px` // for oldIE
-            }
-
-            // We need to add margins and paddings to set the overlay exactly above our image
-            const pl = parseOffset(element, 'paddingLeft')
-            const pr = parseOffset(element, 'paddingRight')
-            const pt = parseOffset(element, 'paddingTop')
-            const pb = parseOffset(element, 'paddingBottom')
-            const ml = parseOffset(element, 'marginLeft')
-            const mr = parseOffset(element, 'marginRight')
-            const mt = parseOffset(element, 'marginTop')
-            const mb = parseOffset(element, 'marginBottom')
-
-            if (pluginOptions.direction === 'lr') {
-              // Left to right animation
-              resizeOverlay.style.right = `${pr + mr}px`
-              resizeOverlay.style.top = `${pt + mt}px`
-            } else if (pluginOptions.direction === 'rl') {
-              // Right to left animation
-              resizeOverlay.style.left = `${pl + ml}px`
-              resizeOverlay.style.top = `${pt + mt}px`
-            } else if (pluginOptions.direction === 'bt') {
-              // Bottom to top animation
-              resizeOverlay.style.top = `${pt + mt}px`
-              resizeOverlay.style.left = `${pl + ml}px`
-            } else if (pluginOptions.direction === 'tb') {
-              // Top to bottom animation
-              resizeOverlay.style.bottom = `${pb + mb}px`
-              resizeOverlay.style.left = `${pl + ml}px`
-            }
-
-            // Saves overlay element + overlay current dimensions
-            domElements[elementIndex].properties.width = parseFloat(resizeOverlay.style.width)
-            domElements[elementIndex].properties.height = parseFloat(resizeOverlay.style.height)
-
-            Loadgo.setprogress(element, data.progress)
-
-            // Re-enable transition once resizing stops
-            if (pluginOptions.animated) {
-              clearTimeout(resizeTimer)
-              resizeTimer = setTimeout(() => {
-                const d = pluginOptions.animationDuration
-                const e = pluginOptions.animationEasing
-                resizeOverlay.style.transition = `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`
-              }, 150)
-            }
-          }
-        }
-      })
-    }
-
+    let resizeFunction
     if (pluginOptions.resize) {
       resizeFunction = pluginOptions.resize
+    } else {
+      let resizeTimer
+      let rafPending = false
+      resizeFunction = () => {
+        if (rafPending) return
+        rafPending = true
+        requestAnimationFrame(() => {
+          rafPending = false
+          const data = getProperties(element.id)
+          const elementIndex = getIndex(element.id)
+          if (data !== null) {
+            const resizeOverlay = document.getElementById(data.overlay)
+            const resizeGbc = element.getBoundingClientRect()
+
+            if (resizeOverlay) {
+              // Disable transition while resizing to avoid janky animations
+              if (pluginOptions.animated) {
+                resizeOverlay.style.transition = ''
+              }
+
+              // Overlay width
+              if (resizeGbc.width) {
+                resizeOverlay.style.width = `${resizeGbc.width}px` // for modern browsers
+              } else {
+                resizeOverlay.style.width = `${element.offsetWidth}px` // for oldIE
+              }
+
+              // Overlay height
+              if (resizeGbc.height) {
+                resizeOverlay.style.height = `${resizeGbc.height}px` // for modern browsers
+              } else {
+                resizeOverlay.style.height = `${element.offsetHeight}px` // for oldIE
+              }
+
+              // We need to add margins and paddings to set the overlay exactly above our image
+              const pl = parseOffset(element, 'paddingLeft')
+              const pr = parseOffset(element, 'paddingRight')
+              const pt = parseOffset(element, 'paddingTop')
+              const pb = parseOffset(element, 'paddingBottom')
+              const ml = parseOffset(element, 'marginLeft')
+              const mr = parseOffset(element, 'marginRight')
+              const mt = parseOffset(element, 'marginTop')
+              const mb = parseOffset(element, 'marginBottom')
+
+              if (pluginOptions.direction === 'lr') {
+                // Left to right animation
+                resizeOverlay.style.right = `${pr + mr}px`
+                resizeOverlay.style.top = `${pt + mt}px`
+              } else if (pluginOptions.direction === 'rl') {
+                // Right to left animation
+                resizeOverlay.style.left = `${pl + ml}px`
+                resizeOverlay.style.top = `${pt + mt}px`
+              } else if (pluginOptions.direction === 'bt') {
+                // Bottom to top animation
+                resizeOverlay.style.top = `${pt + mt}px`
+                resizeOverlay.style.left = `${pl + ml}px`
+              } else if (pluginOptions.direction === 'tb') {
+                // Top to bottom animation
+                resizeOverlay.style.bottom = `${pb + mb}px`
+                resizeOverlay.style.left = `${pl + ml}px`
+              }
+
+              // Saves overlay element + overlay current dimensions
+              domElements[elementIndex].properties.width = parseFloat(resizeOverlay.style.width)
+              domElements[elementIndex].properties.height = parseFloat(resizeOverlay.style.height)
+
+              Loadgo.setprogress(element, data.progress)
+
+              // Re-enable transition once resizing stops
+              if (pluginOptions.animated) {
+                clearTimeout(resizeTimer)
+                resizeTimer = setTimeout(() => {
+                  const d = pluginOptions.animationDuration
+                  const e = pluginOptions.animationEasing
+                  resizeOverlay.style.transition = `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`
+                }, 150)
+              }
+            }
+          }
+        })
+      }
     }
 
     window.addEventListener('resize', resizeFunction)
