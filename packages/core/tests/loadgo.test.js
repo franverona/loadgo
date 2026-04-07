@@ -576,3 +576,133 @@ describe('jQuery - options() before init()', () => {
     $fresh.remove()
   })
 })
+
+describe('jQuery - Unknown method', () => {
+  it('throws for an unknown method name', () => {
+    $image.loadgo()
+    expect(() => $image.loadgo('unknownMethod')).toThrow(/does not exist/)
+  })
+})
+
+describe('jQuery - Multiple img selector', () => {
+  it('throws if selector matches multiple img elements', () => {
+    const $img2 = $('<img id="img-b" />')
+    $('body').append($img2)
+    expect(() => $('img').loadgo()).toThrow()
+    $img2.remove()
+  })
+})
+
+describe('jQuery - Filter init CSS', () => {
+  it('hue-rotate filter sets hue-rotate(360deg) on image', () => {
+    $image.loadgo({ filter: 'hue-rotate' })
+    expect($image[0].style.filter).toBe('hue-rotate(360deg)')
+  })
+
+  it('opacity filter sets opacity(0) on image', () => {
+    $image.loadgo({ filter: 'opacity' })
+    expect($image[0].style.filter).toBe('opacity(0)')
+  })
+
+  it('grayscale filter sets grayscale(1) on image', () => {
+    $image.loadgo({ filter: 'grayscale' })
+    expect($image[0].style.filter).toBe('grayscale(1)')
+  })
+
+  it('filter with animated: true sets transition on image', () => {
+    $image.loadgo({ filter: 'blur', animated: true })
+    expect($image[0].style.transition).toContain('filter')
+  })
+})
+
+describe('jQuery - setprogress in filter mode', () => {
+  it('hue-rotate at 50% sets hue-rotate(180deg)', () => {
+    $image.loadgo({ filter: 'hue-rotate' })
+    $image.loadgo('setprogress', 50)
+    expect($image[0].style.filter).toBe('hue-rotate(180deg)')
+  })
+
+  it('opacity at 50% sets opacity(0.5)', () => {
+    $image.loadgo({ filter: 'opacity' })
+    $image.loadgo('setprogress', 50)
+    expect($image[0].style.filter).toBe('opacity(0.5)')
+  })
+
+  it('grayscale at 50% sets grayscale(0.5)', () => {
+    $image.loadgo({ filter: 'grayscale' })
+    $image.loadgo('setprogress', 50)
+    expect($image[0].style.filter).toBe('grayscale(0.5)')
+  })
+})
+
+describe('jQuery - setprogress: direction rl', () => {
+  it('setprogress with direction rl stores progress', () => {
+    $image.loadgo({ direction: 'rl' })
+    $image.loadgo('setprogress', 50)
+    expect($image.loadgo('getprogress')).toBe(50)
+  })
+
+  it('setprogress with direction rl sets overlay width proportionally', () => {
+    $image.loadgo({ direction: 'rl', animated: false })
+    const data = $image.data('loadgo')
+    data.width = 100
+    $image.data('loadgo', data)
+    $image.loadgo('setprogress', 25)
+    expect(getOverlay()[0].style.width).toBe('75px')
+  })
+})
+
+describe('jQuery - image option background position', () => {
+  it('image + lr direction uses 100% 0% background-position', () => {
+    $image.loadgo({ image: 'logo.png', direction: 'lr' })
+    expect(getOverlay()[0].style.backgroundPosition).toBe('100% 0%')
+  })
+
+  it('image + rl direction uses 0% 50% background-position', () => {
+    $image.loadgo({ image: 'logo.png', direction: 'rl' })
+    expect(getOverlay()[0].style.backgroundPosition).toBe('0% 50%')
+  })
+
+  it('image + bt direction uses 100% 0% background-position', () => {
+    $image.loadgo({ image: 'logo.png', direction: 'bt' })
+    expect(getOverlay()[0].style.backgroundPosition).toBe('100% 0%')
+  })
+
+  it('image + tb direction uses 0% 100% background-position', () => {
+    $image.loadgo({ image: 'logo.png', direction: 'tb' })
+    expect(getOverlay()[0].style.backgroundPosition).toBe('0% 100%')
+  })
+})
+
+describe('jQuery - loop/stop edge cases', () => {
+  it('loop() on uninitialized element does not throw', () => {
+    expect(() => $image.loadgo('loop', 1000)).not.toThrow()
+  })
+
+  it('loop() while already looping does not throw', () => {
+    $image.loadgo()
+    $image.loadgo('loop', 1000)
+    expect(() => $image.loadgo('loop', 1000)).not.toThrow()
+    $image.loadgo('stop')
+  })
+
+  it('stop() on uninitialized element does not throw', () => {
+    expect(() => $image.loadgo('stop')).not.toThrow()
+  })
+
+  it('destroy() while looping stops the interval', () => {
+    vi.useFakeTimers()
+    try {
+      let callCount = 0
+      $image.loadgo({ onProgress: () => callCount++ })
+      $image.loadgo('loop', 100)
+      vi.advanceTimersByTime(300)
+      const countBeforeDestroy = callCount
+      $image.loadgo('destroy')
+      vi.advanceTimersByTime(300)
+      expect(callCount).toBe(countBeforeDestroy)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
