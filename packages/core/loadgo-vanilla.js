@@ -344,7 +344,7 @@
       useroptions.opacity = parseFloat(useroptions.opacity)
     }
 
-    if (JSON.stringify(currentOptions) === '{}') {
+    if (Object.keys(currentOptions).length === 0) {
       // First-time init: apply defaults then overlay user options
       currentOptions = extend(defaultOptions, useroptions)
     } else if (typeof useroptions === 'undefined') {

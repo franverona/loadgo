@@ -275,7 +275,7 @@ if (typeof jQuery === 'undefined')
         options.opacity = parseFloat(options.opacity)
       }
 
-      if (JSON.stringify(currentOptions) === '{}') {
+      if (Object.keys(currentOptions).length === 0) {
         currentOptions = $.extend({}, defaults, options)
       } else {
         currentOptions = $.extend({}, currentOptions, options)
