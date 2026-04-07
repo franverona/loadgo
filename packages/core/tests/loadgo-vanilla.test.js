@@ -1,16 +1,10 @@
-import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
 import { beforeAll, beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const scriptCode = readFileSync(join(__dirname, '../loadgo-vanilla.js'), 'utf8')
 
 let Loadgo
 let container, image
 
-beforeAll(() => {
-  ;(0, globalThis.eval)(scriptCode)
+beforeAll(async () => {
+  await import('../loadgo-vanilla.js')
   Loadgo = globalThis.Loadgo
 })
 

@@ -1,18 +1,12 @@
-import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
 import { beforeAll, beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import $ from 'jquery'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const scriptCode = readFileSync(join(__dirname, '../loadgo.js'), 'utf8')
-
 let $container, $image
 
-beforeAll(() => {
+beforeAll(async () => {
   globalThis.jQuery = $
   globalThis.$ = $
-  ;(0, globalThis.eval)(scriptCode)
+  await import('../loadgo.js')
 })
 
 beforeEach(() => {
