@@ -134,7 +134,7 @@
     if (pluginOptions.animated) {
       const d = pluginOptions.animationDuration
       const e = pluginOptions.animationEasing
-      overlay.style['transition'] = `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`
+      overlay.style.transition = `width ${d}s ${e}, height ${d}s ${e}, top ${d}s ${e}`
     }
 
     // ARIA progressbar attributes — set on the overlay in normal mode, or on the image in filter mode
@@ -148,18 +148,17 @@
     // Filters
     if (pluginOptions.filter) {
       if (pluginOptions.filter === 'blur') {
-        element.style['filter'] = `${pluginOptions.filter}(10px)`
+        element.style.filter = `${pluginOptions.filter}(10px)`
       } else if (pluginOptions.filter === 'hue-rotate') {
-        element.style['filter'] = `${pluginOptions.filter}(360deg)`
+        element.style.filter = `${pluginOptions.filter}(360deg)`
       } else if (pluginOptions.filter === 'opacity') {
-        element.style['filter'] = `${pluginOptions.filter}(0)`
+        element.style.filter = `${pluginOptions.filter}(0)`
       } else {
-        element.style['filter'] = `${pluginOptions.filter}(1)`
+        element.style.filter = `${pluginOptions.filter}(1)`
       }
 
       if (pluginOptions.animated) {
-        element.style['transition'] =
-          `${pluginOptions.animationDuration}s filter ${pluginOptions.animationEasing}`
+        element.style.transition = `${pluginOptions.animationDuration}s filter ${pluginOptions.animationEasing}`
       }
     }
 
@@ -174,11 +173,11 @@
         bgposition = '0% 100%' // Top to bottom animation
       }
 
-      overlay.style['background-image'] = `url("${pluginOptions.image}")`
-      overlay.style['background-repeat'] = 'no-repeat'
-      overlay.style['background-size'] = 'cover'
-      overlay.style['background-color'] = 'transparent'
-      overlay.style['background-position'] = bgposition
+      overlay.style.backgroundImage = `url("${pluginOptions.image}")`
+      overlay.style.backgroundRepeat = 'no-repeat'
+      overlay.style.backgroundSize = 'cover'
+      overlay.style.backgroundColor = 'transparent'
+      overlay.style.backgroundPosition = bgposition
     }
 
     const pluginData = {
@@ -430,19 +429,19 @@
         switch (filter) {
           case 'blur':
             p = (100 - progress) / 10 // maps 0–100% progress to 10px–0px blur radius
-            element.style['filter'] = `${filter}(${p}px)`
+            element.style.filter = `${filter}(${p}px)`
             break
           case 'hue-rotate':
             p = (progress * 360) / 100
-            element.style['filter'] = `${filter}(${p}deg)`
+            element.style.filter = `${filter}(${p}deg)`
             break
           case 'opacity':
             p = progress / 100
-            element.style['filter'] = `${filter}(${p})`
+            element.style.filter = `${filter}(${p})`
             break
           default:
             p = 1 - progress / 100
-            element.style['filter'] = `${filter}(${p})`
+            element.style.filter = `${filter}(${p})`
         }
       }
     }
@@ -523,7 +522,7 @@
       // Can be replaced with animated: false in the initializer
       const loopOverlay = document.getElementById(domElements[domIndex].properties.overlay)
       if (loopOverlay) {
-        loopOverlay.style['transition'] = 'none'
+        loopOverlay.style.transition = 'none'
       }
 
       Loadgo.setprogress(element, domElements[domIndex].properties.progress)
