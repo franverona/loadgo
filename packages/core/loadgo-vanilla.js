@@ -27,12 +27,12 @@
       return false
     }
 
-    if (element.nodeName !== 'IMG') {
-      throw new Error('LoadGo only works on img elements.')
+    if (!(element instanceof HTMLElement)) {
+      throw new Error('LoadGo only works on one element at a time. Try with a valid #id.')
     }
 
-    if (element.length > 1) {
-      throw new Error('LoadGo only works on one element at a time. Try with a valid #id.')
+    if (element.nodeName !== 'IMG') {
+      throw new Error('LoadGo only works on img elements.')
     }
 
     return true

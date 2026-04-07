@@ -47,6 +47,13 @@ describe('JS - Initialization', () => {
     expect(() => Loadgo.init(div)).toThrow()
   })
 
+  it('throws if argument is not a single HTMLElement (e.g. NodeList)', () => {
+    document.body.appendChild(Object.assign(document.createElement('img'), { id: 'img-a' }))
+    document.body.appendChild(Object.assign(document.createElement('img'), { id: 'img-b' }))
+    const nodeList = document.querySelectorAll('img')
+    expect(() => Loadgo.init(nodeList)).toThrow('LoadGo only works on one element at a time.')
+  })
+
   it('wraps image in a loadgo-container', () => {
     Loadgo.init(image)
     expect(image.parentElement.classList.contains('loadgo-container')).toBe(true)
