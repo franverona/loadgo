@@ -1,16 +1,10 @@
-import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
-import { beforeAll, beforeEach, afterEach, describe, it, expect } from 'vitest'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const scriptCode = readFileSync(join(__dirname, '../loadgo-vanilla.js'), 'utf8')
+import { beforeAll, beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 
 let Loadgo
 let container, image
 
-beforeAll(() => {
-  ;(0, globalThis.eval)(scriptCode)
+beforeAll(async () => {
+  await import('../loadgo-vanilla.js')
   Loadgo = globalThis.Loadgo
 })
 
@@ -434,5 +428,306 @@ describe('JS - Resize listener cleanup', () => {
     Loadgo.init(image)
     Loadgo.destroy(image)
     expect(() => window.dispatchEvent(new Event('resize'))).not.toThrow()
+  })
+})
+
+describe('JS - setprogress: direction bt', () => {
+  it('setprogress with direction bt does not throw', () => {
+    Loadgo.init(image, { direction: 'bt' })
+    expect(() => Loadgo.setprogress(image, 50)).not.toThrow()
+  })
+
+  it('setprogress with direction bt stores progress', () => {
+    Loadgo.init(image, { direction: 'bt' })
+    Loadgo.setprogress(image, 50)
+    expect(Loadgo.getprogress(image)).toBe(50)
+  })
+
+  it('setprogress with direction bt sets overlay height proportionally', () => {
+    Loadgo.init(image, { direction: 'bt', animated: false })
+    // Patch stored height since jsdom has no layout engine
+    Loadgo.options(image).height = 200
+    Loadgo.setprogress(image, 25)
+    expect(getOverlay().style.height).toBe('150px')
+  })
+
+  it('setprogress with direction bt does not modify overlay width', () => {
+    Loadgo.init(image, { direction: 'bt', animated: false })
+    const widthBefore = getOverlay().style.width
+    Loadgo.setprogress(image, 50)
+    expect(getOverlay().style.width).toBe(widthBefore)
+  })
+})
+
+describe('JS - setprogress: direction tb', () => {
+  it('setprogress with direction tb does not throw', () => {
+    Loadgo.init(image, { direction: 'tb' })
+    expect(() => Loadgo.setprogress(image, 50)).not.toThrow()
+  })
+
+  it('setprogress with direction tb stores progress', () => {
+    Loadgo.init(image, { direction: 'tb' })
+    Loadgo.setprogress(image, 50)
+    expect(Loadgo.getprogress(image)).toBe(50)
+  })
+
+  it('setprogress with direction tb sets overlay height and top', () => {
+    Loadgo.init(image, { direction: 'tb', animated: false })
+    Loadgo.options(image).height = 200
+    Loadgo.setprogress(image, 25)
+    expect(getOverlay().style.height).toBe('150px')
+    expect(getOverlay().style.top).toBe('50px')
+  })
+})
+
+describe('JS - setprogress: boundary values', () => {
+  it('setprogress(0) stores 0', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 0)
+    expect(Loadgo.getprogress(image)).toBe(0)
+  })
+
+  it('setprogress(100) stores 100', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 100)
+    expect(Loadgo.getprogress(image)).toBe(100)
+  })
+
+  it('setprogress(0) sets overlay width to full width', () => {
+    Loadgo.init(image, { animated: false })
+    Loadgo.options(image).width = 100
+    Loadgo.setprogress(image, 0)
+    expect(getOverlay().style.width).toBe('100px')
+  })
+
+  it('setprogress(100) sets overlay width to 0', () => {
+    Loadgo.init(image, { animated: false })
+    Loadgo.options(image).width = 100
+    Loadgo.setprogress(image, 100)
+    expect(getOverlay().style.width).toBe('0px')
+  })
+})
+
+describe('JS - loop restart after stop', () => {
+  it('loop() can be called again after stop() without error', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    Loadgo.stop(image)
+    expect(() => {
+      Loadgo.loop(image, 1000)
+      Loadgo.stop(image)
+    }).not.toThrow()
+  })
+})
+
+describe('JS - onProgress during loop', () => {
+  it('onProgress is called on each loop tick', () => {
+    vi.useFakeTimers()
+    try {
+      let callCount = 0
+      Loadgo.init(image, { onProgress: () => callCount++ })
+      Loadgo.loop(image, 100)
+      vi.advanceTimersByTime(350) // fires at 100ms, 200ms, 300ms → 3 ticks
+      Loadgo.stop(image)
+      expect(callCount).toBeGreaterThanOrEqual(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('JS - destroy/init lifecycle', () => {
+  it('destroy then re-init resets progress and restores DOM structure', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 75)
+    Loadgo.destroy(image)
+    Loadgo.init(image)
+    expect(Loadgo.getprogress(image)).toBe(0)
+    expect(image.parentElement.classList.contains('loadgo-container')).toBe(true)
+    expect(image.parentElement.querySelectorAll('.loadgo-overlay').length).toBe(1)
+  })
+
+  it('custom resize listener from before destroy is not called after re-init', () => {
+    let count = 0
+    Loadgo.init(image, { resize: () => count++ })
+    window.dispatchEvent(new Event('resize'))
+    expect(count).toBe(1)
+    Loadgo.destroy(image)
+    Loadgo.init(image) // fresh init without custom resize
+    window.dispatchEvent(new Event('resize'))
+    expect(count).toBe(1) // original custom resize not re-attached
+  })
+})
+
+describe('JS - Multiple elements', () => {
+  it('setprogress on one element does not affect another', () => {
+    const image2 = document.createElement('img')
+    image2.id = 'id-logo-2'
+    document.body.appendChild(image2)
+    Loadgo.init(image)
+    Loadgo.init(image2)
+    Loadgo.setprogress(image, 60)
+    expect(Loadgo.getprogress(image2)).toBe(0)
+    Loadgo.destroy(image2)
+  })
+
+  it('two elements without id can be initialized simultaneously without overwriting each other', () => {
+    const imgA = document.createElement('img') // no id — will get auto-generated one
+    const imgB = document.createElement('img') // no id — will get a different auto-generated one
+    document.body.appendChild(imgA)
+    document.body.appendChild(imgB)
+    Loadgo.init(imgA)
+    Loadgo.init(imgB)
+    Loadgo.setprogress(imgA, 40)
+    expect(Loadgo.getprogress(imgA)).toBe(40)
+    expect(Loadgo.getprogress(imgB)).toBe(0)
+    Loadgo.destroy(imgA)
+    Loadgo.destroy(imgB)
+  })
+})
+
+describe('JS - options() before init()', () => {
+  it('options() called before init() returns undefined', () => {
+    const fresh = document.createElement('img')
+    fresh.id = 'fresh-img'
+    document.body.appendChild(fresh)
+    expect(Loadgo.options(fresh)).toBeUndefined()
+    document.body.removeChild(fresh)
+  })
+})
+
+describe('JS - resetprogress on uninitialized element', () => {
+  it('resetprogress does not throw on an uninitialized element', () => {
+    const fresh = document.createElement('img')
+    fresh.id = 'fresh-img'
+    document.body.appendChild(fresh)
+    expect(() => Loadgo.resetprogress(fresh)).not.toThrow()
+    document.body.removeChild(fresh)
+  })
+})
+
+describe('JS - Filter init CSS', () => {
+  it('hue-rotate filter sets hue-rotate(360deg) on image', () => {
+    Loadgo.init(image, { filter: 'hue-rotate' })
+    expect(image.style.filter).toBe('hue-rotate(360deg)')
+  })
+
+  it('opacity filter sets opacity(0) on image', () => {
+    Loadgo.init(image, { filter: 'opacity' })
+    expect(image.style.filter).toBe('opacity(0)')
+  })
+
+  it('grayscale filter sets grayscale(1) on image', () => {
+    Loadgo.init(image, { filter: 'grayscale' })
+    expect(image.style.filter).toBe('grayscale(1)')
+  })
+
+  it('filter with animated: true sets transition on image', () => {
+    Loadgo.init(image, { filter: 'blur', animated: true })
+    expect(image.style.transition).toContain('filter')
+  })
+})
+
+describe('JS - setprogress in filter mode', () => {
+  it('hue-rotate at 50% sets hue-rotate(180deg)', () => {
+    Loadgo.init(image, { filter: 'hue-rotate' })
+    Loadgo.setprogress(image, 50)
+    expect(image.style.filter).toBe('hue-rotate(180deg)')
+  })
+
+  it('opacity at 50% sets opacity(0.5)', () => {
+    Loadgo.init(image, { filter: 'opacity' })
+    Loadgo.setprogress(image, 50)
+    expect(image.style.filter).toBe('opacity(0.5)')
+  })
+
+  it('grayscale at 50% sets grayscale(0.5)', () => {
+    Loadgo.init(image, { filter: 'grayscale' })
+    Loadgo.setprogress(image, 50)
+    expect(image.style.filter).toBe('grayscale(0.5)')
+  })
+})
+
+describe('JS - setprogress: direction rl', () => {
+  it('setprogress with direction rl stores progress', () => {
+    Loadgo.init(image, { direction: 'rl' })
+    Loadgo.setprogress(image, 50)
+    expect(Loadgo.getprogress(image)).toBe(50)
+  })
+
+  it('setprogress with direction rl sets overlay width proportionally', () => {
+    Loadgo.init(image, { direction: 'rl', animated: false })
+    Loadgo.options(image).width = 100
+    Loadgo.setprogress(image, 25)
+    expect(getOverlay().style.width).toBe('75px')
+  })
+})
+
+describe('JS - image option background position', () => {
+  it('image + lr direction uses 100% 0% background-position', () => {
+    Loadgo.init(image, { image: 'logo.png', direction: 'lr' })
+    expect(getOverlay().style.backgroundPosition).toBe('100% 0%')
+  })
+
+  it('image + rl direction uses 0% 50% background-position', () => {
+    Loadgo.init(image, { image: 'logo.png', direction: 'rl' })
+    expect(getOverlay().style.backgroundPosition).toBe('0% 50%')
+  })
+
+  it('image + bt direction uses 100% 0% background-position', () => {
+    Loadgo.init(image, { image: 'logo.png', direction: 'bt' })
+    expect(getOverlay().style.backgroundPosition).toBe('100% 0%')
+  })
+
+  it('image + tb direction uses 0% 100% background-position', () => {
+    Loadgo.init(image, { image: 'logo.png', direction: 'tb' })
+    expect(getOverlay().style.backgroundPosition).toBe('0% 100%')
+  })
+})
+
+describe('JS - options() update after init', () => {
+  it('options() with args after init merges into existing options', () => {
+    Loadgo.init(image, { bgcolor: '#FF0000' })
+    Loadgo.options(image, { bgcolor: '#00FF00' })
+    expect(Loadgo.options(image).bgcolor).toBe('#00FF00')
+  })
+
+  it('options() update preserves previously set options', () => {
+    Loadgo.init(image, { bgcolor: '#FF0000', opacity: 0.8 })
+    Loadgo.options(image, { bgcolor: '#00FF00' })
+    expect(Loadgo.options(image).opacity).toBe(0.8)
+  })
+})
+
+describe('JS - loop/stop edge cases', () => {
+  it('loop() on uninitialized element does not throw', () => {
+    expect(() => Loadgo.loop(image, 1000)).not.toThrow()
+  })
+
+  it('loop() while already looping does not throw', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    expect(() => Loadgo.loop(image, 1000)).not.toThrow()
+    Loadgo.stop(image)
+  })
+
+  it('stop() on uninitialized element does not throw', () => {
+    expect(() => Loadgo.stop(image)).not.toThrow()
+  })
+
+  it('destroy() while looping stops the interval', () => {
+    vi.useFakeTimers()
+    try {
+      let callCount = 0
+      Loadgo.init(image, { onProgress: () => callCount++ })
+      Loadgo.loop(image, 100)
+      vi.advanceTimersByTime(300)
+      const countBeforeDestroy = callCount
+      Loadgo.destroy(image)
+      vi.advanceTimersByTime(300)
+      expect(callCount).toBe(countBeforeDestroy)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

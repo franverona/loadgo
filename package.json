@@ -9,6 +9,7 @@
     "build": "npm run build --workspaces",
     "clean": "npm run clean --workspaces",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "eslint packages/core/loadgo.js packages/core/loadgo-vanilla.js scripts/ examples/ packages/core/tests/",
     "lint:fix": "eslint --fix packages/core/loadgo.js packages/core/loadgo-vanilla.js scripts/ examples/ packages/core/tests/",
@@ -17,12 +18,15 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.js": ["prettier --write"]
+    "*.js": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.2",
     "eslint": "^10.2.0",
     "globals": "^17.4.0",
     "husky": "^9.1.7",
