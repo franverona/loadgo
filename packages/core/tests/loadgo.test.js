@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-import { beforeAll, beforeEach, afterEach, describe, it, expect } from 'vitest'
+import { beforeAll, beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import $ from 'jquery'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -423,5 +423,162 @@ describe('jQuery - Resize listener cleanup', () => {
     $image.loadgo()
     $image.loadgo('destroy')
     expect(() => $(window).trigger('resize')).not.toThrow()
+  })
+})
+
+describe('jQuery - setprogress: direction bt', () => {
+  it('setprogress with direction bt does not throw', () => {
+    $image.loadgo({ direction: 'bt' })
+    expect(() => $image.loadgo('setprogress', 50)).not.toThrow()
+  })
+
+  it('setprogress with direction bt stores progress', () => {
+    $image.loadgo({ direction: 'bt' })
+    $image.loadgo('setprogress', 50)
+    expect($image.loadgo('getprogress')).toBe(50)
+  })
+
+  it('setprogress with direction bt sets overlay height proportionally', () => {
+    $image.loadgo({ direction: 'bt', animated: false })
+    // Patch stored height since jsdom has no layout engine
+    const data = $image.data('loadgo')
+    data.height = 200
+    $image.data('loadgo', data)
+    $image.loadgo('setprogress', 25)
+    expect(getOverlay()[0].style.height).toBe('150px')
+  })
+
+  it('setprogress with direction bt does not modify overlay width', () => {
+    $image.loadgo({ direction: 'bt', animated: false })
+    const widthBefore = getOverlay()[0].style.width
+    $image.loadgo('setprogress', 50)
+    expect(getOverlay()[0].style.width).toBe(widthBefore)
+  })
+})
+
+describe('jQuery - setprogress: direction tb', () => {
+  it('setprogress with direction tb does not throw', () => {
+    $image.loadgo({ direction: 'tb' })
+    expect(() => $image.loadgo('setprogress', 50)).not.toThrow()
+  })
+
+  it('setprogress with direction tb stores progress', () => {
+    $image.loadgo({ direction: 'tb' })
+    $image.loadgo('setprogress', 50)
+    expect($image.loadgo('getprogress')).toBe(50)
+  })
+
+  it('setprogress with direction tb sets overlay height and top', () => {
+    $image.loadgo({ direction: 'tb', animated: false })
+    const data = $image.data('loadgo')
+    data.height = 200
+    $image.data('loadgo', data)
+    $image.loadgo('setprogress', 25)
+    expect(getOverlay()[0].style.height).toBe('150px')
+    expect(getOverlay()[0].style.top).toBe('50px')
+  })
+})
+
+describe('jQuery - setprogress: boundary values', () => {
+  it('setprogress(0) stores 0', () => {
+    $image.loadgo()
+    $image.loadgo('setprogress', 0)
+    expect($image.loadgo('getprogress')).toBe(0)
+  })
+
+  it('setprogress(100) stores 100', () => {
+    $image.loadgo()
+    $image.loadgo('setprogress', 100)
+    expect($image.loadgo('getprogress')).toBe(100)
+  })
+
+  it('setprogress(0) sets overlay width to full width', () => {
+    $image.loadgo({ animated: false })
+    const data = $image.data('loadgo')
+    data.width = 100
+    $image.data('loadgo', data)
+    $image.loadgo('setprogress', 0)
+    expect(getOverlay()[0].style.width).toBe('100px')
+  })
+
+  it('setprogress(100) sets overlay width to 0', () => {
+    $image.loadgo({ animated: false })
+    const data = $image.data('loadgo')
+    data.width = 100
+    $image.data('loadgo', data)
+    $image.loadgo('setprogress', 100)
+    expect(getOverlay()[0].style.width).toBe('0px')
+  })
+})
+
+describe('jQuery - loop restart after stop', () => {
+  it('loop() can be called again after stop() without error', () => {
+    $image.loadgo()
+    $image.loadgo('loop', 1000)
+    $image.loadgo('stop')
+    expect(() => {
+      $image.loadgo('loop', 1000)
+      $image.loadgo('stop')
+    }).not.toThrow()
+  })
+})
+
+describe('jQuery - onProgress during loop', () => {
+  it('onProgress is called on each loop tick', () => {
+    vi.useFakeTimers()
+    try {
+      let callCount = 0
+      $image.loadgo({ onProgress: () => callCount++ })
+      $image.loadgo('loop', 100)
+      vi.advanceTimersByTime(350) // fires at 100ms, 200ms, 300ms → 3 ticks
+      $image.loadgo('stop')
+      expect(callCount).toBeGreaterThanOrEqual(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('jQuery - destroy/init lifecycle', () => {
+  it('destroy then re-init resets progress and restores DOM structure', () => {
+    $image.loadgo()
+    $image.loadgo('setprogress', 75)
+    $image.loadgo('destroy')
+    $image.loadgo()
+    expect($image.loadgo('getprogress')).toBe(0)
+    expect($image.parent().hasClass('loadgo-container')).toBe(true)
+    expect($image.siblings('.loadgo-overlay').length).toBe(1)
+  })
+
+  it('custom resize listener from before destroy is not called after re-init', () => {
+    let count = 0
+    $image.loadgo({ resize: () => count++ })
+    $(window).trigger('resize')
+    expect(count).toBe(1)
+    $image.loadgo('destroy')
+    $image.loadgo() // fresh init without custom resize
+    $(window).trigger('resize')
+    expect(count).toBe(1) // original custom resize not re-attached
+  })
+})
+
+describe('jQuery - Multiple elements', () => {
+  it('setprogress on one element does not affect another', () => {
+    const $image2 = $('<img id="id-logo-2" />')
+    $('body').append($image2)
+    $image.loadgo()
+    $image2.loadgo()
+    $image.loadgo('setprogress', 60)
+    expect($image2.loadgo('getprogress')).toBe(0)
+    $image2.loadgo('destroy')
+  })
+})
+
+describe('jQuery - options() before init()', () => {
+  it('options() called before init() throws because internal data is not set', () => {
+    const $fresh = $('<img id="fresh-img" />')
+    $('body').append($fresh)
+    expect(() => $fresh.loadgo('options')).toThrow()
+    $fresh.remove()
   })
 })
