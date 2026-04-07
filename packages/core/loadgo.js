@@ -358,15 +358,15 @@ if (typeof jQuery === 'undefined')
         switch ($filter) {
           case 'blur':
             p = (100 - progress) / 10 // maps 0–100% progress to 10px–0px blur radius
-            jQuery(this).css({ filter: `${$filter}(${p}px)` })
+            $(this).css({ filter: `${$filter}(${p}px)` })
             break
           case 'hue-rotate':
             p = (progress * 360) / 100
-            jQuery(this).css({ filter: `${$filter}(${p}deg)` })
+            $(this).css({ filter: `${$filter}(${p}deg)` })
             break
           case 'opacity':
             p = progress / 100
-            jQuery(this).css({ filter: `${$filter}(${p})` })
+            $(this).css({ filter: `${$filter}(${p})` })
             break
           default:
             p = 1 - progress / 100
