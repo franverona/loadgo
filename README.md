@@ -384,6 +384,10 @@ logo.addEventListener('loadgo:options', (e) => {
   // e.detail is typed as LoadgoOptions
   console.log(e.detail.bgcolor)
 })
+
+logo.addEventListener('loadgo:init', (e) => {
+  // e.detail is null — events with no payload have CustomEvent<null>
+})
 ```
 
 ---
