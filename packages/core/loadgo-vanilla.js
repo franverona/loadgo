@@ -1,5 +1,5 @@
 /*!
- * LoadGo v3.1.2 (https://github.com/franverona/loadgo)
+ * LoadGo v3.2.0 (https://github.com/franverona/loadgo)
  * 2026 - Fran Verona
  * Licensed under MIT (https://github.com/franverona/loadgo/blob/master/LICENSE)
  */
