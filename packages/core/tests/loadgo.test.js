@@ -739,7 +739,10 @@ describe('jQuery - Custom events: loadgo:error', () => {
     const { events, off } = captureEvent(div, 'loadgo:error')
     try {
       $(div).loadgo()
-    } catch (_) {}
+      // eslint-disable-next-line no-unused-vars
+    } catch (_) {
+      //
+    }
     off()
     expect(events.length).toBe(1)
     expect(events[0].detail.message).toMatch(/img/)
