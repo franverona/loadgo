@@ -52,19 +52,20 @@
     return parseFloat(measure) || 0
   }
 
+  const CUSTOM_EVENTS = {
+    complete: 'loadgo:complete',
+    cycle: 'loadgo:cycle',
+    destroy: 'loadgo:destroy',
+    error: 'loadgo:error',
+    init: 'loadgo:init',
+    options: 'loadgo:options',
+    progress: 'loadgo:progress',
+    reset: 'loadgo:reset',
+    start: 'loadgo:start',
+    stop: 'loadgo:stop',
+  }
+
   const dispatchCustomEvent = (element, type, detail) => {
-    const CUSTOM_EVENTS = {
-      complete: 'loadgo:complete',
-      cycle: 'loadgo:cycle',
-      destroy: 'loadgo:destroy',
-      error: 'loadgo:error',
-      init: 'loadgo:init',
-      options: 'loadgo:options',
-      progress: 'loadgo:progress',
-      reset: 'loadgo:reset',
-      start: 'loadgo:start',
-      stop: 'loadgo:stop',
-    }
     const eventType = CUSTOM_EVENTS[type] ?? null
     if (!eventType) {
       throw new Error(`Unable to dispatch unknown event type: ${type}`)
@@ -616,7 +617,7 @@
 
     if (getIndex(element.id) === -1) {
       const message =
-        'Trying to stop loop a non initialized element. You have to run "init" method first.'
+        'Trying to stop loop for a non initialized element. You have to run "init" method first.'
       dispatchCustomEvent(element, 'error', { message })
       console.error(message)
       return

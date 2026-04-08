@@ -9,19 +9,20 @@ if (typeof jQuery === 'undefined')
     'LoadGo requires jQuery. Make sure you are loading jQuery before LoadGo, or try pure Javascript version instead.',
   )
 ;(function ($) {
+  const CUSTOM_EVENTS = {
+    complete: 'loadgo:complete',
+    cycle: 'loadgo:cycle',
+    destroy: 'loadgo:destroy',
+    error: 'loadgo:error',
+    init: 'loadgo:init',
+    options: 'loadgo:options',
+    progress: 'loadgo:progress',
+    reset: 'loadgo:reset',
+    start: 'loadgo:start',
+    stop: 'loadgo:stop',
+  }
+
   const dispatchCustomEvent = (element, type, detail) => {
-    const CUSTOM_EVENTS = {
-      complete: 'loadgo:complete',
-      cycle: 'loadgo:cycle',
-      destroy: 'loadgo:destroy',
-      error: 'loadgo:error',
-      init: 'loadgo:init',
-      options: 'loadgo:options',
-      progress: 'loadgo:progress',
-      reset: 'loadgo:reset',
-      start: 'loadgo:start',
-      stop: 'loadgo:stop',
-    }
     const eventType = CUSTOM_EVENTS[type] ?? null
     if (!eventType) {
       throw new Error(`Unable to dispatch unknown event type: ${type}`)
@@ -64,24 +65,24 @@ if (typeof jQuery === 'undefined')
       storedData.overlay = $overlay
     } else {
       rawElement.setAttribute('aria-valuenow', progress)
-      const $filter = pluginOptions.filter
+      const filter = pluginOptions.filter
       let p
-      switch ($filter) {
+      switch (filter) {
         case 'blur':
           p = (100 - progress) / 10
-          $element.css({ filter: `${$filter}(${p}px)` })
+          $element.css({ filter: `${filter}(${p}px)` })
           break
         case 'hue-rotate':
           p = (progress * 360) / 100
-          $element.css({ filter: `${$filter}(${p}deg)` })
+          $element.css({ filter: `${filter}(${p}deg)` })
           break
         case 'opacity':
           p = progress / 100
-          $element.css({ filter: `${$filter}(${p})` })
+          $element.css({ filter: `${filter}(${p})` })
           break
         default:
           p = 1 - progress / 100
-          $element.css({ filter: `${$filter}(${p})` })
+          $element.css({ filter: `${filter}(${p})` })
       }
     }
 
