@@ -63,6 +63,19 @@ Two independent parallel implementations in `packages/core/`, both with identica
 - Prettier: single quotes, no semicolons, 2-space indent, trailing commas, 100-char print width
 - `"type": "module"` in root `package.json` — all config files and scripts use ESM
 
+## Custom events
+
+Both implementations dispatch native DOM `CustomEvent`s (not jQuery `.trigger()`). This ensures listeners registered via `addEventListener` work in both versions.
+
+**Implementation rules that are not obvious from the code:**
+
+- `dispatchCustomEvent` requires a raw DOM element. In jQuery plugin methods, `this` is a jQuery wrapper — always use `this[0]` (or `$this[0]` / `rawElement`). The `_setprogress` helper in `loadgo.js` normalises via `const rawElement = $element[0]` for this reason.
+- `CUSTOM_EVENTS` (the `type → 'loadgo:type'` lookup map) is defined at IIFE scope, above `dispatchCustomEvent`, so it is not recreated on every call.
+- `resetprogress` and `stop` call `_setprogress(..., false)` (`shouldEmit = false`) and then dispatch their own events (`loadgo:reset` / `loadgo:stop`). This prevents `loadgo:progress` from firing alongside them.
+- `loadgo:complete` is guarded by `!data.interval` — it never fires inside a loop even when progress hits 100.
+- `loadgo:options` is guarded by an `isUpdate` flag computed before the `if/else` branch. It fires only on the update path (existing options + user-provided options), not during first-time init and not when `options()` is used as a getter.
+- Events with no payload (`loadgo:init`, `loadgo:start`, `loadgo:cycle`, `loadgo:destroy`) are dispatched without a `detail` argument — the Web API defaults `event.detail` to `null`. The TypeScript types use `CustomEvent<null>` accordingly.
+
 ## jQuery 4 compatibility notes
 
 - `$.inArray()` removed — use `Array.prototype.includes()`

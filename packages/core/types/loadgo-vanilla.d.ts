@@ -26,26 +26,84 @@ export interface LoadgoOptions {
 }
 
 export interface LoadgoAPI {
-  /** Initialise LoadGo on an `<img>` element. */
+  /**
+   * Initialise LoadGo on an `<img>` element.
+   * @fires loadgo:init
+   * @fires loadgo:error
+   */
   init(element: HTMLImageElement, options?: LoadgoOptions): void
-  /** Get or set options for an already-initialised element. */
+  /**
+   * Get or set options for an already-initialised element.
+   * @fires loadgo:options - Only fired when called as a setter after init.
+   */
   options(element: HTMLImageElement, options?: LoadgoOptions): LoadgoOptions
-  /** Set progress (0–100). */
+  /** 
+   * Set progress (0–100). 
+   * @fires loadgo:progress
+   * @fires loadgo:complete - Only fired when progress reaches 100% outside of a loop.
+   */
   setprogress(element: HTMLImageElement, progress: number): void
   /** Return the current progress value. */
   getprogress(element: HTMLImageElement): number
-  /** Reset progress back to 0. */
+  /** 
+   * Reset progress back to 0. 
+   * @fires loadgo:reset
+   */
   resetprogress(element: HTMLImageElement): void
-  /** Start an indefinite back-and-forth animation loop. */
+  /**
+   * Start an indefinite back-and-forth animation loop.
+   * @fires loadgo:start
+   * @fires loadgo:cycle - Fired each time the loop completes one full back-and-forth.
+   * @fires loadgo:error
+   */
   loop(element: HTMLImageElement, duration: number): void
-  /** Stop the loop and reveal the full image. */
+  /**
+   * Stop the loop and reveal the full image.
+   * @fires loadgo:stop
+   * @fires loadgo:error
+   */
   stop(element: HTMLImageElement): void
-  /** Remove the overlay and restore the original DOM structure. */
+  /**
+   * Remove the overlay and restore the original DOM structure.
+   * @fires loadgo:destroy
+   */
   destroy(element: HTMLImageElement): void
 }
 
 export declare const Loadgo: LoadgoAPI
 
+export interface LoadgoDetail {
+  progress: number
+}
+
+export interface LoadgoEventMap {
+  'loadgo:complete': CustomEvent<LoadgoDetail>
+  'loadgo:cycle': CustomEvent<null>
+  'loadgo:destroy': CustomEvent<null>
+  'loadgo:error': CustomEvent<{ message: string }>
+  'loadgo:init': CustomEvent<null>
+  'loadgo:options': CustomEvent<LoadgoOptions>
+  'loadgo:progress': CustomEvent<LoadgoDetail>
+  'loadgo:reset': CustomEvent<LoadgoDetail>
+  'loadgo:start': CustomEvent<null>
+  'loadgo:stop': CustomEvent<LoadgoDetail>
+}
+
 declare global {
   const Loadgo: LoadgoAPI
+
+  interface HTMLImageElementEventMap extends LoadgoEventMap {}
+
+  interface HTMLImageElement {
+    addEventListener<K extends keyof LoadgoEventMap>(
+      type: K,
+      listener: (this: HTMLImageElement, ev: LoadgoEventMap[K]) => any,
+      options?: boolean | AddEventListenerOptions
+    ): void
+    removeEventListener<K extends keyof LoadgoEventMap>(
+      type: K,
+      listener: (this: HTMLImageElement, ev: LoadgoEventMap[K]) => any,
+      options?: boolean | EventListenerOptions
+    ): void
+  }
 }
