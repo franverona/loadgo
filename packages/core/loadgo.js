@@ -36,7 +36,13 @@ if (typeof jQuery === 'undefined')
     const $element = $(element)
     const rawElement = $element[0]
     const data = $element.data('loadgo')
-    if (typeof data === 'undefined') return
+    if (typeof data === 'undefined') {
+      dispatchCustomEvent(rawElement, 'error', {
+        message:
+          'Trying to set progress on a non initialized element. You have to run "init" method first.',
+      })
+      return
+    }
 
     const storedData = { progress }
     const pluginOptions = $element.loadgo('options')
@@ -415,7 +421,7 @@ if (typeof jQuery === 'undefined')
       $this.data('loadgo-options', currentOptions)
 
       if (isUpdate) {
-        dispatchCustomEvent($this[0], 'options', currentOptions)
+        dispatchCustomEvent($this[0], 'options', { ...currentOptions })
       }
 
       return currentOptions

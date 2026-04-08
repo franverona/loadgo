@@ -771,6 +771,14 @@ describe('jQuery - Custom events: loadgo:error', () => {
     off()
     expect(events.length).toBe(1)
   })
+
+  it('fires on setprogress() when element is not initialized', () => {
+    const { events, off } = captureEvent($image[0], 'loadgo:error')
+    $image.loadgo('setprogress', 50)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.message).toMatch(/set progress/)
+  })
 })
 
 describe('jQuery - Custom events: loadgo:options', () => {

@@ -87,6 +87,10 @@
     // Element exists?
     const domElementsIndex = getIndex(element.id)
     if (domElementsIndex === -1) {
+      dispatchCustomEvent(element, 'error', {
+        message:
+          'Trying to set progress on a non initialized element. You have to run "init" method first.',
+      })
       return
     }
 
@@ -498,7 +502,7 @@
     domElements[domElementsIndex].properties = currentOptions
 
     if (isUpdate) {
-      dispatchCustomEvent(element, 'options', currentOptions)
+      dispatchCustomEvent(element, 'options', { ...currentOptions })
     }
 
     return currentOptions
