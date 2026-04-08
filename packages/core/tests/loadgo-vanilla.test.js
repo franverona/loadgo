@@ -804,6 +804,21 @@ describe('JS - Custom events: loadgo:error', () => {
     expect(events.length).toBe(1)
     expect(events[0].detail.message).toMatch(/set progress/)
   })
+
+  it('fires on resetprogress() when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.message).toMatch(/reset progress/)
+  })
+
+  it('does not fire loadgo:reset when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:reset')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(0)
+  })
 })
 
 describe('JS - Custom events: loadgo:options', () => {

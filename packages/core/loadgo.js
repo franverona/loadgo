@@ -452,8 +452,17 @@ if (typeof jQuery === 'undefined')
     /**
      * Reset progress
      * @fires loadgo:reset
+     * @fires loadgo:error
      */
     resetprogress: function () {
+      const data = $(this).data('loadgo')
+      if (typeof data === 'undefined') {
+        dispatchCustomEvent(this[0], 'error', {
+          message:
+            'Trying to reset progress on a non initialized element. You have to run "init" method first.',
+        })
+        return
+      }
       _setprogress(this, 0, false)
       dispatchCustomEvent(this[0], 'reset', { progress: 0 })
     },

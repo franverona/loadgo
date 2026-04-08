@@ -536,8 +536,16 @@
    * Reset progress back to 0.
    * @param  {HTMLImageElement} element  DOM element using document.getElementById
    * @fires loadgo:reset
+   * @fires loadgo:error
    */
   Loadgo.resetprogress = (element) => {
+    if (getIndex(element.id) === -1) {
+      dispatchCustomEvent(element, 'error', {
+        message:
+          'Trying to reset progress on a non initialized element. You have to run "init" method first.',
+      })
+      return
+    }
     _setprogress(element, 0, false)
     dispatchCustomEvent(element, 'reset', { progress: 0 })
   }
