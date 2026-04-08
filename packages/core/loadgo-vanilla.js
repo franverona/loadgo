@@ -616,7 +616,7 @@
 
     if (getIndex(element.id) === -1) {
       const message =
-        'Trying to loop a non initialized element. You have to run "init" method first.'
+        'Trying to stop loop a non initialized element. You have to run "init" method first.'
       dispatchCustomEvent(element, 'error', { message })
       console.error(message)
       return
