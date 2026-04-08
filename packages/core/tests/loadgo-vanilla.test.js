@@ -25,6 +25,13 @@ afterEach(() => {
 
 const getOverlay = () => image.parentElement?.querySelector('.loadgo-overlay') ?? null
 
+const captureEvent = (el, type) => {
+  const events = []
+  const handler = (e) => events.push(e)
+  el.addEventListener(type, handler)
+  return { events, off: () => el.removeEventListener(type, handler) }
+}
+
 describe('JS - Initialization', () => {
   it('exposes Loadgo on window', () => {
     expect(typeof globalThis.Loadgo).toBe('object')
@@ -729,5 +736,244 @@ describe('JS - loop/stop edge cases', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('JS - Custom events: loadgo:init', () => {
+  it('fires on init()', () => {
+    const { events, off } = captureEvent(image, 'loadgo:init')
+    Loadgo.init(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('fires again on re-init', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:init')
+    Loadgo.init(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - Custom events: loadgo:error', () => {
+  it('fires when element is not an img', () => {
+    const div = document.createElement('div')
+    div.id = 'not-img-error'
+    document.body.appendChild(div)
+    const { events, off } = captureEvent(div, 'loadgo:error')
+    try {
+      Loadgo.init(div)
+    } catch (_) {}
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.message).toMatch(/img/)
+  })
+
+  it('fires on loop() when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.loop(image, 1000)
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('fires on loop() when already looping', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.loop(image, 1000)
+    off()
+    Loadgo.stop(image)
+    expect(events.length).toBe(1)
+  })
+
+  it('fires on stop() when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.stop(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - Custom events: loadgo:options', () => {
+  it('fires when options() is called as a setter after init', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.options(image, { bgcolor: '#FF0000' })
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('detail contains the merged options', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.options(image, { bgcolor: '#FF0000' })
+    off()
+    expect(events[0].detail.bgcolor).toBe('#FF0000')
+  })
+
+  it('does not fire during init()', () => {
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.init(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire when options() is used as a getter', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.options(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('JS - Custom events: loadgo:progress', () => {
+  it('fires on setprogress() with correct detail', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:progress')
+    Loadgo.setprogress(image, 50)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(50)
+  })
+
+  it('does not fire on resetprogress()', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 50)
+    const { events, off } = captureEvent(image, 'loadgo:progress')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire on stop()', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    const { events, off } = captureEvent(image, 'loadgo:progress')
+    Loadgo.stop(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('JS - Custom events: loadgo:complete', () => {
+  it('fires when setprogress reaches 100 outside a loop', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:complete')
+    Loadgo.setprogress(image, 100)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+
+  it('does not fire for values below 100', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:complete')
+    Loadgo.setprogress(image, 99)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire when progress reaches 100 inside a loop', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      const { events, off } = captureEvent(image, 'loadgo:complete')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(105) // enough ticks to pass 100
+      off()
+      Loadgo.stop(image)
+      expect(events.length).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('JS - Custom events: loadgo:reset', () => {
+  it('fires on resetprogress() with progress 0', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 50)
+    const { events, off } = captureEvent(image, 'loadgo:reset')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(0)
+  })
+})
+
+describe('JS - Custom events: loadgo:start', () => {
+  it('fires on loop()', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:start')
+    Loadgo.loop(image, 1000)
+    off()
+    Loadgo.stop(image)
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - Custom events: loadgo:cycle', () => {
+  it('fires when the loop completes one full back-and-forth', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      const { events, off } = captureEvent(image, 'loadgo:cycle')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(200) // 100 ticks up + 100 ticks down
+      off()
+      Loadgo.stop(image)
+      expect(events.length).toBe(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires multiple times across multiple cycles', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      const { events, off } = captureEvent(image, 'loadgo:cycle')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(400) // ~2 full cycles
+      off()
+      Loadgo.stop(image)
+      expect(events.length).toBe(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('JS - Custom events: loadgo:stop', () => {
+  it('fires on stop() with progress 100', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.stop(image)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+})
+
+describe('JS - Custom events: loadgo:destroy', () => {
+  it('fires on destroy()', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:destroy')
+    Loadgo.destroy(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - Custom events: bubbling', () => {
+  it('events bubble up to the parent element', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(container, 'loadgo:progress')
+    Loadgo.setprogress(image, 40)
+    off()
+    expect(events.length).toBe(1)
   })
 })

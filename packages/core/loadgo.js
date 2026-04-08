@@ -9,7 +9,104 @@ if (typeof jQuery === 'undefined')
     'LoadGo requires jQuery. Make sure you are loading jQuery before LoadGo, or try pure Javascript version instead.',
   )
 ;(function ($) {
+  const dispatchCustomEvent = (element, type, detail) => {
+    const CUSTOM_EVENTS = {
+      complete: 'loadgo:complete',
+      cycle: 'loadgo:cycle',
+      destroy: 'loadgo:destroy',
+      error: 'loadgo:error',
+      init: 'loadgo:init',
+      options: 'loadgo:options',
+      progress: 'loadgo:progress',
+      reset: 'loadgo:reset',
+      start: 'loadgo:start',
+      stop: 'loadgo:stop',
+    }
+    const eventType = CUSTOM_EVENTS[type] ?? null
+    if (!eventType) {
+      throw new Error(`Unable to dispatch unknown event type: ${type}`)
+    }
+    element.dispatchEvent(new CustomEvent(eventType, { detail, bubbles: true }))
+  }
+
+  const _setprogress = (element, progress, shouldEmit) => {
+    if (progress < 0 || progress > 100) return
+
+    const $element = $(element)
+    const rawElement = $element[0]
+    const data = $element.data('loadgo')
+    if (typeof data === 'undefined') return
+
+    const storedData = { progress }
+    const pluginOptions = $element.loadgo('options')
+    const $overlay = data.overlay
+    const $width = data.width
+    const $height = data.height
+    const direction = pluginOptions.direction
+
+    if ($overlay) {
+      let overlayWidth, overlayHeight
+      if (direction === 'lr') {
+        overlayWidth = $width * (1 - progress / 100)
+        $overlay[0].style.width = `${overlayWidth}px`
+      } else if (direction === 'rl') {
+        overlayWidth = $width * (1 - progress / 100)
+        $overlay[0].style.width = `${overlayWidth}px`
+      } else if (direction === 'bt') {
+        overlayHeight = $height * (1 - progress / 100)
+        $overlay[0].style.height = `${overlayHeight}px`
+      } else if (direction === 'tb') {
+        overlayHeight = $height * (1 - progress / 100)
+        $overlay[0].style.height = `${overlayHeight}px`
+        $overlay[0].style.top = `${$height - overlayHeight}px`
+      }
+      $overlay[0].setAttribute('aria-valuenow', progress)
+      storedData.overlay = $overlay
+    } else {
+      rawElement.setAttribute('aria-valuenow', progress)
+      const $filter = pluginOptions.filter
+      let p
+      switch ($filter) {
+        case 'blur':
+          p = (100 - progress) / 10
+          $element.css({ filter: `${$filter}(${p}px)` })
+          break
+        case 'hue-rotate':
+          p = (progress * 360) / 100
+          $element.css({ filter: `${$filter}(${p}deg)` })
+          break
+        case 'opacity':
+          p = progress / 100
+          $element.css({ filter: `${$filter}(${p})` })
+          break
+        default:
+          p = 1 - progress / 100
+          $element.css({ filter: `${$filter}(${p})` })
+      }
+    }
+
+    $element.data('loadgo', $.extend({}, data, storedData))
+
+    const onProgress = $element.loadgo('options').onProgress
+    if (typeof onProgress === 'function') {
+      onProgress(progress)
+    }
+
+    if (shouldEmit) {
+      dispatchCustomEvent(rawElement, 'progress', { progress })
+      if (progress === 100 && !data.interval) {
+        dispatchCustomEvent(rawElement, 'complete', { progress: 100 })
+      }
+    }
+  }
+
   const methods = {
+    /**
+     * Initialise LoadGo on the selected `<img>` element.
+     * @param  {object} [userOptions]  Loadgo options
+     * @fires loadgo:init
+     * @fires loadgo:error
+     */
     init: function (userOptions) {
       const $this = $(this)
 
@@ -18,11 +115,15 @@ if (typeof jQuery === 'undefined')
       }
 
       if (!$this.is('img')) {
-        throw new Error('LoadGo only works on img elements.')
+        const message = 'LoadGo only works on img elements.'
+        dispatchCustomEvent($this[0], 'error', { message })
+        throw new Error(message)
       }
 
       if ($this.length > 1) {
-        throw new Error('LoadGo only works on one element at a time. Try with a valid #id.')
+        const message = 'LoadGo only works on one element at a time. Try with a valid #id.'
+        dispatchCustomEvent($this[0], 'error', { message })
+        throw new Error(message)
       }
 
       // If already initialized, destroy first to prevent nested containers
@@ -249,8 +350,15 @@ if (typeof jQuery === 'undefined')
       pluginData.resizeFunction = resizeHandler
       $this.data('loadgo', pluginData)
       $(window).on('resize', resizeHandler)
+
+      dispatchCustomEvent($this[0], 'init')
     },
 
+    /**
+     * Get or set options for an already-initialised element.
+     * @param  {object} [userOptions]  Loadgo options to update. Omit to use as getter.
+     * @fires loadgo:options - Only fired when called as a setter after init.
+     */
     options: function (userOptions) {
       const $this = $(this)
       let currentOptions = $this.data('loadgo-options')
@@ -274,6 +382,8 @@ if (typeof jQuery === 'undefined')
       if (typeof options.opacity !== 'undefined') {
         options.opacity = parseFloat(options.opacity)
       }
+
+      const isUpdate = Object.keys(currentOptions).length > 0 && typeof userOptions !== 'undefined'
 
       if (Object.keys(currentOptions).length === 0) {
         currentOptions = $.extend({}, defaults, options)
@@ -303,87 +413,25 @@ if (typeof jQuery === 'undefined')
       // Store user options with default options
       $this.data('loadgo-options', currentOptions)
 
+      if (isUpdate) {
+        dispatchCustomEvent($this[0], 'options', currentOptions)
+      }
+
       return currentOptions
     },
 
     /**
      * Set progress by percentage
      * @param  {number} progress Progress value (between 0 and 100)
+     * @fires loadgo:progress
+     * @fires loadgo:complete - Only fired when progress reaches 100% outside of a loop.
      */
     setprogress: function (progress) {
-      // LoadGo expects progress number between 0 (0%) and 100 (100%).
-      if (progress < 0 || progress > 100) {
-        return
-      }
-
-      const data = $(this).data('loadgo')
-      if (typeof data === 'undefined') {
-        return
-      }
-
-      const storedData = { progress: progress }
-      const pluginOptions = $(this).loadgo('options')
-      const $overlay = data.overlay
-      const $width = data.width
-      const $height = data.height
-      const direction = pluginOptions.direction
-
-      if ($overlay) {
-        let overlayWidth, overlayHeight
-        if (direction === 'lr') {
-          // Left to right animation
-          overlayWidth = $width * (1 - progress / 100)
-          $overlay[0].style.width = `${overlayWidth}px`
-        } else if (direction === 'rl') {
-          // Right to left animation
-          overlayWidth = $width * (1 - progress / 100)
-          $overlay[0].style.width = `${overlayWidth}px`
-        } else if (direction === 'bt') {
-          // Bottom to top animation
-          overlayHeight = $height * (1 - progress / 100)
-          $overlay[0].style.height = `${overlayHeight}px`
-        } else if (direction === 'tb') {
-          // Top to bottom animation
-          overlayHeight = $height * (1 - progress / 100)
-          $overlay[0].style.height = `${overlayHeight}px`
-          $overlay[0].style.top = `${$height - overlayHeight}px`
-        }
-
-        $overlay[0].setAttribute('aria-valuenow', progress)
-        storedData.overlay = $overlay
-      } else {
-        $(this)[0].setAttribute('aria-valuenow', progress)
-        const $filter = pluginOptions.filter
-        let p
-        switch ($filter) {
-          case 'blur':
-            p = (100 - progress) / 10 // maps 0–100% progress to 10px–0px blur radius
-            $(this).css({ filter: `${$filter}(${p}px)` })
-            break
-          case 'hue-rotate':
-            p = (progress * 360) / 100
-            $(this).css({ filter: `${$filter}(${p}deg)` })
-            break
-          case 'opacity':
-            p = progress / 100
-            $(this).css({ filter: `${$filter}(${p})` })
-            break
-          default:
-            p = 1 - progress / 100
-            $(this).css({ filter: `${$filter}(${p})` })
-        }
-      }
-
-      $(this).data('loadgo', $.extend({}, data, storedData))
-
-      const onProgress = $(this).loadgo('options').onProgress
-      if (typeof onProgress === 'function') {
-        onProgress(progress)
-      }
+      _setprogress(this, progress, true)
     },
 
     /**
-     * Return current progress
+     * Return the current progress value.
      */
     getprogress: function () {
       const data = $(this).data('loadgo')
@@ -396,30 +444,41 @@ if (typeof jQuery === 'undefined')
 
     /**
      * Reset progress
+     * @fires loadgo:reset
      */
     resetprogress: function () {
-      $(this).loadgo('setprogress', 0)
+      _setprogress(this, 0, false)
+      dispatchCustomEvent(this[0], 'reset', { progress: 0 })
     },
 
     /**
-     * Overlay loops back and forth
-     * @param  {number} duration Interval duration in ms
+     * Start an indefinite back-and-forth animation loop.
+     * @param  {number} duration  Interval duration in ms
+     * @fires loadgo:start
+     * @fires loadgo:cycle - Fired each time the loop completes one full back-and-forth.
+     * @fires loadgo:error
      */
     loop: function (duration) {
       const data = $(this).data('loadgo')
 
       if (typeof data === 'undefined') {
-        console.error('Element do not have Loadgo properties.')
+        const message = 'Element do not have Loadgo properties.'
+        dispatchCustomEvent(this[0], 'error', { message })
+        console.error(message)
         return
       }
 
       if (data.interval) {
-        console.error('LoadGo requires you to stop the current loop before modifying it.')
+        const message = 'LoadGo requires you to stop the current loop before modifying it.'
+        dispatchCustomEvent(this[0], 'error', { message })
+        console.error(message)
         return
       }
 
+      dispatchCustomEvent(this[0], 'start')
+
       let toggle = true
-      const image = this
+      const image = this[0]
 
       // Store interval so we can stop it later
       data.interval = setInterval(() => {
@@ -432,6 +491,7 @@ if (typeof jQuery === 'undefined')
           data.progress -= 1
           if (data.progress <= 0) {
             toggle = true
+            dispatchCustomEvent(image, 'cycle')
           }
         }
 
@@ -443,28 +503,33 @@ if (typeof jQuery === 'undefined')
           })
         }
 
-        $(image).loadgo('setprogress', data.progress)
+        _setprogress(image, data.progress, true)
       }, duration)
     },
 
     /**
-     * Stops the loop interval and shows image
+     * Stop the loop and reveal the full image.
+     * @fires loadgo:stop
+     * @fires loadgo:error
      */
     stop: function () {
       const data = $(this).data('loadgo')
       if (typeof data === 'undefined') {
-        console.error(
-          'Trying to stop loop for a non initialized element. You have to run "init" method first.',
-        )
+        const message =
+          'Trying to stop loop for a non initialized element. You have to run "init" method first.'
+        dispatchCustomEvent(this[0], 'error', { message })
+        console.error(message)
         return
       }
 
       data.interval = clearInterval(data.interval)
-      $(this).loadgo('setprogress', 100)
+      _setprogress(this, 100, false)
+      dispatchCustomEvent(this[0], 'stop', { progress: 100 })
     },
 
     /**
-     * Remove all plugin properties
+     * Remove the overlay and restore the original DOM structure.
+     * @fires loadgo:destroy
      */
     destroy: function () {
       const $this = $(this)
@@ -493,6 +558,8 @@ if (typeof jQuery === 'undefined')
       // Remove properties
       $this.removeData('loadgo')
       $this.removeData('loadgo-options')
+
+      dispatchCustomEvent($this[0], 'destroy')
     },
   }
 

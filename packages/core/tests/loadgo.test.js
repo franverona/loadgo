@@ -23,6 +23,13 @@ afterEach(() => {
 
 const getOverlay = () => $image.siblings('.loadgo-overlay').first()
 
+const captureEvent = (el, type) => {
+  const events = []
+  const handler = (e) => events.push(e)
+  el.addEventListener(type, handler)
+  return { events, off: () => el.removeEventListener(type, handler) }
+}
+
 describe('jQuery - Initialization', () => {
   it('exposes $.fn.loadgo as a function', () => {
     expect(typeof $.fn.loadgo).toBe('function')
@@ -704,5 +711,244 @@ describe('jQuery - loop/stop edge cases', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('jQuery - Custom events: loadgo:init', () => {
+  it('fires on init()', () => {
+    const { events, off } = captureEvent($image[0], 'loadgo:init')
+    $image.loadgo()
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('fires again on re-init', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:init')
+    $image.loadgo()
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('jQuery - Custom events: loadgo:error', () => {
+  it('fires when element is not an img', () => {
+    const div = document.createElement('div')
+    div.id = 'not-img-error'
+    document.body.appendChild(div)
+    const { events, off } = captureEvent(div, 'loadgo:error')
+    try {
+      $(div).loadgo()
+    } catch (_) {}
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.message).toMatch(/img/)
+  })
+
+  it('fires on loop() when element is not initialized', () => {
+    const { events, off } = captureEvent($image[0], 'loadgo:error')
+    $image.loadgo('loop', 1000)
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('fires on loop() when already looping', () => {
+    $image.loadgo()
+    $image.loadgo('loop', 1000)
+    const { events, off } = captureEvent($image[0], 'loadgo:error')
+    $image.loadgo('loop', 1000)
+    off()
+    $image.loadgo('stop')
+    expect(events.length).toBe(1)
+  })
+
+  it('fires on stop() when element is not initialized', () => {
+    const { events, off } = captureEvent($image[0], 'loadgo:error')
+    $image.loadgo('stop')
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('jQuery - Custom events: loadgo:options', () => {
+  it('fires when options() is called as a setter after init', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:options')
+    $image.loadgo('options', { bgcolor: '#FF0000' })
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('detail contains the merged options', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:options')
+    $image.loadgo('options', { bgcolor: '#FF0000' })
+    off()
+    expect(events[0].detail.bgcolor).toBe('#FF0000')
+  })
+
+  it('does not fire during init()', () => {
+    const { events, off } = captureEvent($image[0], 'loadgo:options')
+    $image.loadgo()
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire when options() is used as a getter', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:options')
+    $image.loadgo('options')
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('jQuery - Custom events: loadgo:progress', () => {
+  it('fires on setprogress() with correct detail', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:progress')
+    $image.loadgo('setprogress', 50)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(50)
+  })
+
+  it('does not fire on resetprogress()', () => {
+    $image.loadgo()
+    $image.loadgo('setprogress', 50)
+    const { events, off } = captureEvent($image[0], 'loadgo:progress')
+    $image.loadgo('resetprogress')
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire on stop()', () => {
+    $image.loadgo()
+    $image.loadgo('loop', 1000)
+    const { events, off } = captureEvent($image[0], 'loadgo:progress')
+    $image.loadgo('stop')
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('jQuery - Custom events: loadgo:complete', () => {
+  it('fires when setprogress reaches 100 outside a loop', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:complete')
+    $image.loadgo('setprogress', 100)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+
+  it('does not fire for values below 100', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:complete')
+    $image.loadgo('setprogress', 99)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire when progress reaches 100 inside a loop', () => {
+    vi.useFakeTimers()
+    try {
+      $image.loadgo()
+      const { events, off } = captureEvent($image[0], 'loadgo:complete')
+      $image.loadgo('loop', 1)
+      vi.advanceTimersByTime(105) // enough ticks to pass 100
+      off()
+      $image.loadgo('stop')
+      expect(events.length).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('jQuery - Custom events: loadgo:reset', () => {
+  it('fires on resetprogress() with progress 0', () => {
+    $image.loadgo()
+    $image.loadgo('setprogress', 50)
+    const { events, off } = captureEvent($image[0], 'loadgo:reset')
+    $image.loadgo('resetprogress')
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(0)
+  })
+})
+
+describe('jQuery - Custom events: loadgo:start', () => {
+  it('fires on loop()', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:start')
+    $image.loadgo('loop', 1000)
+    off()
+    $image.loadgo('stop')
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('jQuery - Custom events: loadgo:cycle', () => {
+  it('fires when the loop completes one full back-and-forth', () => {
+    vi.useFakeTimers()
+    try {
+      $image.loadgo()
+      const { events, off } = captureEvent($image[0], 'loadgo:cycle')
+      $image.loadgo('loop', 1)
+      vi.advanceTimersByTime(200) // 100 ticks up + 100 ticks down
+      off()
+      $image.loadgo('stop')
+      expect(events.length).toBe(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires multiple times across multiple cycles', () => {
+    vi.useFakeTimers()
+    try {
+      $image.loadgo()
+      const { events, off } = captureEvent($image[0], 'loadgo:cycle')
+      $image.loadgo('loop', 1)
+      vi.advanceTimersByTime(400) // ~2 full cycles
+      off()
+      $image.loadgo('stop')
+      expect(events.length).toBe(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('jQuery - Custom events: loadgo:stop', () => {
+  it('fires on stop() with progress 100', () => {
+    $image.loadgo()
+    $image.loadgo('loop', 1000)
+    const { events, off } = captureEvent($image[0], 'loadgo:stop')
+    $image.loadgo('stop')
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+})
+
+describe('jQuery - Custom events: loadgo:destroy', () => {
+  it('fires on destroy()', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:destroy')
+    $image.loadgo('destroy')
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('jQuery - Custom events: bubbling', () => {
+  it('events bubble up to the parent element', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($container[0], 'loadgo:progress')
+    $image.loadgo('setprogress', 40)
+    off()
+    expect(events.length).toBe(1)
   })
 })

@@ -28,11 +28,19 @@
     }
 
     if (!(element instanceof HTMLElement)) {
-      throw new Error('LoadGo only works on one element at a time. Try with a valid #id.')
+      const message = 'LoadGo only works on one element at a time. Try with a valid #id.'
+      if (element instanceof EventTarget) {
+        dispatchCustomEvent(element, 'error', { message })
+      }
+      throw new Error(message)
     }
 
     if (element.nodeName !== 'IMG') {
-      throw new Error('LoadGo only works on img elements.')
+      const message = 'LoadGo only works on img elements.'
+      if (element instanceof EventTarget) {
+        dispatchCustomEvent(element, 'error', { message })
+      }
+      throw new Error(message)
     }
 
     return true
@@ -42,6 +50,108 @@
   const parseOffset = (element, property) => {
     const measure = getComputedStyle(element)[property]
     return parseFloat(measure) || 0
+  }
+
+  const dispatchCustomEvent = (element, type, detail) => {
+    const CUSTOM_EVENTS = {
+      complete: 'loadgo:complete',
+      cycle: 'loadgo:cycle',
+      destroy: 'loadgo:destroy',
+      error: 'loadgo:error',
+      init: 'loadgo:init',
+      options: 'loadgo:options',
+      progress: 'loadgo:progress',
+      reset: 'loadgo:reset',
+      start: 'loadgo:start',
+      stop: 'loadgo:stop',
+    }
+    const eventType = CUSTOM_EVENTS[type] ?? null
+    if (!eventType) {
+      throw new Error(`Unable to dispatch unknown event type: ${type}`)
+    }
+
+    element.dispatchEvent(new CustomEvent(eventType, { detail, bubbles: true }))
+  }
+
+  const _setprogress = function (element, progress, shouldEmit = true) {
+    if (!elementIsValid(element)) {
+      return
+    }
+
+    // LoadGo expects progress number between 0 (0%) and 100 (100%).
+    if (progress < 0 || progress > 100) {
+      return
+    }
+
+    // Element exists?
+    const domElementsIndex = getIndex(element.id)
+    if (domElementsIndex === -1) {
+      return
+    }
+
+    const data = getProperties(element.id)
+
+    if (data !== null) {
+      const overlay = document.getElementById(data.overlay)
+      const w = data.width
+      const h = data.height
+
+      if (overlay) {
+        const direction = data.direction
+        if (direction === 'lr') {
+          // Left to right animation
+          overlay.style.width = `${w * (1 - progress / 100)}px`
+        } else if (direction === 'rl') {
+          // Right to left animation
+          overlay.style.width = `${w * (1 - progress / 100)}px`
+        } else if (direction === 'bt') {
+          // Bottom to top animation
+          overlay.style.height = `${h * (1 - progress / 100)}px`
+        } else if (direction === 'tb') {
+          // Top to bottom animation
+          const _h = h * (1 - progress / 100)
+          overlay.style.height = `${_h}px`
+          overlay.style.top = `${h - _h}px`
+        }
+        overlay.setAttribute('aria-valuenow', progress)
+      } else {
+        element.setAttribute('aria-valuenow', progress)
+        const filter = data.filter
+        let p
+        switch (filter) {
+          case 'blur':
+            p = (100 - progress) / 10 // maps 0–100% progress to 10px–0px blur radius
+            element.style.filter = `${filter}(${p}px)`
+            break
+          case 'hue-rotate':
+            p = (progress * 360) / 100
+            element.style.filter = `${filter}(${p}deg)`
+            break
+          case 'opacity':
+            p = progress / 100
+            element.style.filter = `${filter}(${p})`
+            break
+          default:
+            p = 1 - progress / 100
+            element.style.filter = `${filter}(${p})`
+        }
+      }
+    }
+
+    domElements[domElementsIndex].properties.progress = progress
+
+    const onProgress = getProperties(element.id)?.onProgress
+    if (typeof onProgress === 'function') {
+      onProgress(progress)
+    }
+
+    if (shouldEmit) {
+      dispatchCustomEvent(element, 'progress', { progress })
+      // Only fire complete if it hits 100 AND we aren't currently looping
+      if (progress === 100 && (!data || !data.interval)) {
+        dispatchCustomEvent(element, 'complete', { progress: 100 })
+      }
+    }
   }
 
   let _idCounter = 0
@@ -69,11 +179,13 @@
   const Loadgo = window.Loadgo || {}
 
   /**
-   * Init Loadgo in an specific element
-   * @param  {DOM} element  DOM element using document.getElementById
-   * @param  {JSON} useroptions Loadgo options
+   * Initialise LoadGo on an `<img>` element.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @param  {object} [userOptions]  Loadgo options
+   * @fires loadgo:init
+   * @fires loadgo:error
    */
-  Loadgo.init = function (element, useroptions) {
+  Loadgo.init = function (element, userOptions) {
     if (!elementIsValid(element)) {
       return
     }
@@ -94,7 +206,7 @@
     })
     const domElementsIndex = domElements.length - 1
 
-    const pluginOptions = Loadgo.options(element, useroptions)
+    const pluginOptions = Loadgo.options(element, userOptions)
 
     const overlay = document.createElement('div')
     overlay.id = uniqueId() // We need to set a unique id so we can retrieve it later when needed
@@ -324,9 +436,17 @@
 
     window.addEventListener('resize', resizeFunction)
     domElements[domElementsIndex].properties.resizeFunction = resizeFunction
+
+    dispatchCustomEvent(element, 'init')
   }
 
-  Loadgo.options = function (element, useroptions) {
+  /**
+   * Get or set options for an already-initialised element.
+   * @param  {DOM} element  DOM element using document.getElementById
+   * @param  {object} [userOptions]  Loadgo options to update. Omit to use as getter.
+   * @fires loadgo:options - Only fired when called as a setter after init.
+   */
+  Loadgo.options = function (element, userOptions) {
     if (!elementIsValid(element)) {
       return
     }
@@ -340,19 +460,21 @@
     let currentOptions = domElements[domElementsIndex].properties
 
     // Parse to number the 'opacity' option if provided
-    if (typeof useroptions !== 'undefined' && typeof useroptions.opacity !== 'undefined') {
-      useroptions.opacity = parseFloat(useroptions.opacity)
+    if (typeof userOptions !== 'undefined' && typeof userOptions.opacity !== 'undefined') {
+      userOptions.opacity = parseFloat(userOptions.opacity)
     }
+
+    const isUpdate = Object.keys(currentOptions).length > 0 && typeof userOptions !== 'undefined'
 
     if (Object.keys(currentOptions).length === 0) {
       // First-time init: apply defaults then overlay user options
-      currentOptions = extend(defaultOptions, useroptions)
-    } else if (typeof useroptions === 'undefined') {
+      currentOptions = extend(defaultOptions, userOptions)
+    } else if (typeof userOptions === 'undefined') {
       // Getter: no options provided, return current options as-is
       return currentOptions
     } else {
       // Update: merge new options into existing
-      currentOptions = extend(currentOptions, useroptions)
+      currentOptions = extend(currentOptions, userOptions)
     }
 
     // Check for valid direction
@@ -374,90 +496,27 @@
     // Store user options with default options
     domElements[domElementsIndex].properties = currentOptions
 
+    if (isUpdate) {
+      dispatchCustomEvent(element, 'options', currentOptions)
+    }
+
     return currentOptions
   }
 
   /**
-   * Set progress to specific value
-   * @param  {DOM} element  DOM element using document.getElementById
-   * @param  {Number} progress Progress value (between 0 and 100)
+   * Set progress (0–100).
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @param  {number} progress  Progress value (between 0 and 100)
+   * @fires loadgo:progress
+   * @fires loadgo:complete - Only fired when progress reaches 100% outside of a loop.
    */
   Loadgo.setprogress = function (element, progress) {
-    if (!elementIsValid(element)) {
-      return
-    }
-
-    // LoadGo expects progress number between 0 (0%) and 100 (100%).
-    if (progress < 0 || progress > 100) {
-      return
-    }
-
-    // Element exists?
-    const domElementsIndex = getIndex(element.id)
-    if (domElementsIndex === -1) {
-      return
-    }
-
-    const data = getProperties(element.id)
-
-    if (data !== null) {
-      const overlay = document.getElementById(data.overlay)
-      const w = data.width
-      const h = data.height
-
-      if (overlay) {
-        const direction = data.direction
-        if (direction === 'lr') {
-          // Left to right animation
-          overlay.style.width = `${w * (1 - progress / 100)}px`
-        } else if (direction === 'rl') {
-          // Right to left animation
-          overlay.style.width = `${w * (1 - progress / 100)}px`
-        } else if (direction === 'bt') {
-          // Bottom to top animation
-          overlay.style.height = `${h * (1 - progress / 100)}px`
-        } else if (direction === 'tb') {
-          // Top to bottom animation
-          const _h = h * (1 - progress / 100)
-          overlay.style.height = `${_h}px`
-          overlay.style.top = `${h - _h}px`
-        }
-        overlay.setAttribute('aria-valuenow', progress)
-      } else {
-        element.setAttribute('aria-valuenow', progress)
-        const filter = data.filter
-        let p
-        switch (filter) {
-          case 'blur':
-            p = (100 - progress) / 10 // maps 0–100% progress to 10px–0px blur radius
-            element.style.filter = `${filter}(${p}px)`
-            break
-          case 'hue-rotate':
-            p = (progress * 360) / 100
-            element.style.filter = `${filter}(${p}deg)`
-            break
-          case 'opacity':
-            p = progress / 100
-            element.style.filter = `${filter}(${p})`
-            break
-          default:
-            p = 1 - progress / 100
-            element.style.filter = `${filter}(${p})`
-        }
-      }
-    }
-
-    domElements[domElementsIndex].properties.progress = progress
-
-    const onProgress = getProperties(element.id)?.onProgress
-    if (typeof onProgress === 'function') {
-      onProgress(progress)
-    }
+    _setprogress(element, progress, true)
   }
 
   /**
-   * Return current progress
-   * @param  {DOM} element  DOM element using document.getElementById
+   * Return the current progress value.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
    */
   Loadgo.getprogress = (element) => {
     if (!elementIsValid(element)) {
@@ -469,17 +528,22 @@
   }
 
   /**
-   * Reset progress
-   * @param  {DOM} element  DOM element using document.getElementById
+   * Reset progress back to 0.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @fires loadgo:reset
    */
   Loadgo.resetprogress = (element) => {
-    Loadgo.setprogress(element, 0)
+    _setprogress(element, 0, false)
+    dispatchCustomEvent(element, 'reset', { progress: 0 })
   }
 
   /**
-   * Overlay loops back and forth
-   * @param  {DOM} element  DOM element using document.getElementById
-   * @param  {number} duration Interval duration in ms
+   * Start an indefinite back-and-forth animation loop.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @param  {number} duration  Interval duration in ms
+   * @fires loadgo:start
+   * @fires loadgo:cycle - Fired each time the loop completes one full back-and-forth.
+   * @fires loadgo:error
    */
   Loadgo.loop = function (element, duration) {
     if (!elementIsValid(element)) {
@@ -487,22 +551,29 @@
     }
 
     if (getIndex(element.id) === -1) {
-      console.error(
-        'Trying to loop a non initialized element. You have to run "init" method first.',
-      )
+      const message =
+        'Trying to loop a non initialized element. You have to run "init" method first.'
+      dispatchCustomEvent(element, 'error', { message })
+      console.error(message)
       return
     }
 
     const data = getProperties(element.id)
     if (data === null) {
-      console.error('Element do not have Loadgo properties.')
+      const message = 'Element do not have Loadgo properties.'
+      dispatchCustomEvent(element, 'error', { message })
+      console.error(message)
       return
     }
 
     if (data.interval) {
-      console.error('LoadGo requires you to stop the current loop before modifying it.')
+      const message = 'LoadGo requires you to stop the current loop before modifying it.'
+      dispatchCustomEvent(element, 'error', { message })
+      console.error(message)
       return
     }
+
+    dispatchCustomEvent(element, 'start')
 
     // Store interval so we can stop it later
     let toggle = true
@@ -517,6 +588,7 @@
         domElements[domIndex].properties.progress -= 1
         if (domElements[domIndex].properties.progress <= 0) {
           toggle = true
+          dispatchCustomEvent(element, 'cycle')
         }
       }
       // Remove transition animation
@@ -526,13 +598,16 @@
         loopOverlay.style.transition = 'none'
       }
 
-      Loadgo.setprogress(element, domElements[domIndex].properties.progress)
+      const progress = domElements[domIndex].properties.progress
+      _setprogress(element, progress, true)
     }, duration)
   }
 
   /**
-   * Stops the loop interval and shows image
-   * @param {DOM} element
+   * Stop the loop and reveal the full image.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @fires loadgo:stop
+   * @fires loadgo:error
    */
   Loadgo.stop = function (element) {
     if (!elementIsValid(element)) {
@@ -540,21 +615,24 @@
     }
 
     if (getIndex(element.id) === -1) {
-      console.error(
-        'Trying to stop loop for a non initialized element. You have to run "init" method first.',
-      )
+      const message =
+        'Trying to loop a non initialized element. You have to run "init" method first.'
+      dispatchCustomEvent(element, 'error', { message })
+      console.error(message)
       return
     }
 
     const idx = getIndex(element.id)
     clearInterval(domElements[idx].properties.interval)
     domElements[idx].properties.interval = null
-    Loadgo.setprogress(element, 100)
+    _setprogress(element, 100, false)
+    dispatchCustomEvent(element, 'stop', { progress: 100 })
   }
 
   /**
-   * Remove all plugin properties
-   * @param  {DOM} element  DOM element using document.getElementById
+   * Remove the overlay and restore the original DOM structure.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @fires loadgo:destroy
    */
   Loadgo.destroy = function (element) {
     const domElementsIndex = getIndex(element.id)
@@ -588,6 +666,8 @@
       element.removeAttribute('aria-valuenow')
       element.removeAttribute('aria-label')
     }
+
+    dispatchCustomEvent(element, 'destroy')
   }
 
   window.Loadgo = Loadgo

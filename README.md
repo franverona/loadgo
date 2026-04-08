@@ -23,6 +23,7 @@
   - [Custom animation timing](#custom-animation-timing)
   - [Accessibility](#accessibility)
   - [Methods](#methods)
+  - [Custom events](#custom-events)
 - [Real-world example](#real-world-example)
 - [Examples](#examples)
 - [Tests](#tests)
@@ -316,6 +317,73 @@ $('#logo').loadgo('destroy');
 
 // Pure JavaScript
 Loadgo.destroy(document.getElementById('logo'));
+```
+
+---
+
+### Custom events
+
+LoadGo dispatches native DOM [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent)s at key lifecycle points. All events bubble, so you can listen on a parent element if needed.
+
+Events work with both `addEventListener` and jQuery's `.on()`:
+
+```js
+// Pure JavaScript
+document.getElementById('logo').addEventListener('loadgo:complete', () => {
+  console.log('Loading complete!')
+})
+
+// jQuery
+$('#logo').on('loadgo:complete', () => {
+  console.log('Loading complete!')
+})
+```
+
+Access the event payload via `event.detail`:
+
+```js
+document.getElementById('logo').addEventListener('loadgo:progress', (e) => {
+  console.log(`Progress: ${e.detail.progress}%`)
+})
+
+document.getElementById('logo').addEventListener('loadgo:error', (e) => {
+  console.warn('LoadGo error:', e.detail.message)
+})
+```
+
+#### Event reference
+
+| Event | Fires when | `event.detail` |
+| --- | --- | --- |
+| `loadgo:init` | `init()` completes | — |
+| `loadgo:error` | invalid usage (non-`img` element, loop/stop on uninitialized, double loop) | `{ message: string }` |
+| `loadgo:options` | `options()` is called as a setter after init | merged `LoadgoOptions` object |
+| `loadgo:progress` | `setprogress()` is called | `{ progress: number }` |
+| `loadgo:complete` | progress reaches 100 **outside** of a loop | `{ progress: 100 }` |
+| `loadgo:reset` | `resetprogress()` is called | `{ progress: 0 }` |
+| `loadgo:start` | `loop()` starts | — |
+| `loadgo:cycle` | loop completes one full back-and-forth (bounces back to 0) | — |
+| `loadgo:stop` | `stop()` is called | `{ progress: 100 }` |
+| `loadgo:destroy` | `destroy()` completes | — |
+
+> **Note:** `loadgo:progress` is **not** fired by `resetprogress()` or `stop()` — those operations dispatch `loadgo:reset` and `loadgo:stop` respectively. Similarly, `loadgo:complete` is suppressed while a loop is running, even when progress internally reaches 100.
+
+#### TypeScript
+
+Event types are declared in `LoadgoEventMap` and are automatically applied to `HTMLImageElement.addEventListener`:
+
+```ts
+const logo = document.getElementById('logo') as HTMLImageElement
+
+logo.addEventListener('loadgo:progress', (e) => {
+  // e.detail is typed as { progress: number }
+  console.log(e.detail.progress)
+})
+
+logo.addEventListener('loadgo:options', (e) => {
+  // e.detail is typed as LoadgoOptions
+  console.log(e.detail.bgcolor)
+})
 ```
 
 ---
