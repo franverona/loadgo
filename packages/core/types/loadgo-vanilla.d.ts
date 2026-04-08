@@ -78,14 +78,14 @@ export interface LoadgoDetail {
 
 export interface LoadgoEventMap {
   'loadgo:complete': CustomEvent<LoadgoDetail>
-  'loadgo:cycle': CustomEvent<undefined>
-  'loadgo:destroy': CustomEvent<undefined>
+  'loadgo:cycle': CustomEvent<null>
+  'loadgo:destroy': CustomEvent<null>
   'loadgo:error': CustomEvent<{ message: string }>
-  'loadgo:init': CustomEvent<undefined>
+  'loadgo:init': CustomEvent<null>
   'loadgo:options': CustomEvent<LoadgoOptions>
   'loadgo:progress': CustomEvent<LoadgoDetail>
   'loadgo:reset': CustomEvent<LoadgoDetail>
-  'loadgo:start': CustomEvent<undefined>
+  'loadgo:start': CustomEvent<null>
   'loadgo:stop': CustomEvent<LoadgoDetail>
 }
 
