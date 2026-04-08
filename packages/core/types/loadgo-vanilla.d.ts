@@ -23,6 +23,12 @@ export interface LoadgoOptions {
   animationDuration?: number
   /** CSS transition easing function. Default: `'ease'` */
   animationEasing?: string
+  /**
+   * Automatically call `stop()` when `setprogress(100)` is reached outside of a loop.
+   * Removes the need to manually call `stop()` after setting progress to 100.
+   * Has no effect when a loop is running. Default: `false`
+   */
+  autoStop?: boolean
 }
 
 export interface LoadgoAPI {

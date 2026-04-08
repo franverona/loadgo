@@ -166,6 +166,7 @@ Loadgo.init(document.getElementById('logo'));
 | `resize` | `Function` | built-in | Custom window resize handler. When provided, replaces the built-in one entirely. |
 | `onProgress` | `Function` | `null` | Callback invoked after every `setprogress` call, receiving the current progress value (0–100). |
 | `ariaLabel` | `String` | `Loading` | Text for the `aria-label` attribute on the progressbar element. |
+| `autoStop` | `Boolean` | `false` | Automatically calls `stop()` when `setprogress(100)` is reached outside of a loop. Fires `loadgo:complete` then `loadgo:stop`. Has no effect while a loop is running. |
 
 ### onProgress callback
 
