@@ -994,6 +994,61 @@ describe('JS - Custom events: loadgo:destroy', () => {
   })
 })
 
+describe('JS - autoStop option', () => {
+  it('calls stop() automatically when setprogress reaches 100', () => {
+    Loadgo.init(image, { autoStop: true })
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.setprogress(image, 100)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+
+  it('does not call stop() when progress is below 100', () => {
+    Loadgo.init(image, { autoStop: true })
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.setprogress(image, 99)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not call stop() when looping, even if progress hits 100', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image, { autoStop: true })
+      const { events, off } = captureEvent(image, 'loadgo:stop')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(105) // enough ticks to pass 100
+      Loadgo.stop(image)
+      off()
+      expect(events.length).toBe(1) // only from the explicit stop() call
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires loadgo:complete before loadgo:stop when autoStop triggers', () => {
+    Loadgo.init(image, { autoStop: true })
+    const order = []
+    const offComplete = captureEvent(image, 'loadgo:complete')
+    const offStop = captureEvent(image, 'loadgo:stop')
+    image.addEventListener('loadgo:complete', () => order.push('complete'))
+    image.addEventListener('loadgo:stop', () => order.push('stop'))
+    Loadgo.setprogress(image, 100)
+    offComplete.off()
+    offStop.off()
+    expect(order).toEqual(['complete', 'stop'])
+  })
+
+  it('does not call stop() when autoStop is false (default)', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.setprogress(image, 100)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
 describe('JS - Custom events: bubbling', () => {
   it('events bubble up to the parent element', () => {
     Loadgo.init(image)

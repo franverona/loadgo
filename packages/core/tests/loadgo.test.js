@@ -969,6 +969,57 @@ describe('jQuery - Custom events: loadgo:destroy', () => {
   })
 })
 
+describe('jQuery - autoStop option', () => {
+  it('calls stop() automatically when setprogress reaches 100', () => {
+    $image.loadgo({ autoStop: true })
+    const { events, off } = captureEvent($image[0], 'loadgo:stop')
+    $image.loadgo('setprogress', 100)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+
+  it('does not call stop() when progress is below 100', () => {
+    $image.loadgo({ autoStop: true })
+    const { events, off } = captureEvent($image[0], 'loadgo:stop')
+    $image.loadgo('setprogress', 99)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not call stop() when looping, even if progress hits 100', () => {
+    vi.useFakeTimers()
+    try {
+      $image.loadgo({ autoStop: true })
+      const { events, off } = captureEvent($image[0], 'loadgo:stop')
+      $image.loadgo('loop', 1)
+      vi.advanceTimersByTime(105) // enough ticks to pass 100
+      $image.loadgo('stop')
+      off()
+      expect(events.length).toBe(1) // only from the explicit stop() call
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires loadgo:complete before loadgo:stop when autoStop triggers', () => {
+    $image.loadgo({ autoStop: true })
+    const order = []
+    $image[0].addEventListener('loadgo:complete', () => order.push('complete'))
+    $image[0].addEventListener('loadgo:stop', () => order.push('stop'))
+    $image.loadgo('setprogress', 100)
+    expect(order).toEqual(['complete', 'stop'])
+  })
+
+  it('does not call stop() when autoStop is false (default)', () => {
+    $image.loadgo()
+    const { events, off } = captureEvent($image[0], 'loadgo:stop')
+    $image.loadgo('setprogress', 100)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
 describe('jQuery - Custom events: bubbling', () => {
   it('events bubble up to the parent element', () => {
     $image.loadgo()

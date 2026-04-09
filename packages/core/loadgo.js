@@ -103,6 +103,9 @@ if (typeof jQuery === 'undefined')
       dispatchCustomEvent(rawElement, 'progress', { progress })
       if (progress === 100 && !data.interval) {
         dispatchCustomEvent(rawElement, 'complete', { progress: 100 })
+        if (pluginOptions.autoStop) {
+          $element.loadgo('stop')
+        }
       }
     }
   }
@@ -383,6 +386,7 @@ if (typeof jQuery === 'undefined')
         ariaLabel: 'Loading', //  Value for aria-label on the progressbar
         animationDuration: 0.6, //  CSS transition duration in seconds
         animationEasing: 'ease', //  CSS transition easing function
+        autoStop: false, // calls `stop()` when `setprogress(100)` is reached
       }
 
       // Parse to number the 'opacity' option

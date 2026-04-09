@@ -155,6 +155,9 @@
       // Only fire complete if it hits 100 AND we aren't currently looping
       if (progress === 100 && (!data || !data.interval)) {
         dispatchCustomEvent(element, 'complete', { progress: 100 })
+        if (data.autoStop) {
+          Loadgo.stop(element)
+        }
       }
     }
   }
@@ -179,6 +182,7 @@
     ariaLabel: 'Loading', //  Value for aria-label on the progressbar
     animationDuration: 0.6, //  CSS transition duration in seconds
     animationEasing: 'ease', //  CSS transition easing function
+    autoStop: false, // calls `stop()` when `setprogress(100)` is reached
   }
 
   const Loadgo = window.Loadgo || {}
@@ -422,7 +426,7 @@
               domElements[elementIndex].properties.width = parseFloat(resizeOverlay.style.width)
               domElements[elementIndex].properties.height = parseFloat(resizeOverlay.style.height)
 
-              Loadgo.setprogress(element, data.progress)
+              _setprogress(element, data.progress, false)
 
               // Re-enable transition once resizing stops
               if (pluginOptions.animated) {
