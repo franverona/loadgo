@@ -17,6 +17,11 @@ export interface LoadgoOptions {
   filter?: 'blur' | 'grayscale' | 'sepia' | 'hue-rotate' | 'invert' | 'opacity' | null
   /** Callback invoked after every `setprogress` call, receiving the new progress value (0–100). Default: `null` */
   onProgress?: ((progress: number) => void) | null
+  /**
+   * Map of threshold values (0–100) to callbacks. Each callback fires once when progress first
+   * reaches or crosses the threshold, and resets when `resetprogress()` is called. Default: `null`
+   */
+  onThreshold?: Record<number, (progress: number) => void> | null
   /** Text for the `aria-label` attribute on the progressbar element. Default: `'Loading'` */
   ariaLabel?: string
   /** CSS transition duration in seconds. Default: `0.6` */

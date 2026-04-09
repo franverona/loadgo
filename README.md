@@ -20,6 +20,7 @@
   - [Initialization](#initialization)
   - [Options](#options)
   - [onProgress callback](#onprogress-callback)
+  - [onThreshold callback](#onthreshold-callback)
   - [Custom animation timing](#custom-animation-timing)
   - [Accessibility](#accessibility)
   - [Methods](#methods)
@@ -165,6 +166,7 @@ Loadgo.init(document.getElementById('logo'));
 | `filter` | `String` | `null` | CSS image filter applied directly to the `img`. Values: `blur`, `grayscale`, `sepia`, `hue-rotate`, `invert`, `opacity`. No overlay is created when this is set. |
 | `resize` | `Function` | built-in | Custom window resize handler. When provided, replaces the built-in one entirely. |
 | `onProgress` | `Function` | `null` | Callback invoked after every `setprogress` call, receiving the current progress value (0–100). |
+| `onThreshold` | `Object` | `null` | Map of progress values (0–100) to callbacks. Each callback fires once when progress first reaches or crosses its key. Thresholds reset when `resetprogress()` is called. |
 | `ariaLabel` | `String` | `Loading` | Text for the `aria-label` attribute on the progressbar element. |
 | `autoStop` | `Boolean` | `false` | Automatically calls `stop()` when `setprogress(100)` is reached outside of a loop. Fires `loadgo:complete` then `loadgo:stop`. Has no effect while a loop is running. |
 
@@ -184,6 +186,28 @@ $('#logo').loadgo({
 Loadgo.init(document.getElementById('logo'), {
   onProgress: (progress) => {
     document.getElementById('counter').textContent = `${progress}%`
+  },
+})
+```
+
+### onThreshold callback
+
+Use `onThreshold` to fire callbacks once when progress crosses specific values — useful for multi-stage loading UIs. Each callback fires at most once per pass; calling `resetprogress()` resets all thresholds so they can fire again.
+
+```js
+// jQuery
+$('#logo').loadgo({
+  onThreshold: {
+    50: () => console.log('halfway there'),
+    100: () => document.getElementById('status').textContent = 'Done!',
+  },
+})
+
+// Pure JavaScript
+Loadgo.init(document.getElementById('logo'), {
+  onThreshold: {
+    50: () => console.log('halfway there'),
+    100: () => document.getElementById('status').textContent = 'Done!',
   },
 })
 ```

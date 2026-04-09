@@ -99,6 +99,19 @@ if (typeof jQuery === 'undefined')
       onProgress(progress)
     }
 
+    const onThreshold = pluginOptions.onThreshold
+    if (onThreshold && typeof onThreshold === 'object') {
+      const currentData = $element.data('loadgo')
+      if (!currentData.firedThresholds) currentData.firedThresholds = {}
+      for (const key of Object.keys(onThreshold)) {
+        const threshold = Number(key)
+        if (!isNaN(threshold) && progress >= threshold && !currentData.firedThresholds[key]) {
+          currentData.firedThresholds[key] = true
+          if (typeof onThreshold[key] === 'function') onThreshold[key](progress)
+        }
+      }
+    }
+
     if (shouldEmit) {
       dispatchCustomEvent(rawElement, 'progress', { progress })
       if (progress === 100 && !data.interval) {
@@ -383,6 +396,7 @@ if (typeof jQuery === 'undefined')
         direction: 'lr', //  Direction animation (optional)
         filter: null, //  Image filter (optional)
         onProgress: null, //  Callback fired on every setprogress call
+        onThreshold: null, //  Map of progress value → callback, fired once per crossing
         ariaLabel: 'Loading', //  Value for aria-label on the progressbar
         animationDuration: 0.6, //  CSS transition duration in seconds
         animationEasing: 'ease', //  CSS transition easing function
@@ -468,6 +482,8 @@ if (typeof jQuery === 'undefined')
         return
       }
       _setprogress(this, 0, false)
+      const currentData = $(this).data('loadgo')
+      if (currentData) currentData.firedThresholds = {}
       dispatchCustomEvent(this[0], 'reset', { progress: 0 })
     },
 

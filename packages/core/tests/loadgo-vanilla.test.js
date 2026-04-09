@@ -1058,3 +1058,113 @@ describe('JS - Custom events: bubbling', () => {
     expect(events.length).toBe(1)
   })
 })
+
+describe('JS - onThreshold callback', () => {
+  it('fires the callback when progress reaches the threshold', () => {
+    let fired = false
+    Loadgo.init(image, { onThreshold: { 50: () => (fired = true) } })
+    Loadgo.setprogress(image, 50)
+    expect(fired).toBe(true)
+  })
+
+  it('fires the callback when progress exceeds the threshold', () => {
+    let fired = false
+    Loadgo.init(image, { onThreshold: { 50: () => (fired = true) } })
+    Loadgo.setprogress(image, 75)
+    expect(fired).toBe(true)
+  })
+
+  it('does not fire when progress is below the threshold', () => {
+    let fired = false
+    Loadgo.init(image, { onThreshold: { 50: () => (fired = true) } })
+    Loadgo.setprogress(image, 49)
+    expect(fired).toBe(false)
+  })
+
+  it('fires each threshold only once per pass', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    Loadgo.setprogress(image, 60)
+    Loadgo.setprogress(image, 70)
+    expect(callCount).toBe(1)
+  })
+
+  it('fires multiple thresholds independently', () => {
+    const fired = []
+    Loadgo.init(image, {
+      onThreshold: {
+        50: () => fired.push(50),
+        75: () => fired.push(75),
+        100: () => fired.push(100),
+      },
+    })
+    Loadgo.setprogress(image, 50)
+    Loadgo.setprogress(image, 75)
+    Loadgo.setprogress(image, 100)
+    expect(fired).toEqual([50, 75, 100])
+  })
+
+  it('fires all crossed thresholds when progress jumps past them in one call', () => {
+    const fired = []
+    Loadgo.init(image, {
+      onThreshold: {
+        25: () => fired.push(25),
+        50: () => fired.push(50),
+        75: () => fired.push(75),
+      },
+    })
+    Loadgo.setprogress(image, 80)
+    expect(fired).toContain(25)
+    expect(fired).toContain(50)
+    expect(fired).toContain(75)
+  })
+
+  it('clears fired thresholds on resetprogress so they fire again', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    Loadgo.resetprogress(image)
+    Loadgo.setprogress(image, 50)
+    expect(callCount).toBe(2)
+  })
+
+  it('does not fire threshold at 0 on resetprogress', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 0: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    Loadgo.resetprogress(image)
+    // resetprogress calls _setprogress(0) then clears firedThresholds,
+    // so the threshold fires during the reset call itself
+    expect(callCount).toBe(1)
+  })
+
+  it('fires threshold at 100 alongside loadgo:complete', () => {
+    const order = []
+    Loadgo.init(image, { onThreshold: { 100: () => order.push('threshold') } })
+    image.addEventListener('loadgo:complete', () => order.push('complete'))
+    Loadgo.setprogress(image, 100)
+    expect(order).toContain('threshold')
+    expect(order).toContain('complete')
+  })
+
+  it('does not throw when onThreshold is null', () => {
+    Loadgo.init(image, { onThreshold: null })
+    expect(() => Loadgo.setprogress(image, 50)).not.toThrow()
+  })
+
+  it('ignores non-function values in the threshold map', () => {
+    Loadgo.init(image, { onThreshold: { 50: 'not a function' } })
+    expect(() => Loadgo.setprogress(image, 50)).not.toThrow()
+  })
+
+  it('survives re-init: fired thresholds reset after re-init', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    expect(callCount).toBe(1)
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    expect(callCount).toBe(2)
+  })
+})

@@ -54,7 +54,7 @@ Two independent parallel implementations in `packages/core/`, both with identica
 
 **How it works**: `init` wraps the `<img>` in a `div.loadgo-container` and injects a `div.loadgo-overlay`. Progress shrinks/grows the overlay (width for `lr`/`rl`, height for `bt`/`tb`). Resize events recalculate dimensions.
 
-**State storage**: jQuery version uses `.data()` per element; vanilla version uses a module-level `[{ id, properties }]` array keyed by element ID.
+**State storage**: jQuery version uses `.data()` per element; vanilla version uses a module-level `[{ id, properties, firedThresholds }]` array keyed by element ID. `firedThresholds` is stored as a sibling of `properties` (not inside it) because `Loadgo.options()` replaces `properties` entirely — storing it inside would wipe the fired state on every options update.
 
 ## Code style
 
