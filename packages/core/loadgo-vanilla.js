@@ -150,6 +150,18 @@
       onProgress(progress)
     }
 
+    const onThreshold = data.onThreshold
+    if (onThreshold && typeof onThreshold === 'object') {
+      const entry = domElements[domElementsIndex]
+      for (const key of Object.keys(onThreshold)) {
+        const threshold = Number(key)
+        if (!isNaN(threshold) && progress >= threshold && !entry.firedThresholds[key]) {
+          entry.firedThresholds[key] = true
+          if (typeof onThreshold[key] === 'function') onThreshold[key](progress)
+        }
+      }
+    }
+
     if (shouldEmit) {
       dispatchCustomEvent(element, 'progress', { progress })
       // Only fire complete if it hits 100 AND we aren't currently looping
@@ -179,6 +191,7 @@
     direction: 'lr', //  Direction animation (optional)
     filter: null, //  Image filter (optional)
     onProgress: null, //  Callback fired on every setprogress call
+    onThreshold: null, //  Map of progress value → callback, fired once per crossing
     ariaLabel: 'Loading', //  Value for aria-label on the progressbar
     animationDuration: 0.6, //  CSS transition duration in seconds
     animationEasing: 'ease', //  CSS transition easing function
@@ -212,6 +225,7 @@
     domElements.push({
       id: element.id,
       properties: {},
+      firedThresholds: {},
     })
     const domElementsIndex = domElements.length - 1
 
@@ -543,7 +557,8 @@
    * @fires loadgo:error
    */
   Loadgo.resetprogress = (element) => {
-    if (getIndex(element.id) === -1) {
+    const idx = getIndex(element.id)
+    if (idx === -1) {
       dispatchCustomEvent(element, 'error', {
         message:
           'Trying to reset progress on a non initialized element. You have to run "init" method first.',
@@ -551,6 +566,7 @@
       return
     }
     _setprogress(element, 0, false)
+    domElements[idx].firedThresholds = {}
     dispatchCustomEvent(element, 'reset', { progress: 0 })
   }
 
