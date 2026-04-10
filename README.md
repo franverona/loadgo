@@ -119,7 +119,7 @@ LoadGo wraps your `img` element in a `div` and adds an overlay inside that wrapp
 
 This plugin does **not** manage async operations — you connect it to your own upload/load/progress events.
 
-LoadGo only works on `img` elements referenced by a single element (by `id`). It does **not** support multi-element selectors.
+LoadGo only works on `img` elements. Use `Loadgo.init` for a single element, or `Loadgo.initAll` to initialise multiple elements in one call (vanilla JS only — the jQuery plugin already iterates over matched sets implicitly).
 
 ### Image load timing
 
@@ -148,8 +148,22 @@ image.onload = () => {
 // jQuery
 $('#logo').loadgo();
 
-// Pure JavaScript
+// Pure JavaScript — single element
 Loadgo.init(document.getElementById('logo'));
+
+// Pure JavaScript — multiple elements at once
+Loadgo.initAll('.product-image', { bgcolor: '#000', opacity: 0.4 })
+Loadgo.initAll(document.querySelectorAll('img.loadable'), options)
+```
+
+`initAll` accepts a CSS selector string or a `NodeList`/`HTMLCollection` and calls `init` on each matched `<img>`. Non-`<img>` elements in the set are silently skipped. It returns an array of the initialized DOM elements so you can keep references for later calls:
+
+```js
+const images = Loadgo.initAll('.loadable', { direction: 'bt' })
+
+// Later…
+images.forEach(el => Loadgo.setprogress(el, 50))
+images.forEach(el => Loadgo.destroy(el))
 ```
 
 ### Options

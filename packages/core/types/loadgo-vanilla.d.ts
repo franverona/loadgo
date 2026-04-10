@@ -44,6 +44,17 @@ export interface LoadgoAPI {
    */
   init(element: HTMLImageElement, options?: LoadgoOptions): void
   /**
+   * Initialise LoadGo on multiple `<img>` elements at once.
+   * Silently skips non-`<img>` elements.
+   * @param selector CSS selector string, NodeList, or HTMLCollection
+   * @returns Array of successfully initialized DOM elements
+   * @fires loadgo:init - on each initialized element
+   */
+  initAll(
+    selector: string | NodeList | HTMLCollectionOf<Element>,
+    options?: LoadgoOptions
+  ): HTMLImageElement[]
+  /**
    * Get or set options for an already-initialised element.
    * @fires loadgo:options - Only fired when called as a setter after init.
    */
