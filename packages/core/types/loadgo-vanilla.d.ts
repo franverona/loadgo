@@ -75,6 +75,18 @@ export interface LoadgoAPI {
    */
   stop(element: HTMLImageElement): void
   /**
+   * Pause the loop, preserving the current progress and direction state.
+   * No-op if the element is not currently looping.
+   * @fires loadgo:pause
+   */
+  pause(element: HTMLImageElement): void
+  /**
+   * Resume a paused loop, continuing from where it left off.
+   * No-op if the element is not paused.
+   * @fires loadgo:resume
+   */
+  resume(element: HTMLImageElement): void
+  /**
    * Remove the overlay and restore the original DOM structure.
    * @fires loadgo:destroy
    */
@@ -94,8 +106,10 @@ export interface LoadgoEventMap {
   'loadgo:error': CustomEvent<{ message: string }>
   'loadgo:init': CustomEvent<null>
   'loadgo:options': CustomEvent<LoadgoOptions>
+  'loadgo:pause': CustomEvent<LoadgoDetail>
   'loadgo:progress': CustomEvent<LoadgoDetail>
   'loadgo:reset': CustomEvent<LoadgoDetail>
+  'loadgo:resume': CustomEvent<LoadgoDetail>
   'loadgo:start': CustomEvent<null>
   'loadgo:stop': CustomEvent<LoadgoDetail>
 }

@@ -59,8 +59,10 @@
     error: 'loadgo:error',
     init: 'loadgo:init',
     options: 'loadgo:options',
+    pause: 'loadgo:pause',
     progress: 'loadgo:progress',
     reset: 'loadgo:reset',
+    resume: 'loadgo:resume',
     start: 'loadgo:start',
     stop: 'loadgo:stop',
   }
@@ -179,6 +181,31 @@
 
   // Array to store all Loadgo elements
   const domElements = []
+
+  // Starts (or restarts) the loop interval for a given element index with the given toggle state.
+  const _startLoopInterval = (element, idx, initialToggle) => {
+    let t = initialToggle
+    return setInterval(() => {
+      if (t) {
+        domElements[idx].properties.progress += 1
+        if (domElements[idx].properties.progress >= 100) {
+          t = false
+        }
+      } else {
+        domElements[idx].properties.progress -= 1
+        if (domElements[idx].properties.progress <= 0) {
+          t = true
+          dispatchCustomEvent(element, 'cycle')
+        }
+      }
+      domElements[idx].properties.loopToggle = t
+      const loopOverlay = document.getElementById(domElements[idx].properties.overlay)
+      if (loopOverlay) {
+        loopOverlay.style.transition = 'none'
+      }
+      _setprogress(element, domElements[idx].properties.progress, true)
+    }, domElements[idx].properties.loopDuration)
+  }
 
   // Loadgo default options
   const defaultOptions = {
@@ -608,32 +635,10 @@
 
     dispatchCustomEvent(element, 'start')
 
-    // Store interval so we can stop it later
-    let toggle = true
     const domIndex = getIndex(element.id)
-    domElements[domIndex].properties.interval = setInterval(() => {
-      if (toggle) {
-        domElements[domIndex].properties.progress += 1
-        if (domElements[domIndex].properties.progress >= 100) {
-          toggle = false
-        }
-      } else {
-        domElements[domIndex].properties.progress -= 1
-        if (domElements[domIndex].properties.progress <= 0) {
-          toggle = true
-          dispatchCustomEvent(element, 'cycle')
-        }
-      }
-      // Remove transition animation
-      // Can be replaced with animated: false in the initializer
-      const loopOverlay = document.getElementById(domElements[domIndex].properties.overlay)
-      if (loopOverlay) {
-        loopOverlay.style.transition = 'none'
-      }
-
-      const progress = domElements[domIndex].properties.progress
-      _setprogress(element, progress, true)
-    }, duration)
+    domElements[domIndex].properties.loopDuration = duration
+    domElements[domIndex].properties.loopToggle = true
+    domElements[domIndex].properties.interval = _startLoopInterval(element, domIndex, true)
   }
 
   /**
@@ -660,6 +665,60 @@
     domElements[idx].properties.interval = null
     _setprogress(element, 100, false)
     dispatchCustomEvent(element, 'stop', { progress: 100 })
+  }
+
+  /**
+   * Pause the loop, preserving the current progress and direction state.
+   * No-op if the element is not currently looping.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @fires loadgo:pause
+   */
+  Loadgo.pause = function (element) {
+    if (!elementIsValid(element)) {
+      return
+    }
+
+    const idx = getIndex(element.id)
+    if (idx === -1) {
+      return
+    }
+
+    const data = domElements[idx].properties
+    if (!data.interval) {
+      return
+    }
+
+    clearInterval(data.interval)
+    data.interval = null
+    data.paused = true
+    dispatchCustomEvent(element, 'pause', { progress: data.progress })
+  }
+
+  /**
+   * Resume a paused loop, continuing from where it left off.
+   * No-op if the element is not paused.
+   * @param  {HTMLImageElement} element  DOM element using document.getElementById
+   * @fires loadgo:resume
+   */
+  Loadgo.resume = function (element) {
+    if (!elementIsValid(element)) {
+      return
+    }
+
+    const idx = getIndex(element.id)
+    if (idx === -1) {
+      return
+    }
+
+    const data = domElements[idx].properties
+    if (!data.paused) {
+      return
+    }
+
+    data.paused = false
+    const toggle = data.loopToggle !== undefined ? data.loopToggle : true
+    data.interval = _startLoopInterval(element, idx, toggle)
+    dispatchCustomEvent(element, 'resume', { progress: data.progress })
   }
 
   /**

@@ -69,6 +69,35 @@ function playThresholdDemo() {
   }, 300)
 }
 
+function pauseDemo(action) {
+  const btnStart = document.getElementById('btn-loop-start')
+  const btnPause = document.getElementById('btn-loop-pause')
+  const btnResume = document.getElementById('btn-loop-resume')
+  const btnStop = document.getElementById('btn-loop-stop')
+
+  if (action === 'start') {
+    $('#loop-pause').loadgo('loop', 10)
+    btnStart.disabled = true
+    btnPause.disabled = false
+    btnResume.disabled = true
+    btnStop.disabled = false
+  } else if (action === 'pause') {
+    $('#loop-pause').loadgo('pause')
+    btnPause.disabled = true
+    btnResume.disabled = false
+  } else if (action === 'resume') {
+    $('#loop-pause').loadgo('resume')
+    btnPause.disabled = false
+    btnResume.disabled = true
+  } else if (action === 'stop') {
+    $('#loop-pause').loadgo('stop')
+    btnStart.disabled = false
+    btnPause.disabled = true
+    btnResume.disabled = true
+    btnStop.disabled = true
+  }
+}
+
 $(document).ready(() => {
   // Example #1
   $('#disney')
@@ -200,6 +229,15 @@ $(document).ready(() => {
           100: () => showStatus('Done!'),
         },
       })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
+
+  // Example #7
+  $('#loop-pause')
+    .on('load', () => {
+      $('#loop-pause').loadgo()
     })
     .each((_, el) => {
       if (el.complete) $(el).trigger('load')

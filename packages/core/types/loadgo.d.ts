@@ -45,6 +45,18 @@ declare global {
      */
     loadgo(method: 'stop'): JQuery
     /**
+     * Pause the loop, preserving the current progress and direction state.
+     * No-op if the element is not currently looping.
+     * @fires loadgo:pause
+     */
+    loadgo(method: 'pause'): JQuery
+    /**
+     * Resume a paused loop, continuing from where it left off.
+     * No-op if the element is not paused.
+     * @fires loadgo:resume
+     */
+    loadgo(method: 'resume'): JQuery
+    /**
      * Remove the overlay and restore the original DOM structure.
      * @fires loadgo:destroy
      */

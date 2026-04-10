@@ -75,6 +75,16 @@ Both implementations dispatch native DOM `CustomEvent`s (not jQuery `.trigger()`
 - `loadgo:complete` is guarded by `!data.interval` — it never fires inside a loop even when progress hits 100.
 - `loadgo:options` is guarded by an `isUpdate` flag computed before the `if/else` branch. It fires only on the update path (existing options + user-provided options), not during first-time init and not when `options()` is used as a getter.
 - Events with no payload (`loadgo:init`, `loadgo:start`, `loadgo:cycle`, `loadgo:destroy`) are dispatched without a `detail` argument — the Web API defaults `event.detail` to `null`. The TypeScript types use `CustomEvent<null>` accordingly.
+- `loadgo:pause` and `loadgo:resume` carry `{ progress: number }` as their detail. They fire only when the state actually changes (pause when interval exists, resume when `paused` flag is true). Both are no-ops otherwise — no event is dispatched.
+
+## pause() / resume() internals
+
+`loop()` stores three extra fields in element state: `loopDuration` (the interval ms), `loopToggle` (the current direction: `true` = going up, `false` = going down), and `paused` (boolean). `loopToggle` is synced on every tick so `pause()` can snapshot it.
+
+- `pause()`: calls `clearInterval`, nulls `interval`, sets `paused = true`.
+- `resume()`: restarts `setInterval` with the saved `loopDuration` and `loopToggle`, sets `paused = false`.
+- Vanilla version extracts a shared `_startLoopInterval(element, idx, toggle)` helper used by both `loop()` and `resume()` to avoid duplication.
+- `stop()` is unaffected — it does not check `paused` and always sets progress to 100.
 
 ## jQuery 4 compatibility notes
 

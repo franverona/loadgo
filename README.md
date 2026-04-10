@@ -25,6 +25,7 @@
   - [Accessibility](#accessibility)
   - [Methods](#methods)
   - [Custom events](#custom-events)
+  - [Pause and resume a loop](#pause-and-resume-a-loop)
 - [Real-world example](#real-world-example)
 - [Examples](#examples)
 - [Tests](#tests)
@@ -331,6 +332,36 @@ Loadgo.stop(document.getElementById('logo'));
 
 ---
 
+#### Pause loop
+**`$element.loadgo('pause')`** | **`Loadgo.pause(<element>)`**
+
+Pauses a running loop, freezing the animation at the current progress. The direction toggle state is also preserved so `resume()` continues smoothly in the same direction. No-op if the element is not currently looping.
+
+```js
+// jQuery
+$('#logo').loadgo('pause');
+
+// Pure JavaScript
+Loadgo.pause(document.getElementById('logo'));
+```
+
+---
+
+#### Resume loop
+**`$element.loadgo('resume')`** | **`Loadgo.resume(<element>)`**
+
+Resumes a paused loop from the exact point where `pause()` was called. No-op if the element is not paused.
+
+```js
+// jQuery
+$('#logo').loadgo('resume');
+
+// Pure JavaScript
+Loadgo.resume(document.getElementById('logo'));
+```
+
+---
+
 #### Destroy
 **`$element.loadgo('destroy')`** | **`Loadgo.destroy(<element>)`**
 
@@ -388,6 +419,8 @@ document.getElementById('logo').addEventListener('loadgo:error', (e) => {
 | `loadgo:reset` | `resetprogress()` is called | `{ progress: 0 }` |
 | `loadgo:start` | `loop()` starts | — |
 | `loadgo:cycle` | loop completes one full back-and-forth (bounces back to 0) | — |
+| `loadgo:pause` | `pause()` is called on a running loop | `{ progress: number }` |
+| `loadgo:resume` | `resume()` restarts a paused loop | `{ progress: number }` |
 | `loadgo:stop` | `stop()` is called | `{ progress: 100 }` |
 | `loadgo:destroy` | `destroy()` completes | — |
 
@@ -414,6 +447,33 @@ logo.addEventListener('loadgo:init', (e) => {
   // e.detail is null — events with no payload have CustomEvent<null>
 })
 ```
+
+### Pause and resume a loop
+
+Use `pause()` and `resume()` to freeze and restart a `loop()` animation without resetting progress. A common use case is pausing when the tab is hidden and resuming when the user returns:
+
+```js
+// jQuery
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    $('#logo').loadgo('pause')
+  } else {
+    $('#logo').loadgo('resume')
+  }
+})
+
+// Pure JavaScript
+document.addEventListener('visibilitychange', () => {
+  const el = document.getElementById('logo')
+  if (document.hidden) {
+    Loadgo.pause(el)
+  } else {
+    Loadgo.resume(el)
+  }
+})
+```
+
+`stop()` still works as before — it clears the interval and sets progress to 100, regardless of whether the loop was paused.
 
 ---
 

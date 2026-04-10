@@ -39,6 +39,36 @@ function playThresholdDemo() {
   }, 300)
 }
 
+function pauseDemo(action) {
+  const el = document.getElementById('loop-pause')
+  const btnStart = document.getElementById('btn-loop-start')
+  const btnPause = document.getElementById('btn-loop-pause')
+  const btnResume = document.getElementById('btn-loop-resume')
+  const btnStop = document.getElementById('btn-loop-stop')
+
+  if (action === 'start') {
+    Loadgo.loop(el, 10)
+    btnStart.disabled = true
+    btnPause.disabled = false
+    btnResume.disabled = true
+    btnStop.disabled = false
+  } else if (action === 'pause') {
+    Loadgo.pause(el)
+    btnPause.disabled = true
+    btnResume.disabled = false
+  } else if (action === 'resume') {
+    Loadgo.resume(el)
+    btnPause.disabled = false
+    btnResume.disabled = true
+  } else if (action === 'stop') {
+    Loadgo.stop(el)
+    btnStart.disabled = false
+    btnPause.disabled = true
+    btnResume.disabled = true
+    btnStop.disabled = true
+  }
+}
+
 function playDemo(id, index) {
   const image = document.getElementById(id)
   const demoMsg = document.getElementById(`demo-msg-${index}`)
@@ -180,4 +210,11 @@ window.onload = () => {
       },
     })
   }
+
+  // Example #7
+  const loopPause = document.getElementById('loop-pause')
+  loopPause.onload = () => {
+    Loadgo.init(loopPause)
+  }
+  if (loopPause.complete) loopPause.onload()
 }
