@@ -1168,3 +1168,116 @@ describe('JS - onThreshold callback', () => {
     expect(callCount).toBe(2)
   })
 })
+
+describe('JS - pause() / resume()', () => {
+  it('pause() is a no-op on an element that is not looping', () => {
+    Loadgo.init(image)
+    expect(() => Loadgo.pause(image)).not.toThrow()
+  })
+
+  it('resume() is a no-op on an element that is not paused', () => {
+    Loadgo.init(image)
+    expect(() => Loadgo.resume(image)).not.toThrow()
+  })
+
+  it('pause() stops the interval without changing progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(50)
+      const progressBeforePause = Loadgo.getprogress(image)
+      expect(progressBeforePause).toBeGreaterThan(0)
+      Loadgo.pause(image)
+      vi.advanceTimersByTime(200)
+      expect(Loadgo.getprogress(image)).toBe(progressBeforePause)
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('resume() restarts the loop from the paused progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(50)
+      const progressBeforePause = Loadgo.getprogress(image)
+      Loadgo.pause(image)
+      vi.advanceTimersByTime(50)
+      Loadgo.resume(image)
+      vi.advanceTimersByTime(10)
+      expect(Loadgo.getprogress(image)).toBeGreaterThan(progressBeforePause)
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('resume() is a no-op when called without a prior pause()', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      const progressSnapshot = Loadgo.getprogress(image)
+      Loadgo.resume(image) // should not double-start
+      vi.advanceTimersByTime(10)
+      // progress should have advanced by only one tick, not two
+      expect(Loadgo.getprogress(image)).toBe(progressSnapshot + 1)
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires loadgo:pause event with current progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      const { events, off } = captureEvent(image, 'loadgo:pause')
+      Loadgo.pause(image)
+      off()
+      expect(events.length).toBe(1)
+      expect(typeof events[0].detail.progress).toBe('number')
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires loadgo:resume event with current progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      Loadgo.pause(image)
+      const { events, off } = captureEvent(image, 'loadgo:resume')
+      Loadgo.resume(image)
+      off()
+      expect(events.length).toBe(1)
+      expect(typeof events[0].detail.progress).toBe('number')
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('stop() after pause() still sets progress to 100', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      Loadgo.pause(image)
+      Loadgo.stop(image)
+      expect(Loadgo.getprogress(image)).toBe(100)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})

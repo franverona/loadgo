@@ -16,8 +16,10 @@ if (typeof jQuery === 'undefined')
     error: 'loadgo:error',
     init: 'loadgo:init',
     options: 'loadgo:options',
+    pause: 'loadgo:pause',
     progress: 'loadgo:progress',
     reset: 'loadgo:reset',
+    resume: 'loadgo:resume',
     start: 'loadgo:start',
     stop: 'loadgo:stop',
   }
@@ -513,20 +515,20 @@ if (typeof jQuery === 'undefined')
 
       dispatchCustomEvent(this[0], 'start')
 
-      let toggle = true
       const image = this[0]
+      data.loopDuration = duration
+      data.loopToggle = true
 
-      // Store interval so we can stop it later
       data.interval = setInterval(() => {
-        if (toggle) {
+        if (data.loopToggle) {
           data.progress += 1
           if (data.progress >= 100) {
-            toggle = false
+            data.loopToggle = false
           }
         } else {
           data.progress -= 1
           if (data.progress <= 0) {
-            toggle = true
+            data.loopToggle = true
             dispatchCustomEvent(image, 'cycle')
           }
         }
@@ -561,6 +563,61 @@ if (typeof jQuery === 'undefined')
       data.interval = clearInterval(data.interval)
       _setprogress(this, 100, false)
       dispatchCustomEvent(this[0], 'stop', { progress: 100 })
+    },
+
+    /**
+     * Pause the loop, preserving the current progress and direction state.
+     * No-op if the element is not currently looping.
+     * @fires loadgo:pause
+     */
+    pause: function () {
+      const data = $(this).data('loadgo')
+      if (typeof data === 'undefined' || !data.interval) {
+        return
+      }
+
+      clearInterval(data.interval)
+      data.interval = null
+      data.paused = true
+      dispatchCustomEvent(this[0], 'pause', { progress: data.progress })
+    },
+
+    /**
+     * Resume a paused loop, continuing from where it left off.
+     * No-op if the element is not paused.
+     * @fires loadgo:resume
+     */
+    resume: function () {
+      const data = $(this).data('loadgo')
+      if (typeof data === 'undefined' || !data.paused) {
+        return
+      }
+
+      const image = this[0]
+      data.paused = false
+
+      data.interval = setInterval(() => {
+        if (data.loopToggle) {
+          data.progress += 1
+          if (data.progress >= 100) {
+            data.loopToggle = false
+          }
+        } else {
+          data.progress -= 1
+          if (data.progress <= 0) {
+            data.loopToggle = true
+            dispatchCustomEvent(image, 'cycle')
+          }
+        }
+
+        if (data.overlay) {
+          data.overlay.css({ transition: 'none' })
+        }
+
+        _setprogress(image, data.progress, true)
+      }, data.loopDuration)
+
+      dispatchCustomEvent(image, 'resume', { progress: data.progress })
     },
 
     /**
