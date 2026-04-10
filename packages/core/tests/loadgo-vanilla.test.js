@@ -66,6 +66,62 @@ describe('JS - Initialization', () => {
   })
 })
 
+describe('JS - initAll', () => {
+  let imgA, imgB, div
+
+  beforeEach(() => {
+    imgA = Object.assign(document.createElement('img'), { id: 'initall-a' })
+    imgB = Object.assign(document.createElement('img'), { id: 'initall-b' })
+    div = Object.assign(document.createElement('div'), { id: 'initall-div' })
+    document.body.append(imgA, imgB, div)
+  })
+
+  afterEach(() => {
+    Loadgo.destroy(imgA)
+    Loadgo.destroy(imgB)
+  })
+
+  it('accepts a CSS selector string and initialises all matched img elements', () => {
+    imgA.className = 'batch-img'
+    imgB.className = 'batch-img'
+    const result = Loadgo.initAll('.batch-img')
+    expect(result).toHaveLength(2)
+    expect(result).toContain(imgA)
+    expect(result).toContain(imgB)
+    expect(imgA.parentElement.classList.contains('loadgo-container')).toBe(true)
+    expect(imgB.parentElement.classList.contains('loadgo-container')).toBe(true)
+  })
+
+  it('accepts a NodeList', () => {
+    imgA.className = 'nodelist-img'
+    imgB.className = 'nodelist-img'
+    const nodeList = document.querySelectorAll('.nodelist-img')
+    const result = Loadgo.initAll(nodeList)
+    expect(result).toHaveLength(2)
+  })
+
+  it('passes options to each element', () => {
+    imgA.className = 'opts-img'
+    imgB.className = 'opts-img'
+    Loadgo.initAll('.opts-img', { bgcolor: '#123456' })
+    expect(Loadgo.options(imgA).bgcolor).toBe('#123456')
+    expect(Loadgo.options(imgB).bgcolor).toBe('#123456')
+  })
+
+  it('silently skips non-img elements', () => {
+    div.className = 'mixed-el'
+    imgA.className = 'mixed-el'
+    const result = Loadgo.initAll('.mixed-el')
+    expect(result).toHaveLength(1)
+    expect(result).toContain(imgA)
+  })
+
+  it('returns an empty array when no elements match', () => {
+    const result = Loadgo.initAll('.no-match')
+    expect(result).toEqual([])
+  })
+})
+
 describe('JS - Default properties', () => {
   it('bgcolor defaults to #FFFFFF', () => {
     Loadgo.init(image)

@@ -491,6 +491,31 @@
   }
 
   /**
+   * Initialise LoadGo on multiple `<img>` elements at once.
+   * @param  {string|NodeList|HTMLCollection} selector  CSS selector string or a NodeList/HTMLCollection
+   * @param  {object} [userOptions]  Loadgo options
+   * @returns {HTMLImageElement[]} Array of successfully initialized DOM elements
+   */
+  Loadgo.initAll = function (selector, userOptions) {
+    let elements
+    if (typeof selector === 'string') {
+      elements = document.querySelectorAll(selector)
+    } else {
+      elements = selector
+    }
+
+    const initialized = []
+    for (const el of elements) {
+      if (!(el instanceof HTMLElement) || el.nodeName !== 'IMG') {
+        continue
+      }
+      Loadgo.init(el, userOptions)
+      initialized.push(el)
+    }
+    return initialized
+  }
+
+  /**
    * Get or set options for an already-initialised element.
    * @param  {DOM} element  DOM element using document.getElementById
    * @param  {object} [userOptions]  Loadgo options to update. Omit to use as getter.
