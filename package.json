@@ -23,18 +23,18 @@
     ]
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^10.0.1",
-    "@vitest/coverage-v8": "^4.1.2",
-    "eslint": "^10.2.0",
-    "globals": "^17.4.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "eslint": "^10.5.0",
+    "globals": "^17.6.0",
     "husky": "^9.1.7",
     "jquery": "^4.0.0",
-    "jsdom": "^29.0.1",
-    "lint-staged": "^16.4.0",
-    "prettier": "^3.0.0",
-    "terser": "^5.0.0",
+    "jsdom": "^29.1.1",
+    "lint-staged": "^17.0.8",
+    "prettier": "^3.8.4",
+    "terser": "^5.48.0",
     "vitest": "^4.1.2"
   }
 }
