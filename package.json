@@ -23,7 +23,7 @@
     ]
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.1.0",
+    "@commitlint/cli": "^21.2.0",
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^10.0.1",
     "@vitest/coverage-v8": "^4.1.9",
@@ -33,7 +33,7 @@
     "jquery": "^4.0.0",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
-    "prettier": "^3.9.1",
+    "prettier": "^3.9.4",
     "terser": "^5.48.0",
     "vitest": "^4.1.2"
   }
