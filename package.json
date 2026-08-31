@@ -27,14 +27,14 @@
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^10.0.1",
     "@vitest/coverage-v8": "^4.1.11",
-    "eslint": "^10.9.0",
+    "eslint": "^10.9.1",
     "globals": "^17.11.0",
     "husky": "^9.1.7",
     "jquery": "^4.0.0",
     "jsdom": "^30.0.1",
-    "lint-staged": "^17.3.0",
+    "lint-staged": "^17.4.1",
     "prettier": "^3.9.6",
-    "terser": "^5.50.0",
+    "terser": "^5.51.2",
     "vitest": "^4.1.2"
   }
 }
