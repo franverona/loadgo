@@ -1,5 +1,74 @@
 const intervals = {}
 
+let thresholdInterval = null
+
+function playThresholdDemo() {
+  if (thresholdInterval) {
+    window.clearInterval(thresholdInterval)
+    thresholdInterval = null
+  }
+
+  const cocacola = document.getElementById('cocacola')
+  const demoMsg = document.getElementById('demo-msg-15')
+  const demoProgress = document.getElementById('demo-progress-15')
+  const statusEl = document.getElementById('threshold-status')
+
+  demoMsg.style.opacity = '0'
+  demoProgress.style.opacity = '1'
+  statusEl.textContent = ''
+
+  let p = 0
+  Loadgo.resetprogress(cocacola)
+  demoProgress.innerHTML = '0%'
+
+  window.setTimeout(() => {
+    thresholdInterval = window.setInterval(() => {
+      if (Loadgo.getprogress(cocacola) === 100) {
+        window.clearInterval(thresholdInterval)
+        thresholdInterval = null
+        demoMsg.style.opacity = '1'
+        demoProgress.style.opacity = '0'
+        return
+      }
+
+      const prog = p * 10
+      Loadgo.setprogress(cocacola, prog)
+      demoProgress.innerHTML = `${prog}%`
+      p++
+    }, 150)
+  }, 300)
+}
+
+function pauseDemo(action) {
+  const el = document.getElementById('loop-pause')
+  const btnStart = document.getElementById('btn-loop-start')
+  const btnPause = document.getElementById('btn-loop-pause')
+  const btnResume = document.getElementById('btn-loop-resume')
+  const btnStop = document.getElementById('btn-loop-stop')
+
+  if (action === 'start') {
+    Loadgo.loop(el, 10)
+    btnStart.disabled = true
+    btnPause.disabled = false
+    btnResume.disabled = true
+    btnStop.disabled = false
+  } else if (action === 'pause') {
+    Loadgo.pause(el)
+    btnPause.disabled = true
+    btnResume.disabled = false
+  } else if (action === 'resume') {
+    Loadgo.resume(el)
+    btnPause.disabled = false
+    btnResume.disabled = true
+  } else if (action === 'stop') {
+    Loadgo.stop(el)
+    btnStart.disabled = false
+    btnPause.disabled = true
+    btnResume.disabled = true
+    btnStop.disabled = true
+  }
+}
+
 function playDemo(id, index) {
   const image = document.getElementById(id)
   const demoMsg = document.getElementById(`demo-msg-${index}`)
@@ -124,4 +193,28 @@ window.onload = () => {
   spidermanGrayscale.onload = () => {
     Loadgo.init(spidermanGrayscale, { filter: 'grayscale' })
   }
+
+  // Example #6
+  const statusEl = document.getElementById('threshold-status')
+  const showStatus = (msg) => {
+    statusEl.textContent = msg
+  }
+
+  const cocacola = document.getElementById('cocacola')
+  cocacola.src = '../logos/cocacola.png'
+  cocacola.onload = () => {
+    Loadgo.init(cocacola, {
+      onThreshold: {
+        50: () => showStatus('Halfway there!'),
+        100: () => showStatus('Done!'),
+      },
+    })
+  }
+
+  // Example #7
+  const loopPause = document.getElementById('loop-pause')
+  loopPause.onload = () => {
+    Loadgo.init(loopPause)
+  }
+  if (loopPause.complete) loopPause.onload()
 }

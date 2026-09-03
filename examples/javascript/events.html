@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>LoadGo - Custom Events (Vanilla JS)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-white">
+
+    <div class="max-w-4xl mx-auto px-4 pt-5 pb-16">
+
+      <h2 class="text-2xl font-semibold border-b border-gray-200 pb-3 mb-2">LoadGo – Custom Events (Vanilla JS)</h2>
+      <p class="text-gray-600 mb-1">
+        Every LoadGo method dispatches a native DOM <code class="bg-gray-100 px-1 rounded">CustomEvent</code> that bubbles.
+        Use the controls below and watch the event log to see what fires.
+      </p>
+      <p class="mb-6">
+        <a href="index.html" class="text-blue-600 hover:underline text-sm">← Back to examples</a>
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- Left: image + controls -->
+        <div>
+          <div class="flex justify-center mb-4 min-h-[160px] items-center">
+            <img id="demo-image" src="../logos/disney.png" alt="Demo Logo" class="max-w-full h-auto mx-auto" />
+          </div>
+
+          <div id="progress-display" class="text-center text-3xl font-bold mb-5 text-gray-700">0%</div>
+
+          <div class="flex flex-wrap gap-2 justify-center">
+            <button id="btn-set50"    class="px-3 py-1.5 bg-blue-600   text-white text-sm rounded hover:bg-blue-700">Set 50%</button>
+            <button id="btn-set100"   class="px-3 py-1.5 bg-green-600  text-white text-sm rounded hover:bg-green-700">Set 100%</button>
+            <button id="btn-reset"    class="px-3 py-1.5 bg-orange-500 text-white text-sm rounded hover:bg-orange-600">Reset</button>
+            <button id="btn-loop"     class="px-3 py-1.5 bg-teal-600   text-white text-sm rounded hover:bg-teal-700">Loop</button>
+            <button id="btn-stop"     class="px-3 py-1.5 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600">Stop</button>
+            <button id="btn-options"  class="px-3 py-1.5 bg-purple-600 text-white text-sm rounded hover:bg-purple-700">Change options</button>
+            <button id="btn-destroy"  class="px-3 py-1.5 bg-red-600    text-white text-sm rounded hover:bg-red-700">Destroy / Re-init</button>
+          </div>
+
+          <div class="mt-5 flex items-center gap-2 justify-center">
+            <input type="checkbox" id="show-progress" checked class="rounded" />
+            <label for="show-progress" class="text-sm text-gray-600">
+              Show <code class="bg-gray-100 px-1 rounded">loadgo:progress</code> events
+            </label>
+          </div>
+        </div>
+
+        <!-- Right: event log -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-gray-800">Event log</h3>
+            <button id="btn-clear" class="text-xs text-gray-500 hover:text-gray-700 underline">Clear</button>
+          </div>
+          <div id="event-log" class="border border-gray-200 rounded bg-gray-50 h-96 overflow-y-auto p-2 font-mono text-xs space-y-1">
+            <div class="text-gray-400 italic">Events will appear here…</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script type="text/javascript" src="../../packages/core/loadgo-vanilla.js"></script>
+    <script type="text/javascript" src="events.js"></script>
+  </body>
+</html>

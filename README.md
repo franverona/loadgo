@@ -20,9 +20,12 @@
   - [Initialization](#initialization)
   - [Options](#options)
   - [onProgress callback](#onprogress-callback)
+  - [onThreshold callback](#onthreshold-callback)
   - [Custom animation timing](#custom-animation-timing)
   - [Accessibility](#accessibility)
   - [Methods](#methods)
+  - [Custom events](#custom-events)
+  - [Pause and resume a loop](#pause-and-resume-a-loop)
 - [Real-world example](#real-world-example)
 - [Examples](#examples)
 - [Tests](#tests)
@@ -116,7 +119,7 @@ LoadGo wraps your `img` element in a `div` and adds an overlay inside that wrapp
 
 This plugin does **not** manage async operations — you connect it to your own upload/load/progress events.
 
-LoadGo only works on `img` elements referenced by a single element (by `id`). It does **not** support multi-element selectors.
+LoadGo only works on `img` elements. Use `Loadgo.init` for a single element, or `Loadgo.initAll` to initialise multiple elements in one call (vanilla JS only — the jQuery plugin already iterates over matched sets implicitly).
 
 ### Image load timing
 
@@ -145,8 +148,22 @@ image.onload = () => {
 // jQuery
 $('#logo').loadgo();
 
-// Pure JavaScript
+// Pure JavaScript — single element
 Loadgo.init(document.getElementById('logo'));
+
+// Pure JavaScript — multiple elements at once
+Loadgo.initAll('.product-image', { bgcolor: '#000', opacity: 0.4 })
+Loadgo.initAll(document.querySelectorAll('img.loadable'), options)
+```
+
+`initAll` accepts a CSS selector string or a `NodeList`/`HTMLCollection` and calls `init` on each matched `<img>`. Non-`<img>` elements in the set are silently skipped. It returns an array of the initialized DOM elements so you can keep references for later calls:
+
+```js
+const images = Loadgo.initAll('.loadable', { direction: 'bt' })
+
+// Later…
+images.forEach(el => Loadgo.setprogress(el, 50))
+images.forEach(el => Loadgo.destroy(el))
 ```
 
 ### Options
@@ -164,7 +181,9 @@ Loadgo.init(document.getElementById('logo'));
 | `filter` | `String` | `null` | CSS image filter applied directly to the `img`. Values: `blur`, `grayscale`, `sepia`, `hue-rotate`, `invert`, `opacity`. No overlay is created when this is set. |
 | `resize` | `Function` | built-in | Custom window resize handler. When provided, replaces the built-in one entirely. |
 | `onProgress` | `Function` | `null` | Callback invoked after every `setprogress` call, receiving the current progress value (0–100). |
+| `onThreshold` | `Object` | `null` | Map of progress values (0–100) to callbacks. Each callback fires once when progress first reaches or crosses its key. Thresholds reset when `resetprogress()` is called. |
 | `ariaLabel` | `String` | `Loading` | Text for the `aria-label` attribute on the progressbar element. |
+| `autoStop` | `Boolean` | `false` | Automatically calls `stop()` when `setprogress(100)` is reached outside of a loop. Fires `loadgo:complete` then `loadgo:stop`. Has no effect while a loop is running. |
 
 ### onProgress callback
 
@@ -182,6 +201,28 @@ $('#logo').loadgo({
 Loadgo.init(document.getElementById('logo'), {
   onProgress: (progress) => {
     document.getElementById('counter').textContent = `${progress}%`
+  },
+})
+```
+
+### onThreshold callback
+
+Use `onThreshold` to fire callbacks once when progress crosses specific values — useful for multi-stage loading UIs. Each callback fires at most once per pass; calling `resetprogress()` resets all thresholds so they can fire again.
+
+```js
+// jQuery
+$('#logo').loadgo({
+  onThreshold: {
+    50: () => console.log('halfway there'),
+    100: () => document.getElementById('status').textContent = 'Done!',
+  },
+})
+
+// Pure JavaScript
+Loadgo.init(document.getElementById('logo'), {
+  onThreshold: {
+    50: () => console.log('halfway there'),
+    100: () => document.getElementById('status').textContent = 'Done!',
   },
 })
 ```
@@ -305,6 +346,36 @@ Loadgo.stop(document.getElementById('logo'));
 
 ---
 
+#### Pause loop
+**`$element.loadgo('pause')`** | **`Loadgo.pause(<element>)`**
+
+Pauses a running loop, freezing the animation at the current progress. The direction toggle state is also preserved so `resume()` continues smoothly in the same direction. No-op if the element is not currently looping.
+
+```js
+// jQuery
+$('#logo').loadgo('pause');
+
+// Pure JavaScript
+Loadgo.pause(document.getElementById('logo'));
+```
+
+---
+
+#### Resume loop
+**`$element.loadgo('resume')`** | **`Loadgo.resume(<element>)`**
+
+Resumes a paused loop from the exact point where `pause()` was called. No-op if the element is not paused.
+
+```js
+// jQuery
+$('#logo').loadgo('resume');
+
+// Pure JavaScript
+Loadgo.resume(document.getElementById('logo'));
+```
+
+---
+
 #### Destroy
 **`$element.loadgo('destroy')`** | **`Loadgo.destroy(<element>)`**
 
@@ -317,6 +388,106 @@ $('#logo').loadgo('destroy');
 // Pure JavaScript
 Loadgo.destroy(document.getElementById('logo'));
 ```
+
+---
+
+### Custom events
+
+LoadGo dispatches native DOM [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent)s at key lifecycle points. All events bubble, so you can listen on a parent element if needed.
+
+Events work with both `addEventListener` and jQuery's `.on()`:
+
+```js
+// Pure JavaScript
+document.getElementById('logo').addEventListener('loadgo:complete', () => {
+  console.log('Loading complete!')
+})
+
+// jQuery
+$('#logo').on('loadgo:complete', () => {
+  console.log('Loading complete!')
+})
+```
+
+Access the event payload via `event.detail`:
+
+```js
+document.getElementById('logo').addEventListener('loadgo:progress', (e) => {
+  console.log(`Progress: ${e.detail.progress}%`)
+})
+
+document.getElementById('logo').addEventListener('loadgo:error', (e) => {
+  console.warn('LoadGo error:', e.detail.message)
+})
+```
+
+#### Event reference
+
+| Event | Fires when | `event.detail` |
+| --- | --- | --- |
+| `loadgo:init` | `init()` completes | — |
+| `loadgo:error` | invalid usage (non-`img` element, loop/stop on uninitialized, double loop) | `{ message: string }` |
+| `loadgo:options` | `options()` is called as a setter after init | merged `LoadgoOptions` object |
+| `loadgo:progress` | `setprogress()` is called | `{ progress: number }` |
+| `loadgo:complete` | progress reaches 100 **outside** of a loop | `{ progress: 100 }` |
+| `loadgo:reset` | `resetprogress()` is called | `{ progress: 0 }` |
+| `loadgo:start` | `loop()` starts | — |
+| `loadgo:cycle` | loop completes one full back-and-forth (bounces back to 0) | — |
+| `loadgo:pause` | `pause()` is called on a running loop | `{ progress: number }` |
+| `loadgo:resume` | `resume()` restarts a paused loop | `{ progress: number }` |
+| `loadgo:stop` | `stop()` is called | `{ progress: 100 }` |
+| `loadgo:destroy` | `destroy()` completes | — |
+
+> **Note:** `loadgo:progress` is **not** fired by `resetprogress()` or `stop()` — those operations dispatch `loadgo:reset` and `loadgo:stop` respectively. Similarly, `loadgo:complete` is suppressed while a loop is running, even when progress internally reaches 100.
+
+#### TypeScript
+
+Event types are declared in `LoadgoEventMap` and are automatically applied to `HTMLImageElement.addEventListener`:
+
+```ts
+const logo = document.getElementById('logo') as HTMLImageElement
+
+logo.addEventListener('loadgo:progress', (e) => {
+  // e.detail is typed as { progress: number }
+  console.log(e.detail.progress)
+})
+
+logo.addEventListener('loadgo:options', (e) => {
+  // e.detail is typed as LoadgoOptions
+  console.log(e.detail.bgcolor)
+})
+
+logo.addEventListener('loadgo:init', (e) => {
+  // e.detail is null — events with no payload have CustomEvent<null>
+})
+```
+
+### Pause and resume a loop
+
+Use `pause()` and `resume()` to freeze and restart a `loop()` animation without resetting progress. A common use case is pausing when the tab is hidden and resuming when the user returns:
+
+```js
+// jQuery
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    $('#logo').loadgo('pause')
+  } else {
+    $('#logo').loadgo('resume')
+  }
+})
+
+// Pure JavaScript
+document.addEventListener('visibilitychange', () => {
+  const el = document.getElementById('logo')
+  if (document.hidden) {
+    Loadgo.pause(el)
+  } else {
+    Loadgo.resume(el)
+  }
+})
+```
+
+`stop()` still works as before — it clears the interval and sets progress to 100, regardless of whether the loop was paused.
 
 ---
 

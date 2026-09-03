@@ -31,6 +31,73 @@ function playDemo(id, index) {
   }, 300)
 }
 
+let thresholdInterval = null
+
+function playThresholdDemo() {
+  if (thresholdInterval) {
+    window.clearInterval(thresholdInterval)
+    thresholdInterval = null
+  }
+
+  const demoMsg = $('#demo-msg-15')
+  const demoProgress = $('#demo-progress-15')
+  const statusEl = document.getElementById('threshold-status')
+
+  demoMsg.animate({ opacity: '0' })
+  demoProgress.animate({ opacity: '1' })
+  statusEl.textContent = ''
+
+  let p = 0
+  $('#cocacola').loadgo('resetprogress')
+  demoProgress.html('0%')
+
+  window.setTimeout(() => {
+    thresholdInterval = window.setInterval(() => {
+      if ($('#cocacola').loadgo('getprogress') === 100) {
+        window.clearInterval(thresholdInterval)
+        thresholdInterval = null
+        demoMsg.animate({ opacity: '1' })
+        demoProgress.animate({ opacity: '0' })
+        return
+      }
+
+      const prog = p * 10
+      $('#cocacola').loadgo('setprogress', prog)
+      demoProgress.html(`${prog}%`)
+      p++
+    }, 150)
+  }, 300)
+}
+
+function pauseDemo(action) {
+  const btnStart = document.getElementById('btn-loop-start')
+  const btnPause = document.getElementById('btn-loop-pause')
+  const btnResume = document.getElementById('btn-loop-resume')
+  const btnStop = document.getElementById('btn-loop-stop')
+
+  if (action === 'start') {
+    $('#loop-pause').loadgo('loop', 10)
+    btnStart.disabled = true
+    btnPause.disabled = false
+    btnResume.disabled = true
+    btnStop.disabled = false
+  } else if (action === 'pause') {
+    $('#loop-pause').loadgo('pause')
+    btnPause.disabled = true
+    btnResume.disabled = false
+  } else if (action === 'resume') {
+    $('#loop-pause').loadgo('resume')
+    btnPause.disabled = false
+    btnResume.disabled = true
+  } else if (action === 'stop') {
+    $('#loop-pause').loadgo('stop')
+    btnStart.disabled = false
+    btnPause.disabled = true
+    btnResume.disabled = true
+    btnStop.disabled = true
+  }
+}
+
 $(document).ready(() => {
   // Example #1
   $('#disney')
@@ -143,6 +210,34 @@ $(document).ready(() => {
   $('#spidermanGrayscale')
     .on('load', () => {
       $('#spidermanGrayscale').loadgo({ filter: 'grayscale' })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
+
+  // Example #6
+  const statusEl = document.getElementById('threshold-status')
+  const showStatus = (msg) => {
+    statusEl.textContent = msg
+  }
+
+  $('#cocacola')
+    .on('load', () => {
+      $('#cocacola').loadgo({
+        onThreshold: {
+          50: () => showStatus('Halfway there!'),
+          100: () => showStatus('Done!'),
+        },
+      })
+    })
+    .each((_, el) => {
+      if (el.complete) $(el).trigger('load')
+    })
+
+  // Example #7
+  $('#loop-pause')
+    .on('load', () => {
+      $('#loop-pause').loadgo()
     })
     .each((_, el) => {
       if (el.complete) $(el).trigger('load')

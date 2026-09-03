@@ -54,7 +54,7 @@ Two independent parallel implementations in `packages/core/`, both with identica
 
 **How it works**: `init` wraps the `<img>` in a `div.loadgo-container` and injects a `div.loadgo-overlay`. Progress shrinks/grows the overlay (width for `lr`/`rl`, height for `bt`/`tb`). Resize events recalculate dimensions.
 
-**State storage**: jQuery version uses `.data()` per element; vanilla version uses a module-level `[{ id, properties }]` array keyed by element ID.
+**State storage**: jQuery version uses `.data()` per element; vanilla version uses a module-level `[{ id, properties, firedThresholds }]` array keyed by element ID. `firedThresholds` is stored as a sibling of `properties` (not inside it) because `Loadgo.options()` replaces `properties` entirely — storing it inside would wipe the fired state on every options update.
 
 ## Code style
 
@@ -62,6 +62,29 @@ Two independent parallel implementations in `packages/core/`, both with identica
 - ESLint 9 flat config at repo root with per-directory settings
 - Prettier: single quotes, no semicolons, 2-space indent, trailing commas, 100-char print width
 - `"type": "module"` in root `package.json` — all config files and scripts use ESM
+
+## Custom events
+
+Both implementations dispatch native DOM `CustomEvent`s (not jQuery `.trigger()`). This ensures listeners registered via `addEventListener` work in both versions.
+
+**Implementation rules that are not obvious from the code:**
+
+- `dispatchCustomEvent` requires a raw DOM element. In jQuery plugin methods, `this` is a jQuery wrapper — always use `this[0]` (or `$this[0]` / `rawElement`). The `_setprogress` helper in `loadgo.js` normalises via `const rawElement = $element[0]` for this reason.
+- `CUSTOM_EVENTS` (the `type → 'loadgo:type'` lookup map) is defined at IIFE scope, above `dispatchCustomEvent`, so it is not recreated on every call.
+- `resetprogress` and `stop` call `_setprogress(..., false)` (`shouldEmit = false`) and then dispatch their own events (`loadgo:reset` / `loadgo:stop`). This prevents `loadgo:progress` from firing alongside them.
+- `loadgo:complete` is guarded by `!data.interval` — it never fires inside a loop even when progress hits 100.
+- `loadgo:options` is guarded by an `isUpdate` flag computed before the `if/else` branch. It fires only on the update path (existing options + user-provided options), not during first-time init and not when `options()` is used as a getter.
+- Events with no payload (`loadgo:init`, `loadgo:start`, `loadgo:cycle`, `loadgo:destroy`) are dispatched without a `detail` argument — the Web API defaults `event.detail` to `null`. The TypeScript types use `CustomEvent<null>` accordingly.
+- `loadgo:pause` and `loadgo:resume` carry `{ progress: number }` as their detail. They fire only when the state actually changes (pause when interval exists, resume when `paused` flag is true). Both are no-ops otherwise — no event is dispatched.
+
+## pause() / resume() internals
+
+`loop()` stores three extra fields in element state: `loopDuration` (the interval ms), `loopToggle` (the current direction: `true` = going up, `false` = going down), and `paused` (boolean). `loopToggle` is synced on every tick so `pause()` can snapshot it.
+
+- `pause()`: calls `clearInterval`, nulls `interval`, sets `paused = true`.
+- `resume()`: restarts `setInterval` with the saved `loopDuration` and `loopToggle`, sets `paused = false`.
+- Vanilla version extracts a shared `_startLoopInterval(element, idx, toggle)` helper used by both `loop()` and `resume()` to avoid duplication.
+- `stop()` is unaffected — it does not check `paused` and always sets progress to 100.
 
 ## jQuery 4 compatibility notes
 

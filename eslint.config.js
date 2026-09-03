@@ -15,7 +15,7 @@ export default [
     },
   },
   {
-    files: ['examples/javascript/main.js'],
+    files: ['examples/javascript/main.js', 'examples/javascript/events.js'],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'script',
@@ -30,7 +30,7 @@ export default [
     },
   },
   {
-    files: ['examples/jquery/main.js'],
+    files: ['examples/jquery/main.js', 'examples/jquery/events.js'],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'script',
