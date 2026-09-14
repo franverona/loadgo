@@ -32,7 +32,7 @@
     "husky": "^9.1.7",
     "jquery": "^4.0.0",
     "jsdom": "^30.0.1",
-    "lint-staged": "^17.4.1",
+    "lint-staged": "^17.5.1",
     "prettier": "^3.9.6",
     "terser": "^5.51.2",
     "vitest": "^5.0.0"
