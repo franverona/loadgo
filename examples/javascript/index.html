@@ -18,6 +18,7 @@
       <h2 class="text-2xl font-semibold border-b border-gray-200 pb-3 mb-2">LoadGo - Javascript Examples</h2>
       <ul class="mt-4 mb-8">
         <li><a href="https://github.com/franverona/loadgo" class="text-blue-600 hover:underline">GitHub</a></li>
+        <li><a href="events.html" class="text-blue-600 hover:underline">Custom events demo →</a></li>
       </ul>
 
       <div id="examples">
@@ -319,6 +320,54 @@ spidermanGrayscale.onload = function () {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Example 6 -->
+        <h3 class="text-xl font-semibold mt-10 mb-2">Example #6: onThreshold callbacks</h3>
+        <p class="text-gray-700 mb-4">Callbacks fire once each time progress reaches or crosses a threshold. Calling <code class="bg-gray-100 px-1 rounded">resetprogress</code> resets all thresholds so they fire again on the next pass.</p>
+        <div class="flex justify-center mb-4">
+          <pre class="bg-gray-100 rounded p-4 font-mono text-sm w-full max-w-lg overflow-x-auto">Loadgo.init(cocacola, {
+  onThreshold: {
+    50: () => showStatus('Halfway there!'),
+    100: () => showStatus('Done!'),
+  },
+});</pre>
+        </div>
+        <div class="flex justify-center mb-4">
+          <img id="cocacola" src="../logos/cocacola.png" alt="Coca-Cola Logo" class="max-w-full h-auto mx-auto logo" />
+        </div>
+        <div class="text-center">
+          <div id="threshold-status" class="mb-2 text-sm text-gray-500 h-5"></div>
+          <div id="demo-progress-15" class="mb-2 text-base font-bold opacity-0">0 %</div>
+          <div id="demo-msg-15">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="playThresholdDemo();">
+              Start
+            </button>
+          </div>
+        </div>
+
+        <!-- Example 7 -->
+        <h3 class="text-xl font-semibold mt-10 mb-2">Example #7: pause() and resume()</h3>
+        <p class="text-gray-700 mb-4">
+          Loop the animation with <code class="bg-gray-100 px-1 rounded">loop()</code>, then freeze it mid-animation with
+          <code class="bg-gray-100 px-1 rounded">pause()</code> and pick it back up with
+          <code class="bg-gray-100 px-1 rounded">resume()</code> — progress and direction are preserved exactly.
+        </p>
+        <div class="flex justify-center mb-4">
+          <pre class="bg-gray-100 rounded p-4 font-mono text-sm w-full max-w-lg overflow-x-auto">Loadgo.init(el);
+Loadgo.loop(el, 10);
+Loadgo.pause(el);
+Loadgo.resume(el);
+Loadgo.stop(el);</pre>
+        </div>
+        <div class="flex justify-center mb-4">
+          <img id="loop-pause" src="../logos/disney.png" alt="Disney Logo" class="max-w-full h-auto mx-auto logo" />
+        </div>
+        <div class="text-center space-x-2">
+          <button id="btn-loop-start" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onclick="pauseDemo('start')">Start loop</button>
+          <button id="btn-loop-pause" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-40" onclick="pauseDemo('pause')" disabled>Pause</button>
+          <button id="btn-loop-resume" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-40" onclick="pauseDemo('resume')" disabled>Resume</button>
+          <button id="btn-loop-stop" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-40" onclick="pauseDemo('stop')" disabled>Stop</button>
         </div>
 
         <hr class="mt-10 border-gray-200" />

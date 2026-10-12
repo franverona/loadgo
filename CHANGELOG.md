@@ -1,5 +1,39 @@
 # Changelog
 
+## 3.2.0 — unreleased
+
+### Added
+
+- Native `CustomEvent` dispatching across all lifecycle methods in both jQuery and vanilla implementations.
+- Full TypeScript event types: `LoadgoEventMap` and augmented `HTMLImageElement.addEventListener` overloads.
+- `setprogress()` now dispatches `loadgo:error` when called on an uninitialized element.
+- Interactive demo pages for jQuery and Vanilla JS.
+
+### Changed
+
+- `loadgo:options` detail is now a shallow copy of the merged options object, preventing internal state mutation.
+- Events with no payload (`loadgo:init`, `loadgo:start`, `loadgo:cycle`, `loadgo:destroy`) set `event.detail` to `null` instead of `undefined`.
+- `$filter` renamed to `filter` in jQuery `_setprogress` internal helper.
+
+### Fixed
+
+- `resetprogress()` now guards against calls on uninitialized elements (prevented spurious `loadgo:reset` events).
+
+### Events reference
+
+| Event | Fires when | `event.detail` |
+| --- | --- | --- |
+| `loadgo:init` | `init()` completes | `null` |
+| `loadgo:error` | invalid usage (non-`img` element, loop/stop on uninitialized, double loop) | `{ message: string }` |
+| `loadgo:options` | `options()` is called as a setter after init | merged `LoadgoOptions` object |
+| `loadgo:progress` | `setprogress()` is called | `{ progress: number }` |
+| `loadgo:complete` | progress reaches 100 outside of a loop | `{ progress: 100 }` |
+| `loadgo:reset` | `resetprogress()` is called | `{ progress: 0 }` |
+| `loadgo:start` | `loop()` starts | `null` |
+| `loadgo:cycle` | loop completes one full back-and-forth | `null` |
+| `loadgo:stop` | `stop()` is called | `{ progress: 100 }` |
+| `loadgo:destroy` | `destroy()` completes | `null` |
+
 ## 3.1.2 — 2026-03-26
 
 - Add missing `README.md` to npm package.
