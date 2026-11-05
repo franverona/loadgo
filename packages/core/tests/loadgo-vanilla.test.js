@@ -25,6 +25,13 @@ afterEach(() => {
 
 const getOverlay = () => image.parentElement?.querySelector('.loadgo-overlay') ?? null
 
+const captureEvent = (el, type) => {
+  const events = []
+  const handler = (e) => events.push(e)
+  el.addEventListener(type, handler)
+  return { events, off: () => el.removeEventListener(type, handler) }
+}
+
 describe('JS - Initialization', () => {
   it('exposes Loadgo on window', () => {
     expect(typeof globalThis.Loadgo).toBe('object')
@@ -56,6 +63,62 @@ describe('JS - Initialization', () => {
   it('creates a loadgo-overlay inside the container', () => {
     Loadgo.init(image)
     expect(getOverlay()).not.toBeNull()
+  })
+})
+
+describe('JS - initAll', () => {
+  let imgA, imgB, div
+
+  beforeEach(() => {
+    imgA = Object.assign(document.createElement('img'), { id: 'initall-a' })
+    imgB = Object.assign(document.createElement('img'), { id: 'initall-b' })
+    div = Object.assign(document.createElement('div'), { id: 'initall-div' })
+    document.body.append(imgA, imgB, div)
+  })
+
+  afterEach(() => {
+    Loadgo.destroy(imgA)
+    Loadgo.destroy(imgB)
+  })
+
+  it('accepts a CSS selector string and initialises all matched img elements', () => {
+    imgA.className = 'batch-img'
+    imgB.className = 'batch-img'
+    const result = Loadgo.initAll('.batch-img')
+    expect(result).toHaveLength(2)
+    expect(result).toContain(imgA)
+    expect(result).toContain(imgB)
+    expect(imgA.parentElement.classList.contains('loadgo-container')).toBe(true)
+    expect(imgB.parentElement.classList.contains('loadgo-container')).toBe(true)
+  })
+
+  it('accepts a NodeList', () => {
+    imgA.className = 'nodelist-img'
+    imgB.className = 'nodelist-img'
+    const nodeList = document.querySelectorAll('.nodelist-img')
+    const result = Loadgo.initAll(nodeList)
+    expect(result).toHaveLength(2)
+  })
+
+  it('passes options to each element', () => {
+    imgA.className = 'opts-img'
+    imgB.className = 'opts-img'
+    Loadgo.initAll('.opts-img', { bgcolor: '#123456' })
+    expect(Loadgo.options(imgA).bgcolor).toBe('#123456')
+    expect(Loadgo.options(imgB).bgcolor).toBe('#123456')
+  })
+
+  it('silently skips non-img elements', () => {
+    div.className = 'mixed-el'
+    imgA.className = 'mixed-el'
+    const result = Loadgo.initAll('.mixed-el')
+    expect(result).toHaveLength(1)
+    expect(result).toContain(imgA)
+  })
+
+  it('returns an empty array when no elements match', () => {
+    const result = Loadgo.initAll('.no-match')
+    expect(result).toEqual([])
   })
 })
 
@@ -726,6 +789,549 @@ describe('JS - loop/stop edge cases', () => {
       Loadgo.destroy(image)
       vi.advanceTimersByTime(300)
       expect(callCount).toBe(countBeforeDestroy)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('JS - Custom events: loadgo:init', () => {
+  it('fires on init()', () => {
+    const { events, off } = captureEvent(image, 'loadgo:init')
+    Loadgo.init(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('fires again on re-init', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:init')
+    Loadgo.init(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - Custom events: loadgo:error', () => {
+  it('fires when element is not an img', () => {
+    const div = document.createElement('div')
+    div.id = 'not-img-error'
+    document.body.appendChild(div)
+    const { events, off } = captureEvent(div, 'loadgo:error')
+    try {
+      Loadgo.init(div)
+      // eslint-disable-next-line no-unused-vars
+    } catch (_) {
+      //
+    }
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.message).toMatch(/img/)
+  })
+
+  it('fires on loop() when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.loop(image, 1000)
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('fires on loop() when already looping', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.loop(image, 1000)
+    off()
+    Loadgo.stop(image)
+    expect(events.length).toBe(1)
+  })
+
+  it('fires on stop() when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.stop(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('fires on setprogress() when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.setprogress(image, 50)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.message).toMatch(/set progress/)
+  })
+
+  it('fires on resetprogress() when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:error')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.message).toMatch(/reset progress/)
+  })
+
+  it('does not fire loadgo:reset when element is not initialized', () => {
+    const { events, off } = captureEvent(image, 'loadgo:reset')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('JS - Custom events: loadgo:options', () => {
+  it('fires when options() is called as a setter after init', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.options(image, { bgcolor: '#FF0000' })
+    off()
+    expect(events.length).toBe(1)
+  })
+
+  it('detail contains the merged options', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.options(image, { bgcolor: '#FF0000' })
+    off()
+    expect(events[0].detail.bgcolor).toBe('#FF0000')
+  })
+
+  it('does not fire during init()', () => {
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.init(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire when options() is used as a getter', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:options')
+    Loadgo.options(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('JS - Custom events: loadgo:progress', () => {
+  it('fires on setprogress() with correct detail', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:progress')
+    Loadgo.setprogress(image, 50)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(50)
+  })
+
+  it('does not fire on resetprogress()', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 50)
+    const { events, off } = captureEvent(image, 'loadgo:progress')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire on stop()', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    const { events, off } = captureEvent(image, 'loadgo:progress')
+    Loadgo.stop(image)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('JS - Custom events: loadgo:complete', () => {
+  it('fires when setprogress reaches 100 outside a loop', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:complete')
+    Loadgo.setprogress(image, 100)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+
+  it('does not fire for values below 100', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:complete')
+    Loadgo.setprogress(image, 99)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not fire when progress reaches 100 inside a loop', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      const { events, off } = captureEvent(image, 'loadgo:complete')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(105) // enough ticks to pass 100
+      off()
+      Loadgo.stop(image)
+      expect(events.length).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('JS - Custom events: loadgo:reset', () => {
+  it('fires on resetprogress() with progress 0', () => {
+    Loadgo.init(image)
+    Loadgo.setprogress(image, 50)
+    const { events, off } = captureEvent(image, 'loadgo:reset')
+    Loadgo.resetprogress(image)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(0)
+  })
+})
+
+describe('JS - Custom events: loadgo:start', () => {
+  it('fires on loop()', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:start')
+    Loadgo.loop(image, 1000)
+    off()
+    Loadgo.stop(image)
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - Custom events: loadgo:cycle', () => {
+  it('fires when the loop completes one full back-and-forth', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      const { events, off } = captureEvent(image, 'loadgo:cycle')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(200) // 100 ticks up + 100 ticks down
+      off()
+      Loadgo.stop(image)
+      expect(events.length).toBe(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires multiple times across multiple cycles', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      const { events, off } = captureEvent(image, 'loadgo:cycle')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(400) // ~2 full cycles
+      off()
+      Loadgo.stop(image)
+      expect(events.length).toBe(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('JS - Custom events: loadgo:stop', () => {
+  it('fires on stop() with progress 100', () => {
+    Loadgo.init(image)
+    Loadgo.loop(image, 1000)
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.stop(image)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+})
+
+describe('JS - Custom events: loadgo:destroy', () => {
+  it('fires on destroy()', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:destroy')
+    Loadgo.destroy(image)
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - autoStop option', () => {
+  it('calls stop() automatically when setprogress reaches 100', () => {
+    Loadgo.init(image, { autoStop: true })
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.setprogress(image, 100)
+    off()
+    expect(events.length).toBe(1)
+    expect(events[0].detail.progress).toBe(100)
+  })
+
+  it('does not call stop() when progress is below 100', () => {
+    Loadgo.init(image, { autoStop: true })
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.setprogress(image, 99)
+    off()
+    expect(events.length).toBe(0)
+  })
+
+  it('does not call stop() when looping, even if progress hits 100', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image, { autoStop: true })
+      const { events, off } = captureEvent(image, 'loadgo:stop')
+      Loadgo.loop(image, 1)
+      vi.advanceTimersByTime(105) // enough ticks to pass 100
+      Loadgo.stop(image)
+      off()
+      expect(events.length).toBe(1) // only from the explicit stop() call
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires loadgo:complete before loadgo:stop when autoStop triggers', () => {
+    Loadgo.init(image, { autoStop: true })
+    const order = []
+    const offComplete = captureEvent(image, 'loadgo:complete')
+    const offStop = captureEvent(image, 'loadgo:stop')
+    image.addEventListener('loadgo:complete', () => order.push('complete'))
+    image.addEventListener('loadgo:stop', () => order.push('stop'))
+    Loadgo.setprogress(image, 100)
+    offComplete.off()
+    offStop.off()
+    expect(order).toEqual(['complete', 'stop'])
+  })
+
+  it('does not call stop() when autoStop is false (default)', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(image, 'loadgo:stop')
+    Loadgo.setprogress(image, 100)
+    off()
+    expect(events.length).toBe(0)
+  })
+})
+
+describe('JS - Custom events: bubbling', () => {
+  it('events bubble up to the parent element', () => {
+    Loadgo.init(image)
+    const { events, off } = captureEvent(container, 'loadgo:progress')
+    Loadgo.setprogress(image, 40)
+    off()
+    expect(events.length).toBe(1)
+  })
+})
+
+describe('JS - onThreshold callback', () => {
+  it('fires the callback when progress reaches the threshold', () => {
+    let fired = false
+    Loadgo.init(image, { onThreshold: { 50: () => (fired = true) } })
+    Loadgo.setprogress(image, 50)
+    expect(fired).toBe(true)
+  })
+
+  it('fires the callback when progress exceeds the threshold', () => {
+    let fired = false
+    Loadgo.init(image, { onThreshold: { 50: () => (fired = true) } })
+    Loadgo.setprogress(image, 75)
+    expect(fired).toBe(true)
+  })
+
+  it('does not fire when progress is below the threshold', () => {
+    let fired = false
+    Loadgo.init(image, { onThreshold: { 50: () => (fired = true) } })
+    Loadgo.setprogress(image, 49)
+    expect(fired).toBe(false)
+  })
+
+  it('fires each threshold only once per pass', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    Loadgo.setprogress(image, 60)
+    Loadgo.setprogress(image, 70)
+    expect(callCount).toBe(1)
+  })
+
+  it('fires multiple thresholds independently', () => {
+    const fired = []
+    Loadgo.init(image, {
+      onThreshold: {
+        50: () => fired.push(50),
+        75: () => fired.push(75),
+        100: () => fired.push(100),
+      },
+    })
+    Loadgo.setprogress(image, 50)
+    Loadgo.setprogress(image, 75)
+    Loadgo.setprogress(image, 100)
+    expect(fired).toEqual([50, 75, 100])
+  })
+
+  it('fires all crossed thresholds when progress jumps past them in one call', () => {
+    const fired = []
+    Loadgo.init(image, {
+      onThreshold: {
+        25: () => fired.push(25),
+        50: () => fired.push(50),
+        75: () => fired.push(75),
+      },
+    })
+    Loadgo.setprogress(image, 80)
+    expect(fired).toContain(25)
+    expect(fired).toContain(50)
+    expect(fired).toContain(75)
+  })
+
+  it('clears fired thresholds on resetprogress so they fire again', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    Loadgo.resetprogress(image)
+    Loadgo.setprogress(image, 50)
+    expect(callCount).toBe(2)
+  })
+
+  it('does not fire threshold at 0 on resetprogress', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 0: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    Loadgo.resetprogress(image)
+    // resetprogress calls _setprogress(0) then clears firedThresholds,
+    // so the threshold fires during the reset call itself
+    expect(callCount).toBe(1)
+  })
+
+  it('fires threshold at 100 alongside loadgo:complete', () => {
+    const order = []
+    Loadgo.init(image, { onThreshold: { 100: () => order.push('threshold') } })
+    image.addEventListener('loadgo:complete', () => order.push('complete'))
+    Loadgo.setprogress(image, 100)
+    expect(order).toContain('threshold')
+    expect(order).toContain('complete')
+  })
+
+  it('does not throw when onThreshold is null', () => {
+    Loadgo.init(image, { onThreshold: null })
+    expect(() => Loadgo.setprogress(image, 50)).not.toThrow()
+  })
+
+  it('ignores non-function values in the threshold map', () => {
+    Loadgo.init(image, { onThreshold: { 50: 'not a function' } })
+    expect(() => Loadgo.setprogress(image, 50)).not.toThrow()
+  })
+
+  it('survives re-init: fired thresholds reset after re-init', () => {
+    let callCount = 0
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    expect(callCount).toBe(1)
+    Loadgo.init(image, { onThreshold: { 50: () => callCount++ } })
+    Loadgo.setprogress(image, 50)
+    expect(callCount).toBe(2)
+  })
+})
+
+describe('JS - pause() / resume()', () => {
+  it('pause() is a no-op on an element that is not looping', () => {
+    Loadgo.init(image)
+    expect(() => Loadgo.pause(image)).not.toThrow()
+  })
+
+  it('resume() is a no-op on an element that is not paused', () => {
+    Loadgo.init(image)
+    expect(() => Loadgo.resume(image)).not.toThrow()
+  })
+
+  it('pause() stops the interval without changing progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(50)
+      const progressBeforePause = Loadgo.getprogress(image)
+      expect(progressBeforePause).toBeGreaterThan(0)
+      Loadgo.pause(image)
+      vi.advanceTimersByTime(200)
+      expect(Loadgo.getprogress(image)).toBe(progressBeforePause)
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('resume() restarts the loop from the paused progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(50)
+      const progressBeforePause = Loadgo.getprogress(image)
+      Loadgo.pause(image)
+      vi.advanceTimersByTime(50)
+      Loadgo.resume(image)
+      vi.advanceTimersByTime(10)
+      expect(Loadgo.getprogress(image)).toBeGreaterThan(progressBeforePause)
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('resume() is a no-op when called without a prior pause()', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      const progressSnapshot = Loadgo.getprogress(image)
+      Loadgo.resume(image) // should not double-start
+      vi.advanceTimersByTime(10)
+      // progress should have advanced by only one tick, not two
+      expect(Loadgo.getprogress(image)).toBe(progressSnapshot + 1)
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires loadgo:pause event with current progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      const { events, off } = captureEvent(image, 'loadgo:pause')
+      Loadgo.pause(image)
+      off()
+      expect(events.length).toBe(1)
+      expect(typeof events[0].detail.progress).toBe('number')
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires loadgo:resume event with current progress', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      Loadgo.pause(image)
+      const { events, off } = captureEvent(image, 'loadgo:resume')
+      Loadgo.resume(image)
+      off()
+      expect(events.length).toBe(1)
+      expect(typeof events[0].detail.progress).toBe('number')
+      Loadgo.stop(image)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('stop() after pause() still sets progress to 100', () => {
+    vi.useFakeTimers()
+    try {
+      Loadgo.init(image)
+      Loadgo.loop(image, 10)
+      vi.advanceTimersByTime(30)
+      Loadgo.pause(image)
+      Loadgo.stop(image)
+      expect(Loadgo.getprogress(image)).toBe(100)
     } finally {
       vi.useRealTimers()
     }

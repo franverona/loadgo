@@ -17,35 +17,129 @@ export interface LoadgoOptions {
   filter?: 'blur' | 'grayscale' | 'sepia' | 'hue-rotate' | 'invert' | 'opacity' | null
   /** Callback invoked after every `setprogress` call, receiving the new progress value (0–100). Default: `null` */
   onProgress?: ((progress: number) => void) | null
+  /**
+   * Map of threshold values (0–100) to callbacks. Each callback fires once when progress first
+   * reaches or crosses the threshold, and resets when `resetprogress()` is called. Default: `null`
+   */
+  onThreshold?: Record<number, (progress: number) => void> | null
   /** Text for the `aria-label` attribute on the progressbar element. Default: `'Loading'` */
   ariaLabel?: string
   /** CSS transition duration in seconds. Default: `0.6` */
   animationDuration?: number
   /** CSS transition easing function. Default: `'ease'` */
   animationEasing?: string
+  /**
+   * Automatically call `stop()` when `setprogress(100)` is reached outside of a loop.
+   * Removes the need to manually call `stop()` after setting progress to 100.
+   * Has no effect when a loop is running. Default: `false`
+   */
+  autoStop?: boolean
 }
 
 export interface LoadgoAPI {
-  /** Initialise LoadGo on an `<img>` element. */
+  /**
+   * Initialise LoadGo on an `<img>` element.
+   * @fires loadgo:init
+   * @fires loadgo:error
+   */
   init(element: HTMLImageElement, options?: LoadgoOptions): void
-  /** Get or set options for an already-initialised element. */
+  /**
+   * Initialise LoadGo on multiple `<img>` elements at once.
+   * Silently skips non-`<img>` elements.
+   * @param selector CSS selector string, NodeList, or HTMLCollection
+   * @returns Array of successfully initialized DOM elements
+   * @fires loadgo:init - on each initialized element
+   */
+  initAll(
+    selector: string | NodeList | HTMLCollectionOf<Element>,
+    options?: LoadgoOptions
+  ): HTMLImageElement[]
+  /**
+   * Get or set options for an already-initialised element.
+   * @fires loadgo:options - Only fired when called as a setter after init.
+   */
   options(element: HTMLImageElement, options?: LoadgoOptions): LoadgoOptions
-  /** Set progress (0–100). */
+  /** 
+   * Set progress (0–100). 
+   * @fires loadgo:progress
+   * @fires loadgo:complete - Only fired when progress reaches 100% outside of a loop.
+   */
   setprogress(element: HTMLImageElement, progress: number): void
   /** Return the current progress value. */
   getprogress(element: HTMLImageElement): number
-  /** Reset progress back to 0. */
+  /** 
+   * Reset progress back to 0. 
+   * @fires loadgo:reset
+   */
   resetprogress(element: HTMLImageElement): void
-  /** Start an indefinite back-and-forth animation loop. */
+  /**
+   * Start an indefinite back-and-forth animation loop.
+   * @fires loadgo:start
+   * @fires loadgo:cycle - Fired each time the loop completes one full back-and-forth.
+   * @fires loadgo:error
+   */
   loop(element: HTMLImageElement, duration: number): void
-  /** Stop the loop and reveal the full image. */
+  /**
+   * Stop the loop and reveal the full image.
+   * @fires loadgo:stop
+   * @fires loadgo:error
+   */
   stop(element: HTMLImageElement): void
-  /** Remove the overlay and restore the original DOM structure. */
+  /**
+   * Pause the loop, preserving the current progress and direction state.
+   * No-op if the element is not currently looping.
+   * @fires loadgo:pause
+   */
+  pause(element: HTMLImageElement): void
+  /**
+   * Resume a paused loop, continuing from where it left off.
+   * No-op if the element is not paused.
+   * @fires loadgo:resume
+   */
+  resume(element: HTMLImageElement): void
+  /**
+   * Remove the overlay and restore the original DOM structure.
+   * @fires loadgo:destroy
+   */
   destroy(element: HTMLImageElement): void
 }
 
 export declare const Loadgo: LoadgoAPI
 
+export interface LoadgoDetail {
+  progress: number
+}
+
+export interface LoadgoEventMap {
+  'loadgo:complete': CustomEvent<LoadgoDetail>
+  'loadgo:cycle': CustomEvent<null>
+  'loadgo:destroy': CustomEvent<null>
+  'loadgo:error': CustomEvent<{ message: string }>
+  'loadgo:init': CustomEvent<null>
+  'loadgo:options': CustomEvent<LoadgoOptions>
+  'loadgo:pause': CustomEvent<LoadgoDetail>
+  'loadgo:progress': CustomEvent<LoadgoDetail>
+  'loadgo:reset': CustomEvent<LoadgoDetail>
+  'loadgo:resume': CustomEvent<LoadgoDetail>
+  'loadgo:start': CustomEvent<null>
+  'loadgo:stop': CustomEvent<LoadgoDetail>
+}
+
 declare global {
   const Loadgo: LoadgoAPI
+
+  interface HTMLImageElementEventMap extends LoadgoEventMap {}
+
+  interface HTMLImageElement {
+    addEventListener<K extends keyof LoadgoEventMap>(
+      type: K,
+      listener: (this: HTMLImageElement, ev: LoadgoEventMap[K]) => any,
+      options?: boolean | AddEventListenerOptions
+    ): void
+    removeEventListener<K extends keyof LoadgoEventMap>(
+      type: K,
+      listener: (this: HTMLImageElement, ev: LoadgoEventMap[K]) => any,
+      options?: boolean | EventListenerOptions
+    ): void
+  }
 }
