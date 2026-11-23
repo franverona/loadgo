@@ -162,7 +162,7 @@ describe('jQuery - Overlay render', () => {
 
   it('sets CSS transition when animated is true', () => {
     $image.loadgo({ animated: true })
-    expect(getOverlay()[0].style.transition).toContain('ease')
+    expect(getOverlay()[0].style.transitionTimingFunction).toContain('ease')
   })
 
   it('uses custom animationDuration', () => {
