@@ -173,7 +173,7 @@ describe('JS - Overlay render', () => {
 
   it('sets CSS transition when animated is true', () => {
     Loadgo.init(image, { animated: true })
-    expect(getOverlay().style.transition).toContain('ease')
+    expect(getOverlay().style.transitionTimingFunction).toContain('ease')
   })
 
   it('uses custom animationDuration', () => {
